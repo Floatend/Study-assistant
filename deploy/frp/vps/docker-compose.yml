@@ -1,0 +1,44 @@
+services:
+  frps:
+    image: ${FRPS_IMAGE:-snowdreamtech/frps:latest}
+    container_name: goalbot-frps
+    restart: unless-stopped
+    command:
+      - -c
+      - /etc/frp/frps.toml
+    environment:
+      FRP_BIND_PORT: ${FRP_BIND_PORT:-7000}
+      FRP_REMOTE_PORT: ${FRP_REMOTE_PORT:-18080}
+      FRP_AUTH_TOKEN: ${FRP_AUTH_TOKEN:?FRP_AUTH_TOKEN is required}
+    volumes:
+      - ./frps.toml:/etc/frp/frps.toml:ro
+    ports:
+      - "${FRP_BIND_PORT:-7000}:${FRP_BIND_PORT:-7000}"
+    expose:
+      - "${FRP_REMOTE_PORT:-18080}"
+    networks:
+      - gateway
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: goalbot-public-nginx
+    restart: unless-stopped
+    depends_on:
+      - frps
+    environment:
+      GOALBOT_DOMAIN: ${GOALBOT_DOMAIN:?GOALBOT_DOMAIN is required}
+      FRP_REMOTE_PORT: ${FRP_REMOTE_PORT:-18080}
+      NGINX_ENVSUBST_FILTER: "GOALBOT_DOMAIN|FRP_REMOTE_PORT"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/goalbot.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./certs/origin.pem:/etc/nginx/certs/origin.pem:ro
+      - ./certs/origin.key:/etc/nginx/certs/origin.key:ro
+    networks:
+      - gateway
+
+networks:
+  gateway:
+    driver: bridge

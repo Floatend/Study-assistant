@@ -1,0 +1,11 @@
+bindAddr = "0.0.0.0"
+bindPort = {{ .Envs.FRP_BIND_PORT }}
+
+auth.method = "token"
+auth.token = "{{ .Envs.FRP_AUTH_TOKEN }}"
+
+transport.tls.force = true
+
+allowPorts = [
+  { start = {{ .Envs.FRP_REMOTE_PORT }}, end = {{ .Envs.FRP_REMOTE_PORT }} }
+]

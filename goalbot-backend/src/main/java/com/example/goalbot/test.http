@@ -1,0 +1,79 @@
+@baseUrl = http://localhost:8080
+@username = local_user
+@password = replace_with_your_admin_password
+
+### Login and save bearer token
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {% client.global.set("auth_token", response.body.data.token); %}
+
+###
+POST {{baseUrl}}/api/ai/advice?days=2
+Authorization: Bearer {{auth_token}}
+
+###
+POST {{baseUrl}}/api/ai/daily-review
+Authorization: Bearer {{auth_token}}
+
+###
+POST {{baseUrl}}/api/ai/weekly-review
+Authorization: Bearer {{auth_token}}
+
+###
+POST {{baseUrl}}/api/feishu/command/test
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "text": "/今日"
+}
+
+
+###
+POST {{baseUrl}}/api/feishu/command/test
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "text": "/进度"
+}
+
+###
+POST {{baseUrl}}/api/feishu/command/test
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "text": "/打卡 离散作业 30分钟"
+}
+
+###
+POST {{baseUrl}}/api/feishu/command/parse
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "text": "我今天有什么必须处理的吗"
+}
+###
+POST {{baseUrl}}/api/feishu/command/test
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "text": "那就晚上去吃点好的吧"
+}
+###
+POST {{baseUrl}}/api/feishu/command/test
+Authorization: Bearer {{auth_token}}
+Content-Type: application/json
+
+{
+  "text": "七点半出发吧"
+}
