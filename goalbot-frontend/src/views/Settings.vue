@@ -46,8 +46,9 @@
               <el-input
                 v-model="form.feishuChatId"
                 clearable
-                placeholder="可选；为空则使用后端 FEISHU_DEFAULT_CHAT_ID"
+                placeholder="首次私聊机器人后自动填写，也可手动覆盖"
               />
+              <p class="field-help">只自动绑定已关联用户的首次私聊；群聊不会覆盖。清空保存后，下次私聊会重新绑定。</p>
             </div>
 
             <div class="quiet-settings">
@@ -462,7 +463,7 @@ async function saveSettings() {
   try {
     settings.value = await updateAssistantSettings({
       ...form,
-      feishuChatId: form.feishuChatId.trim() || null,
+      feishuChatId: form.feishuChatId.trim(),
       aiBriefingSourceName: form.aiBriefingSourceName.trim() || '橘鸦Juya',
       aiBriefingSourceUrl: form.aiBriefingSourceUrl.trim() || null
     })

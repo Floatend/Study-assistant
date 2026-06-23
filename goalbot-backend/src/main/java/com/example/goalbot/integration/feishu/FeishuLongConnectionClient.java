@@ -1,6 +1,7 @@
 package com.example.goalbot.integration.feishu;
 
 import com.example.goalbot.service.FeishuCommandService;
+import com.example.goalbot.service.AssistantSettingsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lark.oapi.event.EventDispatcher;
 import com.lark.oapi.service.im.ImService;
@@ -23,6 +24,7 @@ public class FeishuLongConnectionClient implements ApplicationRunner {
     private final FeishuOpenApiClient feishuOpenApiClient;
     private final FeishuUserResolver feishuUserResolver;
     private final FeishuMessageDeduplicator feishuMessageDeduplicator;
+    private final AssistantSettingsService assistantSettingsService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -99,6 +101,7 @@ public class FeishuLongConnectionClient implements ApplicationRunner {
             }
             log.info("Feishu app bot received text message. chatId={}, messageId={}",
                     message.getChatId(), message.getMessageId());
+            tryAutoBindPrivateChat(userId, message.getChatId(), message.getChatType());
             String reply = feishuCommandService.handleText(userId, text, message.getMessageId());
             if (!StringUtils.hasText(reply)) {
                 return;
@@ -107,6 +110,20 @@ public class FeishuLongConnectionClient implements ApplicationRunner {
             feishuOpenApiClient.replyText(message.getMessageId(), reply);
         } catch (Exception ex) {
             log.warn("Failed to handle Feishu message event: {}", ex.getMessage(), ex);
+        }
+    }
+
+    private void tryAutoBindPrivateChat(Long userId, String chatId, String chatType) {
+        if (!"p2p".equalsIgnoreCase(chatType) || !StringUtils.hasText(chatId)) {
+            return;
+        }
+        try {
+            if (assistantSettingsService.bindFeishuChatIfAbsent(userId, chatId)) {
+                log.info("Automatically bound Feishu private chat. userId={}, chatId={}", userId, chatId);
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to automatically bind Feishu private chat. userId={}, reason={}",
+                    userId, ex.getMessage());
         }
     }
 

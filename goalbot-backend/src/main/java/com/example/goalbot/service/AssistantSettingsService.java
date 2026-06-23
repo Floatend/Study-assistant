@@ -15,6 +15,8 @@ public interface AssistantSettingsService extends IService<AssistantSettings> {
 
     AssistantSettingsVO updateSettings(Long userId, AssistantSettingsUpdateRequest request);
 
+    boolean bindFeishuChatIfAbsent(Long userId, String chatId);
+
     Notification sendTestMessage(Long userId);
 
     Notification sendNow(Long userId, String type);

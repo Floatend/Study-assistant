@@ -513,6 +513,8 @@ Messages that are not recognized as explicit GoalBot commands fall back to Dify-
 
 The long connection handler receives text messages, calls `FeishuCommandService`, and replies through the Feishu OpenAPI. If `user.feishu_user_id` matches the sender's Feishu user id, open id, or union id, GoalBot uses that active local user. An unbound or disabled Feishu account cannot access another user's data; the bot returns the sender open id so an administrator can complete the binding in User Management.
 
+When a bound user first sends the bot a private (`p2p`) message, GoalBot automatically saves that conversation's `chat_id` to the user's `assistant_settings.feishu_chat_id`. Existing manual settings are never overwritten, and group chats are not selected automatically. A user can still replace the push target from the Settings page when group delivery is intentional.
+
 Duplicate reply guard:
 
 ```text

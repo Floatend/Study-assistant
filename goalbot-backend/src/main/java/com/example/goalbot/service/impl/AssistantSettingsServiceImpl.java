@@ -1,6 +1,7 @@
 package com.example.goalbot.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goalbot.common.BusinessException;
 import com.example.goalbot.config.ReminderProperties;
@@ -63,6 +64,25 @@ public class AssistantSettingsServiceImpl extends ServiceImpl<AssistantSettingsM
         applyUpdates(settings, request);
         updateById(settings);
         return toVO(getById(settings.getId()));
+    }
+
+    @Override
+    @Transactional
+    public boolean bindFeishuChatIfAbsent(Long userId, String chatId) {
+        if (userId == null || !StringUtils.hasText(chatId)) {
+            return false;
+        }
+        AssistantSettings settings = getOrCreate(userId);
+        if (StringUtils.hasText(settings.getFeishuChatId())) {
+            return false;
+        }
+        String normalizedChatId = chatId.trim();
+        return baseMapper.update(null, new LambdaUpdateWrapper<AssistantSettings>()
+                .eq(AssistantSettings::getId, settings.getId())
+                .and(wrapper -> wrapper.isNull(AssistantSettings::getFeishuChatId)
+                        .or()
+                        .eq(AssistantSettings::getFeishuChatId, ""))
+                .set(AssistantSettings::getFeishuChatId, normalizedChatId)) > 0;
     }
 
     @Override
