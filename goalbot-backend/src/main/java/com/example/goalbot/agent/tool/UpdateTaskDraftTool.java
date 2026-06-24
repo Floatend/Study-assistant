@@ -66,7 +66,8 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
                     .decision(TaskDraftDecision.CANCELLED)
                     .build();
             transitionLogService.recordTaskDraftTransition(userId, draft, "TASK_DRAFT_CANCELLED", transition);
-            return ToolResult.ok("好，我先不创建这条任务。");
+            ConversationTaskDraft nextDraft = draftService.getActiveDraft(userId).orElse(null);
+            return ToolResult.ok("好，我先不创建这条任务。" + nextDraftPrompt(nextDraft));
         }
 
         TaskDraftFrame frame = turnParser.parse(
@@ -97,12 +98,13 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
                     ? minutesBetween(draft.getStartTime(), draft.getEndTime())
                     : draft.getPlannedMinutes());
             task = taskService.updateTask(userId, updateTaskId, request);
-            completeDraftWithLog(userId, draft, text);
+            ConversationTaskDraft nextDraft = completeDraftWithLog(userId, draft, text);
             return ToolResult.ok("已调整任务时间：\n"
                     + "任务：" + task.getTitle() + "\n"
                     + "日期：" + task.getPlanDate() + "\n"
                     + "时间：" + task.getStartTime() + " - " + task.getEndTime() + "\n"
-                    + "计划用时：" + zero(task.getPlannedMinutes()) + " 分钟", task);
+                    + "计划用时：" + zero(task.getPlannedMinutes()) + " 分钟"
+                    + nextDraftPrompt(nextDraft), task);
         }
 
         TaskCreateRequest request = new TaskCreateRequest();
@@ -118,15 +120,16 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
         request.setStatus(0);
 
         task = taskService.createTask(userId, request);
-        completeDraftWithLog(userId, draft, text);
+        ConversationTaskDraft nextDraft = completeDraftWithLog(userId, draft, text);
         return ToolResult.ok("已创建任务：\n"
                 + "任务：" + task.getTitle() + "\n"
                 + "日期：" + task.getPlanDate() + "\n"
                 + "时间：" + task.getStartTime() + " - " + task.getEndTime() + "\n"
-                + "计划用时：" + zero(task.getPlannedMinutes()) + " 分钟", task);
+                + "计划用时：" + zero(task.getPlannedMinutes()) + " 分钟"
+                + nextDraftPrompt(nextDraft), task);
     }
 
-    private void completeDraftWithLog(Long userId, ConversationTaskDraft draft, String rawText) {
+    private ConversationTaskDraft completeDraftWithLog(Long userId, ConversationTaskDraft draft, String rawText) {
         TaskDraftSnapshot before = TaskDraftSnapshot.from(draft);
         draftService.completeActiveDraft(userId);
         draft.setStatus(1);
@@ -140,6 +143,15 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
                 .decision(TaskDraftDecision.COMPLETED)
                 .build();
         transitionLogService.recordTaskDraftTransition(userId, draft, "TASK_DRAFT_COMPLETED", transition);
+        return draftService.getActiveDraft(userId).orElse(null);
+    }
+
+    private String nextDraftPrompt(ConversationTaskDraft nextDraft) {
+        if (nextDraft == null) {
+            return "";
+        }
+        return "\n\n接着安排「" + nextDraft.getTitle() + "」（" + nextDraft.getPlanDate()
+                + "）。准备几点开始，预计多久？";
     }
 
     private int minutesBetween(LocalTime start, LocalTime end) {

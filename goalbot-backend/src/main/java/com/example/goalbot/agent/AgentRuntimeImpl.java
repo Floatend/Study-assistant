@@ -3,6 +3,7 @@ package com.example.goalbot.agent;
 import com.example.goalbot.dto.command.CommandIntent;
 import com.example.goalbot.dto.conversation.ConversationTurn;
 import com.example.goalbot.entity.ConversationTaskDraft;
+import com.example.goalbot.agent.tool.NaturalTaskListParser;
 import com.example.goalbot.service.CommandLogService;
 import com.example.goalbot.service.ConversationStateService;
 import com.example.goalbot.service.ConversationTaskDraftService;
@@ -137,6 +138,15 @@ public class AgentRuntimeImpl implements AgentRuntime {
     private CommandIntent parseDirect(String text) {
         if (!StringUtils.hasText(text)) {
             return CommandIntent.of(CommandIntent.Intent.HELP);
+        }
+        if (NaturalTaskListParser.isLikelyTaskList(text)) {
+            CommandIntent intent = CommandIntent.of(CommandIntent.Intent.CREATE_TASK);
+            intent.setSource("rule-natural-task-list");
+            intent.setSentenceType("COMMAND");
+            intent.setActionType("WRITE");
+            intent.setRequiresConfirmation(false);
+            intent.setMissingSlots(java.util.List.of("start_time", "duration"));
+            return intent;
         }
         var importedScheduleCancellation = ImportedScheduleCancellationParser.parse(text, LocalDate.now());
         if (importedScheduleCancellation.isPresent()) {

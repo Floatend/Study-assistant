@@ -37,9 +37,14 @@ public class CreateTaskTool extends AbstractAgentTool {
 
     @Override
     public ToolResult execute(Long userId, ToolCall call) {
-        List<BatchScheduleParser.Entry> batchEntries = BatchScheduleParser.parse(stringArg(call, "source_text"));
+        String sourceText = stringArg(call, "source_text");
+        List<BatchScheduleParser.Entry> batchEntries = BatchScheduleParser.parse(sourceText);
         if (!batchEntries.isEmpty()) {
             return createBatchTasks(userId, batchEntries);
+        }
+        List<String> naturalTaskTitles = NaturalTaskListParser.parse(sourceText);
+        if (!naturalTaskTitles.isEmpty()) {
+            return enqueueNaturalTasks(userId, call, sourceText, naturalTaskTitles);
         }
 
         String title = stringArg(call, "task_title");
@@ -117,6 +122,53 @@ public class CreateTaskTool extends AbstractAgentTool {
         return ToolResult.ok(batchCreatedReply(tasks), tasks);
     }
 
+    private ToolResult enqueueNaturalTasks(
+            Long userId,
+            ToolCall call,
+            String sourceText,
+            List<String> titles
+    ) {
+        LocalDate planDate = dateArg(call, "plan_date");
+        if (planDate == null) {
+            planDate = parseRelativeDate(sourceText);
+        }
+        LocalDate resolvedDate = planDate == null ? LocalDate.now() : planDate;
+        Long sessionId = longArg(call, "session_id");
+        List<ConversationTaskDraft> drafts = titles.stream()
+                .map(title -> {
+                    ConversationTaskDraft draft = new ConversationTaskDraft();
+                    draft.setTitle(title);
+                    draft.setPlanDate(resolvedDate);
+                    draft.setGoalId(longArg(call, "goal_id"));
+                    draft.setGoalKeyword(stringArg(call, "goal_keyword"));
+                    draft.setMissingSlots("start_time,duration");
+                    draft.setSourceText(sourceText);
+                    return draft;
+                })
+                .toList();
+        List<ConversationTaskDraft> savedDrafts = draftService.enqueueDrafts(userId, sessionId, drafts);
+        for (int index = 0; index < savedDrafts.size(); index++) {
+            ConversationTaskDraft savedDraft = savedDrafts.get(index);
+            TaskDraftFrame frame = initialFrame(savedDraft, sourceText);
+            String question = index == 0 ? askForMissing(
+                    savedDraft.getTitle(), savedDraft.getPlanDate(), null, null, null) : null;
+            TaskDraftTransition transition = TaskDraftTransition.builder()
+                    .rawText(sourceText)
+                    .frame(frame)
+                    .after(TaskDraftSnapshot.from(savedDraft))
+                    .decision(index == 0 ? TaskDraftDecision.NEEDS_INPUT : TaskDraftDecision.QUEUED)
+                    .clarificationQuestion(question)
+                    .build();
+            transitionLogService.recordTaskDraftTransition(
+                    userId,
+                    savedDraft,
+                    index == 0 ? "TASK_DRAFT_CREATED" : "TASK_DRAFT_QUEUED",
+                    transition
+            );
+        }
+        return ToolResult.ok(queuedTasksReply(savedDrafts), savedDrafts);
+    }
+
     private String resolveMissingSlots(LocalTime startTime, LocalTime endTime, Integer plannedMinutes) {
         StringBuilder builder = new StringBuilder();
         if (startTime == null) {
@@ -184,6 +236,32 @@ public class CreateTaskTool extends AbstractAgentTool {
                         + " | " + zero(task.getPlannedMinutes()) + " 分钟")
                 .collect(Collectors.joining("\n"));
         return "已创建 " + tasks.size() + " 个日程：\n" + lines;
+    }
+
+    private String queuedTasksReply(List<ConversationTaskDraft> drafts) {
+        String lines = java.util.stream.IntStream.range(0, drafts.size())
+                .mapToObj(index -> (index + 1) + ". " + drafts.get(index).getTitle())
+                .collect(Collectors.joining("\n"));
+        ConversationTaskDraft first = drafts.get(0);
+        return "我识别到 " + drafts.size() + " 个任务：\n"
+                + lines
+                + "\n\n先安排「" + first.getTitle() + "」。准备几点开始，预计多久？";
+    }
+
+    private LocalDate parseRelativeDate(String text) {
+        if (!StringUtils.hasText(text)) {
+            return null;
+        }
+        if (text.contains("后天")) {
+            return LocalDate.now().plusDays(2);
+        }
+        if (text.contains("明天") || text.contains("明日")) {
+            return LocalDate.now().plusDays(1);
+        }
+        if (text.contains("今天") || text.contains("今日") || text.contains("今晚")) {
+            return LocalDate.now();
+        }
+        return null;
     }
 
     private String formatTime(TaskVO task) {

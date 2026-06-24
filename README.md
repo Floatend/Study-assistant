@@ -153,7 +153,7 @@ conversation_task_draft   unfinished task creation draft for multi-turn scheduli
 conversation_transition_log deterministic before/frame/after audit trail for each draft change
 ```
 
-The first persistent flow is natural-language task planning. For example, when the bot receives "I need to write the report tomorrow" without a time or duration, it stores a draft and asks a follow-up question. The follow-up answer completes the same draft and creates the final task through the normal backend `TaskService`.
+The first persistent flow is natural-language task planning. For example, when the bot receives "I need to write the report tomorrow" without a time or duration, it stores a draft and asks a follow-up question. A comma-separated planning message can enqueue several drafts; GoalBot completes them in order and automatically introduces the next task. Final tasks are still created through the normal backend `TaskService`.
 
 Existing databases created before the transition audit was added must run this additive migration once:
 

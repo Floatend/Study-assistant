@@ -89,4 +89,13 @@ class AgentRuntimeImplTest {
         assertTrue(reply.isSuccess());
         verifyNoInteractions(naturalLanguageCommandService);
     }
+
+    @Test
+    void routesNaturalTaskListWithoutDependingOnDifyTitleExtraction() {
+        CommandIntent intent = agentRuntime.parseIntent(1L, "今天写高数卷子，新工科英语复习");
+
+        assertEquals(CommandIntent.Intent.CREATE_TASK, intent.getIntent());
+        assertEquals("rule-natural-task-list", intent.getSource());
+        verifyNoInteractions(naturalLanguageCommandService);
+    }
 }

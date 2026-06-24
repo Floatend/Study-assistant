@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,7 +38,7 @@ public class ConversationTaskDraftServiceImpl implements ConversationTaskDraftSe
                 .eq(ConversationTaskDraft::getUserId, userId)
                 .eq(ConversationTaskDraft::getStatus, DRAFT_COLLECTING)
                 .ge(ConversationTaskDraft::getExpiresAt, LocalDateTime.now())
-                .orderByDesc(ConversationTaskDraft::getUpdatedAt)
+                .orderByAsc(ConversationTaskDraft::getId)
                 .last("LIMIT 1")));
     }
 
@@ -69,8 +71,38 @@ public class ConversationTaskDraftServiceImpl implements ConversationTaskDraftSe
         active.setSourceText(draft.getSourceText());
         active.setExpiresAt(expiresAt);
         conversationTaskDraftMapper.updateById(active);
+        conversationTaskDraftMapper.update(null, new LambdaUpdateWrapper<ConversationTaskDraft>()
+                .eq(ConversationTaskDraft::getUserId, userId)
+                .eq(ConversationTaskDraft::getStatus, DRAFT_COLLECTING)
+                .set(ConversationTaskDraft::getExpiresAt, expiresAt));
         conversationStateService.updateState(active.getSessionId(), DialogueState.COLLECTING_TASK, "CREATE_TASK");
         return active;
+    }
+
+    @Override
+    @Transactional
+    public List<ConversationTaskDraft> enqueueDrafts(
+            Long userId,
+            Long sessionId,
+            List<ConversationTaskDraft> drafts
+    ) {
+        if (drafts == null || drafts.isEmpty()) {
+            return List.of();
+        }
+        expireStaleDrafts(userId);
+        LocalDateTime expiresAt = LocalDateTime.now().plus(DRAFT_TTL);
+        List<ConversationTaskDraft> saved = new ArrayList<>(drafts.size());
+        for (ConversationTaskDraft draft : drafts) {
+            draft.setId(null);
+            draft.setUserId(userId);
+            draft.setSessionId(sessionId);
+            draft.setStatus(DRAFT_COLLECTING);
+            draft.setExpiresAt(expiresAt);
+            conversationTaskDraftMapper.insert(draft);
+            saved.add(draft);
+        }
+        conversationStateService.updateState(sessionId, DialogueState.COLLECTING_TASK, "CREATE_TASK");
+        return List.copyOf(saved);
     }
 
     @Override
@@ -82,7 +114,7 @@ public class ConversationTaskDraftServiceImpl implements ConversationTaskDraftSe
         }
         active.setStatus(DRAFT_COMPLETED);
         conversationTaskDraftMapper.updateById(active);
-        conversationStateService.updateState(active.getSessionId(), DialogueState.IDLE, null);
+        updateStateAfterCurrentDraft(active.getUserId(), active.getSessionId());
     }
 
     @Override
@@ -94,7 +126,16 @@ public class ConversationTaskDraftServiceImpl implements ConversationTaskDraftSe
         }
         active.setStatus(DRAFT_CANCELLED);
         conversationTaskDraftMapper.updateById(active);
-        conversationStateService.updateState(active.getSessionId(), DialogueState.IDLE, null);
+        updateStateAfterCurrentDraft(active.getUserId(), active.getSessionId());
+    }
+
+    private void updateStateAfterCurrentDraft(Long userId, Long sessionId) {
+        boolean hasNext = getActiveDraft(userId).isPresent();
+        conversationStateService.updateState(
+                sessionId,
+                hasNext ? DialogueState.COLLECTING_TASK : DialogueState.IDLE,
+                hasNext ? "CREATE_TASK" : null
+        );
     }
 
     private void expireStaleDrafts(Long userId) {

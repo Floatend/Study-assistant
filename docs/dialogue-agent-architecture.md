@@ -4,8 +4,9 @@
 
 ```text
 Feishu message
-  -> AgentRuntime (session, idempotency, active work item)
+  -> AgentRuntime (session, idempotency, active work-item queue)
   -> intent routing
+  -> NaturalTaskListParser (zero, one, or many task titles)
   -> TaskDraftTurnParser (extract only this turn)
   -> TaskDraftReducer (merge with persistent state)
   -> constraint decision
@@ -34,6 +35,7 @@ Every draft lifecycle change is represented as a transition:
 
 ```text
 TASK_DRAFT_CREATED
+TASK_DRAFT_QUEUED
 TASK_DRAFT_REDUCED
 TASK_DRAFT_COMPLETED
 TASK_DRAFT_CANCELLED
@@ -63,6 +65,12 @@ LIMIT 20;
 
 Dify Workflow may later return a structured `actions[]` plan, but it must not execute tools or own dialogue state. The backend validates every action, applies deterministic reducers, and executes business services transactionally. Dify Chat remains a response-polishing and free-conversation layer.
 
+## Multi-task Queue
+
+One natural-language message may create several `conversation_task_draft` rows in the same session. The oldest collecting row is the active work item; later rows remain queued. Completing or cancelling the active row advances the session to the next row and asks only for that task's missing schedule. Every row has an independent transition history.
+
+The backend task-list rule is intentionally conservative. It bypasses Dify only when the message contains explicit planning language or every extracted item looks actionable. Ordinary comma-separated chat continues to free conversation.
+
 ## Next Increment
 
-The current reducer handles one active task draft reliably. The next planned increment replaces the singular draft assumption with a persistent work-item queue so one message such as `今天写高数卷子，新工科英语复习` can produce two task work items, collect shared or per-task times, and execute them independently without losing either action.
+The next increment can extend the Dify Workflow contract from a singular intent to `actions[]`. That will support mixed operations in one turn, such as creating two tasks, moving a third task, and asking for tomorrow's free time. The persistent queue and deterministic reducer added here remain the execution layer for those actions.

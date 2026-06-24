@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `conversation_transition_log` (
   `state_before` JSON DEFAULT NULL COMMENT 'Draft state before reducer execution',
   `semantic_frame` JSON DEFAULT NULL COMMENT 'Structured frame extracted from this turn',
   `state_after` JSON DEFAULT NULL COMMENT 'Draft state after reducer execution',
-  `decision` VARCHAR(32) DEFAULT NULL COMMENT 'READY, NEEDS_INPUT, CONFLICT, COMPLETED, or CANCELLED',
+  `decision` VARCHAR(32) DEFAULT NULL COMMENT 'READY, NEEDS_INPUT, CONFLICT, QUEUED, COMPLETED, or CANCELLED',
   `clarification_question` VARCHAR(512) DEFAULT NULL COMMENT 'Question returned to the user',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Created time',
   PRIMARY KEY (`id`),

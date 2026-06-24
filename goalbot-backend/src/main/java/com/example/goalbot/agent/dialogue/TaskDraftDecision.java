@@ -4,6 +4,7 @@ public enum TaskDraftDecision {
     READY,
     NEEDS_INPUT,
     CONFLICT,
+    QUEUED,
     COMPLETED,
     CANCELLED
 }
