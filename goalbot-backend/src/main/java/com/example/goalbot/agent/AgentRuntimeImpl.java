@@ -232,10 +232,23 @@ public class AgentRuntimeImpl implements AgentRuntime {
         if (text.startsWith("/打卡") || text.startsWith("打卡")) {
             Matcher matcher = CHECKIN_PATTERN.matcher(text);
             CommandIntent intent = CommandIntent.of(CommandIntent.Intent.CHECKIN);
+            intent.setSentenceType("COMMAND");
+            intent.setActionType("WRITE");
+            intent.setRequiresConfirmation(false);
             if (matcher.matches()) {
                 intent.setTaskKeyword(matcher.group(1).trim());
                 intent.setActualMinutes(parseMinutes(matcher.group(2), matcher.group(3)));
+            } else {
+                String keyword = text.replaceFirst("^/?打卡\\s*", "")
+                        .replaceAll("[，。！？、,.!?]+$", "")
+                        .trim();
+                if (StringUtils.hasText(keyword)) {
+                    intent.setTaskKeyword(keyword);
+                }
             }
+            intent.setMissingSlots(StringUtils.hasText(intent.getTaskKeyword())
+                    ? java.util.List.of()
+                    : java.util.List.of("task_keyword"));
             return intent;
         }
         return CommandIntent.of(CommandIntent.Intent.UNKNOWN);
@@ -315,7 +328,10 @@ public class AgentRuntimeImpl implements AgentRuntime {
     private boolean isSlotCompletion(String text) {
         return text.contains("今天") || text.contains("今日") || text.contains("明天") || text.contains("后天")
                 || text.contains("今晚") || text.contains("晚上") || text.contains("下午") || text.contains("上午")
+                || text.contains("中午") || text.contains("凌晨") || text.contains("现在") || text.contains("马上")
+                || text.contains("开始") || text.contains("结束") || text.contains("截止")
                 || text.contains("分钟") || text.contains("小时") || text.contains("半小时")
+                || text.matches("(?i).*\\d+(?:\\.\\d+)?\\s*(min|m|h).*")
                 || text.contains("点") || text.contains("点半") || text.contains(":");
     }
 

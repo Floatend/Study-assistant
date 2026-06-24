@@ -38,14 +38,8 @@ public class CheckinTaskTool extends AbstractAgentTool {
             minutes = intArg(call, "minutes");
         }
 
-        if (!StringUtils.hasText(keyword) && (minutes == null || minutes <= 0)) {
-            return ToolResult.failed("我理解你想打卡，但还缺任务名和用时。比如：英语听力学了 30 分钟。");
-        }
         if (!StringUtils.hasText(keyword)) {
-            return ToolResult.failed("我理解你想打卡，但还缺任务名。");
-        }
-        if (minutes == null || minutes <= 0) {
-            return ToolResult.failed("我理解你想给「" + keyword + "」打卡，但还缺实际用时。");
+            return ToolResult.failed("我理解你想打卡，但还缺任务名。例如：打卡物理。");
         }
 
         List<TaskVO> matches = findTodayTaskMatches(userId, keyword);
@@ -60,15 +54,17 @@ public class CheckinTaskTool extends AbstractAgentTool {
         }
 
         TaskVO task = matches.get(0);
+        boolean usesPlannedMinutes = minutes == null || minutes <= 0;
         CheckinCreateRequest request = new CheckinCreateRequest();
         request.setTaskId(task.getId());
-        request.setActualMinutes(minutes);
+        request.setActualMinutes(usesPlannedMinutes ? null : minutes);
         request.setContent("飞书自然语言打卡：" + stringArg(call, "source_text"));
 
         CheckinVO checkin = checkinService.createCheckin(userId, request);
         return ToolResult.ok("已记录打卡：\n"
                 + "任务：" + task.getTitle() + "\n"
-                + "实际用时：" + checkin.getActualMinutes() + " 分钟\n"
+                + (usesPlannedMinutes ? "记录用时（按任务计划）：" : "实际用时：")
+                + checkin.getActualMinutes() + " 分钟\n"
                 + "任务状态已更新。", checkin);
     }
 

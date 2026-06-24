@@ -12,7 +12,7 @@ export interface Checkin {
 
 export interface CheckinPayload {
   taskId: number
-  actualMinutes: number
+  actualMinutes?: number
   content?: string
   mood?: number
   difficulty?: number

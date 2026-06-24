@@ -98,6 +98,8 @@ public class IntentWorkflowServiceImpl implements IntentWorkflowService {
                 when a specific course is named. Never use this intent for ordinary manually created tasks.
                 Use recent_messages to resolve short follow-ups like "七点半出发吧".
                 If the previous user/assistant turns established the task title or date, carry them forward.
+                For CHECKIN, task_keyword is required but actual_minutes is optional. When duration is omitted,
+                leave actual_minutes null and never include actual_minutes in missing_slots.
                 Never invent task data. If required slots are missing, include them in missing_slots.
                 """);
         return inputs;
@@ -180,6 +182,11 @@ public class IntentWorkflowServiceImpl implements IntentWorkflowService {
         if (commandIntent.getIntent() == CommandIntent.Intent.CHECKIN && commandIntent.getActualMinutes() == null) {
             commandIntent.setActualMinutes(parseInteger(firstNonNull(raw, "duration", "time_spent", "timeSpent")));
         }
+        if (commandIntent.getIntent() == CommandIntent.Intent.CHECKIN && commandIntent.getMissingSlots() != null) {
+            commandIntent.setMissingSlots(commandIntent.getMissingSlots().stream()
+                    .filter(slot -> !isOptionalCheckinDurationSlot(slot))
+                    .toList());
+        }
         if (commandIntent.getIntent() == CommandIntent.Intent.CREATE_TASK) {
             if (!StringUtils.hasText(commandIntent.getTaskTitle()) && StringUtils.hasText(commandIntent.getTaskKeyword())) {
                 commandIntent.setTaskTitle(commandIntent.getTaskKeyword());
@@ -189,6 +196,15 @@ public class IntentWorkflowServiceImpl implements IntentWorkflowService {
             }
         }
         return commandIntent;
+    }
+
+    private boolean isOptionalCheckinDurationSlot(String slot) {
+        return "actual_minutes".equalsIgnoreCase(slot)
+                || "actualMinutes".equalsIgnoreCase(slot)
+                || "minutes".equalsIgnoreCase(slot)
+                || "duration".equalsIgnoreCase(slot)
+                || "time_spent".equalsIgnoreCase(slot)
+                || "timeSpent".equalsIgnoreCase(slot);
     }
 
     private Map<String, Object> parseJsonObject(String value) {

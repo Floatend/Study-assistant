@@ -11,7 +11,6 @@ public class CheckinCreateRequest {
     @NotNull
     private Long taskId;
 
-    @NotNull
     @Min(0)
     private Integer actualMinutes;
 

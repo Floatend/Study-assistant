@@ -150,9 +150,18 @@ The new tables are:
 conversation_session      active chat session, channel, state, topic, last intent
 conversation_message      inbound/outbound message history for debugging and future memory
 conversation_task_draft   unfinished task creation draft for multi-turn scheduling
+conversation_transition_log deterministic before/frame/after audit trail for each draft change
 ```
 
 The first persistent flow is natural-language task planning. For example, when the bot receives "I need to write the report tomorrow" without a time or duration, it stores a draft and asks a follow-up question. The follow-up answer completes the same draft and creates the final task through the normal backend `TaskService`.
+
+Existing databases created before the transition audit was added must run this additive migration once:
+
+```sql
+source goalbot-backend/sql/conversation_transition_log.sql;
+```
+
+The task-draft path now uses a deterministic semantic-frame reducer. It preserves slots collected in earlier turns, derives end time or duration when possible, and asks a targeted question when a time expression conflicts with the stored state. See [docs/dialogue-agent-architecture.md](docs/dialogue-agent-architecture.md) for the state rules and diagnostic query. Release-by-release behavior and migration notes are kept in [CHANGELOG.md](CHANGELOG.md).
 
 ## ICS Calendar Import
 
@@ -439,9 +448,9 @@ Supported natural-language examples:
 本周总结一下
 ```
 
-`/打卡 任务名 50分钟` matches today's tasks by title keyword. If exactly one task matches, GoalBot creates a checkin, marks the task completed, and updates the related goal status and task counts. If multiple tasks match, GoalBot asks for a more specific task name.
+`/打卡 任务名` matches today's tasks by title keyword. If exactly one task matches, GoalBot creates a checkin, marks the task completed, and updates the related goal status and task counts. The duration is optional: when omitted, GoalBot records the task's `planned_minutes`; an explicit duration such as `/打卡 任务名 50分钟` overrides it. If multiple tasks match, GoalBot asks for a more specific task name.
 
-Natural-language checkin works the same way: the parser extracts `task_keyword` and `actual_minutes`, then the backend matches today's task and writes the checkin. Dify only parses the command and does not store data.
+Natural-language checkin works the same way: `打卡物理` only needs a task keyword, while `物理学了 50 分钟，帮我打卡` may provide an actual duration. The backend matches today's task and writes the checkin; Dify only parses the command and does not store data.
 
 Natural-language task creation creates real records in the `task` table. Common examples:
 

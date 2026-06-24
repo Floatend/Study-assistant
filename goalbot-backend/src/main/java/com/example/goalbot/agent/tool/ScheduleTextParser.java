@@ -3,10 +3,12 @@ package com.example.goalbot.agent.tool;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class ScheduleTextParser {
+public final class ScheduleTextParser {
 
     private static final String NUMBER = "[0-9]{1,3}(?:\\.\\d+)?|[零一二两三四五六七八九十百]{1,6}";
     private static final Pattern TIME_PATTERN = Pattern.compile(
@@ -25,10 +27,16 @@ final class ScheduleTextParser {
     private ScheduleTextParser() {
     }
 
-    static LocalTime parseTime(String text) {
+    public static LocalTime parseTime(String text) {
+        List<TimeMention> mentions = parseTimes(text);
+        return mentions.isEmpty() ? null : mentions.get(0).time();
+    }
+
+    public static List<TimeMention> parseTimes(String text) {
         if (!StringUtils.hasText(text)) {
-            return null;
+            return List.of();
         }
+        List<TimeMention> mentions = new ArrayList<>();
         Matcher matcher = TIME_PATTERN.matcher(text);
         while (matcher.find()) {
             String raw = matcher.group(0);
@@ -52,7 +60,9 @@ final class ScheduleTextParser {
             }
 
             String meridiem = matcher.group(1);
-            if (("今晚".equals(meridiem) || "晚上".equals(meridiem) || "下午".equals(meridiem)) && hour < 12) {
+            if (("今晚".equals(meridiem) || "晚上".equals(meridiem)) && hour == 12) {
+                hour = 0;
+            } else if (("今晚".equals(meridiem) || "晚上".equals(meridiem) || "下午".equals(meridiem)) && hour < 12) {
                 hour += 12;
             }
             if ("中午".equals(meridiem) && hour < 11) {
@@ -64,12 +74,13 @@ final class ScheduleTextParser {
             if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
                 continue;
             }
-            return LocalTime.of(hour, minute);
+            mentions.add(new TimeMention(LocalTime.of(hour, minute), meridiem,
+                    matcher.start(), matcher.end(), raw.trim()));
         }
-        return null;
+        return List.copyOf(mentions);
     }
 
-    static Integer parseDuration(String text) {
+    public static Integer parseDuration(String text) {
         if (!StringUtils.hasText(text)) {
             return null;
         }
@@ -99,7 +110,7 @@ final class ScheduleTextParser {
         return minuteFallback;
     }
 
-    static String inheritMeridiem(String source, String text) {
+    public static String inheritMeridiem(String source, String text) {
         if (hasMeridiem(text) || !StringUtils.hasText(source)) {
             return text;
         }
@@ -129,7 +140,7 @@ final class ScheduleTextParser {
                 && (text.contains(":") || text.contains("点"));
     }
 
-    static boolean hasMeridiem(String text) {
+    public static boolean hasMeridiem(String text) {
         return StringUtils.hasText(text)
                 && (text.contains("今晚") || text.contains("晚上") || text.contains("下午")
                 || text.contains("上午") || text.contains("早上") || text.contains("中午") || text.contains("凌晨"));
@@ -189,5 +200,12 @@ final class ScheduleTextParser {
             case '九' -> 9;
             default -> null;
         };
+    }
+
+    public record TimeMention(LocalTime time, String meridiem, int start, int end, String raw) {
+
+        public boolean hasExplicitMeridiem() {
+            return StringUtils.hasText(meridiem);
+        }
     }
 }

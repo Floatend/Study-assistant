@@ -40,6 +40,9 @@ public class CheckinServiceImpl extends ServiceImpl<CheckinMapper, Checkin> impl
         Checkin checkin = new Checkin();
         BeanUtils.copyProperties(request, checkin);
         checkin.setUserId(userId);
+        checkin.setActualMinutes(request.getActualMinutes() == null
+                ? zero(task.getPlannedMinutes())
+                : request.getActualMinutes());
         save(checkin);
 
         if (task.getStatus() != 3) {
@@ -48,6 +51,10 @@ public class CheckinServiceImpl extends ServiceImpl<CheckinMapper, Checkin> impl
             goalService.refreshGoalTaskState(task.getGoalId());
         }
         return toVO(checkin);
+    }
+
+    private int zero(Integer value) {
+        return value == null ? 0 : Math.max(0, value);
     }
 
     @Override

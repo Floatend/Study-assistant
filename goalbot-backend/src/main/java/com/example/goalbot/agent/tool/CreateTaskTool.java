@@ -3,9 +3,14 @@ package com.example.goalbot.agent.tool;
 import com.example.goalbot.agent.ToolCall;
 import com.example.goalbot.agent.ToolNames;
 import com.example.goalbot.agent.ToolResult;
+import com.example.goalbot.agent.dialogue.TaskDraftDecision;
+import com.example.goalbot.agent.dialogue.TaskDraftFrame;
+import com.example.goalbot.agent.dialogue.TaskDraftSnapshot;
+import com.example.goalbot.agent.dialogue.TaskDraftTransition;
 import com.example.goalbot.dto.task.TaskCreateRequest;
 import com.example.goalbot.entity.ConversationTaskDraft;
 import com.example.goalbot.service.ConversationTaskDraftService;
+import com.example.goalbot.service.ConversationTransitionLogService;
 import com.example.goalbot.service.TaskService;
 import com.example.goalbot.vo.TaskVO;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +28,7 @@ public class CreateTaskTool extends AbstractAgentTool {
 
     private final TaskService taskService;
     private final ConversationTaskDraftService draftService;
+    private final ConversationTransitionLogService transitionLogService;
 
     @Override
     public String name() {
@@ -65,8 +71,18 @@ public class CreateTaskTool extends AbstractAgentTool {
             draft.setGoalKeyword(stringArg(call, "goal_keyword"));
             draft.setMissingSlots(resolveMissingSlots(startTime, endTime, plannedMinutes));
             draft.setSourceText(stringArg(call, "source_text"));
-            draftService.saveActiveDraft(userId, draft.getSessionId(), draft);
-            return ToolResult.ok(askForMissing(title, draft.getPlanDate(), startTime, endTime, plannedMinutes), draft);
+            ConversationTaskDraft savedDraft = draftService.saveActiveDraft(userId, draft.getSessionId(), draft);
+            String question = askForMissing(title, savedDraft.getPlanDate(), startTime, endTime, plannedMinutes);
+            TaskDraftFrame frame = initialFrame(savedDraft, stringArg(call, "source_text"));
+            TaskDraftTransition transition = TaskDraftTransition.builder()
+                    .rawText(frame.getRawText())
+                    .frame(frame)
+                    .after(TaskDraftSnapshot.from(savedDraft))
+                    .decision(TaskDraftDecision.NEEDS_INPUT)
+                    .clarificationQuestion(question)
+                    .build();
+            transitionLogService.recordTaskDraftTransition(userId, savedDraft, "TASK_DRAFT_CREATED", transition);
+            return ToolResult.ok(question, savedDraft);
         }
 
         TaskCreateRequest request = new TaskCreateRequest();
@@ -134,6 +150,32 @@ public class CreateTaskTool extends AbstractAgentTool {
                 + "时间：" + formatTime(task) + "\n"
                 + "计划用时：" + zero(task.getPlannedMinutes()) + " 分钟\n"
                 + "目标：" + dash(task.getGoalTitle());
+    }
+
+    private TaskDraftFrame initialFrame(ConversationTaskDraft draft, String rawText) {
+        TaskDraftFrame frame = new TaskDraftFrame();
+        frame.setRawText(rawText);
+        frame.setPlanDate(draft.getPlanDate());
+        frame.setStartTime(draft.getStartTime());
+        frame.setEndTime(draft.getEndTime());
+        frame.setPlannedMinutes(draft.getPlannedMinutes());
+        frame.setStartExplicit(draft.getStartTime() != null);
+        frame.setEndExplicit(draft.getEndTime() != null);
+        frame.setDurationExplicit(draft.getPlannedMinutes() != null && draft.getPlannedMinutes() > 0);
+        frame.getSlotSources().put("title", "intent-frame");
+        if (draft.getPlanDate() != null) {
+            frame.getSlotSources().put("plan_date", "intent-frame");
+        }
+        if (draft.getStartTime() != null) {
+            frame.getSlotSources().put("start_time", "intent-frame");
+        }
+        if (draft.getEndTime() != null) {
+            frame.getSlotSources().put("end_time", "intent-frame");
+        }
+        if (draft.getPlannedMinutes() != null) {
+            frame.getSlotSources().put("planned_minutes", "intent-frame");
+        }
+        return frame;
     }
 
     private String batchCreatedReply(List<TaskVO> tasks) {

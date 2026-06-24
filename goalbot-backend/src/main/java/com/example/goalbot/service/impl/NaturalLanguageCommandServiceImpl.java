@@ -183,7 +183,7 @@ public class NaturalLanguageCommandServiceImpl implements NaturalLanguageCommand
         String taskKeyword = resolveTaskKeyword(text, todayTasks, duration);
         if (looksLikeCheckin(text, duration, taskKeyword)) {
             CommandIntent commandIntent = intent(CommandIntent.Intent.CHECKIN,
-                    StringUtils.hasText(taskKeyword) && duration != null ? 0.86 : 0.65,
+                    StringUtils.hasText(taskKeyword) ? 0.86 : 0.65,
                     "rule");
             commandIntent.setTaskKeyword(taskKeyword);
             commandIntent.setActualMinutes(duration == null ? null : duration.minutes());
@@ -340,7 +340,7 @@ public class NaturalLanguageCommandServiceImpl implements NaturalLanguageCommand
                 UPDATE_TASK_SCHEDULE: user wants to adjust an existing task's start time or duration.
                 CANCEL_TASKS: user wants to cancel tasks for a date or date range, such as "取消今天所有任务" or "把下下周的任务删掉".
                 CANCEL_IMPORTED_SCHEDULE: user wants to remove ICS-imported courses for a week or date range.
-                CHECKIN: user wants to record completed work or study time.
+                CHECKIN: user wants to mark a task completed. Actual duration is optional.
                 GOAL_STATUS: user asks about current goals or goal status.
                 ADVICE: user asks for today's suggestion, schedule, or what to do first.
                 DAILY_REVIEW: user asks for today's daily review or today's summary.
@@ -362,7 +362,7 @@ public class NaturalLanguageCommandServiceImpl implements NaturalLanguageCommand
                   "goal_id": 1,
                   "goal_keyword": "matching goal title or keyword",
                   "task_keyword": "for CHECKIN only",
-                  "actual_minutes": 50,
+                  "actual_minutes": "optional explicit actual duration; null uses the matched task's planned_minutes",
                   "confidence": 0.92
                 }
 
@@ -378,7 +378,8 @@ public class NaturalLanguageCommandServiceImpl implements NaturalLanguageCommand
                 - For CANCEL_IMPORTED_SCHEDULE, set range_start_date and range_end_date. Set task_keyword only for a named course.
                 - CANCEL_IMPORTED_SCHEDULE is only for imported calendar courses, never ordinary manual tasks.
                 - For CHECKIN, extract task_keyword from the user's words or a matching today_tasks title.
-                - If task or minutes are missing, still return the likely intent with null missing fields.
+                - For CHECKIN, actual_minutes is optional. Never require duration; the backend uses planned_minutes when omitted.
+                - If the task is missing, still return CHECKIN with task_keyword null.
                 - If uncertain, return UNKNOWN with confidence below 0.5.
 
                 User text:
@@ -700,6 +701,9 @@ public class NaturalLanguageCommandServiceImpl implements NaturalLanguageCommand
         boolean explicit = containsAny(text, "打卡", "记录一下", "记一下", "登记");
         boolean doneVerb = containsAny(text,
                 "完成", "做完", "写完", "学了", "学习了", "看了", "看完", "刷了", "练了", "搞定", "提交了");
+        if (explicit && StringUtils.hasText(taskKeyword)) {
+            return true;
+        }
         return duration != null && (explicit || doneVerb || StringUtils.hasText(taskKeyword) && doneVerb);
     }
 
