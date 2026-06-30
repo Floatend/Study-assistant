@@ -4,6 +4,15 @@ import com.example.goalbot.dto.command.CommandIntent;
 import com.example.goalbot.dto.conversation.ConversationTurn;
 import com.example.goalbot.entity.ConversationTaskDraft;
 import com.example.goalbot.agent.tool.NaturalTaskListParser;
+import com.example.goalbot.agent.dialogue.RelativeTaskTimeResolver;
+import com.example.goalbot.agent.plan.AgentPlan;
+import com.example.goalbot.agent.plan.AgentPlanExecution;
+import com.example.goalbot.agent.plan.AgentPlanExecutor;
+import com.example.goalbot.agent.plan.AgentPlanIntentAdapter;
+import com.example.goalbot.agent.plan.AgentPlanner;
+import com.example.goalbot.agent.plan.AgentPlannerProperties;
+import com.example.goalbot.agent.plan.PlannerRunMode;
+import com.example.goalbot.service.AgentPlanLogService;
 import com.example.goalbot.service.CommandLogService;
 import com.example.goalbot.service.ConversationStateService;
 import com.example.goalbot.service.ConversationTaskDraftService;
@@ -43,6 +52,11 @@ public class AgentRuntimeImpl implements AgentRuntime {
     private final ConversationStateService conversationStateService;
     private final CommandLogService commandLogService;
     private final ToolExecutor toolExecutor;
+    private final AgentPlanner agentPlanner;
+    private final AgentPlanExecutor agentPlanExecutor;
+    private final AgentPlanIntentAdapter agentPlanIntentAdapter;
+    private final AgentPlannerProperties agentPlannerProperties;
+    private final AgentPlanLogService agentPlanLogService;
 
     @Override
     public AgentReply handle(UserMessage message) {
@@ -61,6 +75,21 @@ public class AgentRuntimeImpl implements AgentRuntime {
 
         try {
             ConversationTaskDraft activeDraft = draftService.getActiveDraft(userId).orElse(null);
+            AgentPlan plannerPlan = runPlanner(message, turn, text, activeDraft);
+            if (shouldExecutePlannerPlan(plannerPlan)) {
+                intent = agentPlanIntentAdapter.toIntent(plannerPlan);
+                AgentPlanExecution execution = agentPlanExecutor.execute(
+                        userId,
+                        turn.getSessionId(),
+                        text,
+                        plannerPlan
+                );
+                result = execution.result();
+                call = new ToolCall();
+                call.setTool(execution.primaryTool());
+                return toReply(result, intent, call);
+            }
+
             CommandIntent directIntent = parseDirect(text);
             if (activeDraft != null && shouldHandleOutsideDraft(directIntent)) {
                 draftService.cancelActiveDraft(userId);
@@ -100,6 +129,38 @@ public class AgentRuntimeImpl implements AgentRuntime {
             commandLogService.finishCommand(commandLogId, intent, success, errorMessage, replyContent);
             conversationStateService.finishTurn(turn, intent == null || intent.getIntent() == null ? null : intent.getIntent().name(), replyContent);
         }
+    }
+
+    private AgentPlan runPlanner(
+            UserMessage message,
+            ConversationTurn turn,
+            String text,
+            ConversationTaskDraft activeDraft
+    ) {
+        PlannerRunMode runMode = agentPlannerProperties.getMode();
+        if (runMode == null || runMode == PlannerRunMode.OFF
+                || !StringUtils.hasText(text) || text.startsWith("/")) {
+            return null;
+        }
+        AgentPlan plan = agentPlanner.plan(message.getUserId(), message.getChannel(), text, activeDraft);
+        boolean selected = runMode == PlannerRunMode.PRIMARY
+                && plan != null
+                && plan.isUsable(agentPlannerProperties.getMinConfidence());
+        agentPlanLogService.record(
+                message.getUserId(),
+                turn.getSessionId(),
+                message.getMessageId(),
+                runMode,
+                selected,
+                plan
+        );
+        return selected ? plan : null;
+    }
+
+    private boolean shouldExecutePlannerPlan(AgentPlan plan) {
+        return plan != null
+                && agentPlannerProperties.getMode() == PlannerRunMode.PRIMARY
+                && plan.isUsable(agentPlannerProperties.getMinConfidence());
     }
 
     private AgentReply toReply(ToolResult result, CommandIntent intent, ToolCall call) {
@@ -340,6 +401,7 @@ public class AgentRuntimeImpl implements AgentRuntime {
                 || text.contains("今晚") || text.contains("晚上") || text.contains("下午") || text.contains("上午")
                 || text.contains("中午") || text.contains("凌晨") || text.contains("现在") || text.contains("马上")
                 || text.contains("开始") || text.contains("结束") || text.contains("截止")
+                || RelativeTaskTimeResolver.isRelativeReference(text)
                 || text.contains("分钟") || text.contains("小时") || text.contains("半小时")
                 || text.matches("(?i).*\\d+(?:\\.\\d+)?\\s*(min|m|h).*")
                 || text.contains("点") || text.contains("点半") || text.contains(":");

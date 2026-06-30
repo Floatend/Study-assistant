@@ -5,8 +5,12 @@
 ```text
 Feishu message
   -> AgentRuntime (session, idempotency, active work-item queue)
-  -> intent routing
+  -> optional Dify AgentPlanner (OFF / SHADOW / PRIMARY)
+       -> AgentPlan validation and audit
+       -> ordered allow-listed actions[]
+  -> planner-selected tool or legacy intent fallback
   -> NaturalTaskListParser (zero, one, or many task titles)
+  -> RelativeTaskTimeResolver (optional reference to another task's end time)
   -> TaskDraftTurnParser (extract only this turn)
   -> TaskDraftReducer (merge with persistent state)
   -> constraint decision
@@ -28,6 +32,9 @@ The parser is not allowed to write business data. The reducer is the only compon
 5. An end time that is not after the start time is not silently accepted unless the expression explicitly identifies an overnight period.
 6. A conflict keeps independently valid slots. For example, `现在开始，到中午十二点` at 19:35 keeps `start_time=19:35` but does not commit `end_time=12:00`.
 7. Tool execution happens only when the reducer returns `READY`.
+8. Relative phrases such as `接着高数` resolve against MySQL tasks on the draft date. The referenced task ID is recorded as the `start_time` slot source.
+9. A missing or ambiguous task reference is a reducer conflict, never a new task title.
+10. `CreateTaskTool` cannot overwrite an existing active draft. A misrouted create frame returns clarification instead of mutating the queue.
 
 ## Audit Trail
 
@@ -63,7 +70,17 @@ LIMIT 20;
 
 ## Dify Boundary
 
-Dify Workflow may later return a structured `actions[]` plan, but it must not execute tools or own dialogue state. The backend validates every action, applies deterministic reducers, and executes business services transactionally. Dify Chat remains a response-polishing and free-conversation layer.
+Dify Workflow returns a structured `AgentPlan` with `TOOL`, `CHAT`, `CLARIFY`, or `UNKNOWN` mode and zero or more `actions[]`. It does not execute tools or own dialogue state. The backend supplies user-owned context, enforces an action limit and tool allow-list, rejects malformed plans, validates references, applies deterministic reducers, and executes business services through `ToolExecutor`.
+
+Planner rollout has three modes:
+
+```text
+OFF     do not call the planner
+SHADOW  record the plan, execute the legacy route
+PRIMARY execute valid high-confidence plans, otherwise use the legacy route
+```
+
+Every attempted plan is written to `agent_plan_log`. The detailed Workflow contract and rollout procedure are in [dify-agent-planner.md](dify-agent-planner.md). Dify Chat remains the free-conversation and response-generation layer.
 
 ## Multi-task Queue
 
@@ -71,6 +88,12 @@ One natural-language message may create several `conversation_task_draft` rows i
 
 The backend task-list rule is intentionally conservative. It bypasses Dify only when the message contains explicit planning language or every extracted item looks actionable. Ordinary comma-separated chat continues to free conversation.
 
+## Relative Time References
+
+`接着高数`, `高数之后`, and `等高数结束后` are schedule-slot answers when a task draft is active. GoalBot searches the current draft date for matching task titles and copies the unique match's end time into the draft start time. `接着上一个` selects the latest ending scheduled task on that date.
+
+The resolver does not guess when several tasks match, when no task matches, or when the referenced task has no end time. It returns one clarification and leaves the active draft unchanged except for its transition audit entry.
+
 ## Next Increment
 
-The next increment can extend the Dify Workflow contract from a singular intent to `actions[]`. That will support mixed operations in one turn, such as creating two tasks, moving a third task, and asking for tomorrow's free time. The persistent queue and deterministic reducer added here remain the execution layer for those actions.
+The next increment should add durable confirmation state for destructive or high-impact plans and an execution outbox for recoverable multi-action writes. The current Planner already supports ordered `actions[]`, structured multi-task creation, and relative task references; the persistent queue and deterministic reducer remain the authoritative execution layer.

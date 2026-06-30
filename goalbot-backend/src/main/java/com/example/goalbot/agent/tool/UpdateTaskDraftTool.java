@@ -9,6 +9,7 @@ import com.example.goalbot.agent.dialogue.TaskDraftReducer;
 import com.example.goalbot.agent.dialogue.TaskDraftSnapshot;
 import com.example.goalbot.agent.dialogue.TaskDraftTransition;
 import com.example.goalbot.agent.dialogue.TaskDraftTurnParser;
+import com.example.goalbot.agent.dialogue.RelativeTaskTimeResolver;
 import com.example.goalbot.dto.task.TaskCreateRequest;
 import com.example.goalbot.entity.ConversationTaskDraft;
 import com.example.goalbot.service.ConversationTaskDraftService;
@@ -23,6 +24,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -34,6 +36,7 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
     private final TaskService taskService;
     private final TaskDraftTurnParser turnParser;
     private final TaskDraftReducer reducer;
+    private final RelativeTaskTimeResolver relativeTaskTimeResolver;
     private final ConversationTransitionLogService transitionLogService;
 
     @Override
@@ -46,6 +49,10 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
         ConversationTaskDraft draft = draftService.getActiveDraft(userId).orElse(null);
         if (draft == null) {
             return ToolResult.failed("刚才没有正在补全的任务。你可以重新说一遍要安排什么。");
+        }
+        Long requestedDraftId = longArg(call, "draft_id");
+        if (requestedDraftId != null && !requestedDraftId.equals(draft.getId())) {
+            return ToolResult.failed("规划引用的任务草稿已经变化，请重新说一下当前要安排的任务。");
         }
 
         String text = stringArg(call, "text");
@@ -70,15 +77,24 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
             return ToolResult.ok("好，我先不创建这条任务。" + nextDraftPrompt(nextDraft));
         }
 
+        LocalTime explicitStartTime = timeArg(call, "start_time");
+        RelativeTaskTimeResolver.Resolution relativeResolution = resolveTaskReference(
+                userId, draft, call, text, explicitStartTime);
         TaskDraftFrame frame = turnParser.parse(
                 draft,
                 text,
                 LocalDateTime.now(),
                 dateArg(call, "plan_date"),
-                timeArg(call, "start_time"),
+                relativeResolution.resolved() ? relativeResolution.startTime() : explicitStartTime,
                 timeArg(call, "end_time"),
                 intArg(call, "planned_minutes")
         );
+        if (relativeResolution.resolved()) {
+            frame.getSlotSources().put("start_time", "task-reference:" + relativeResolution.referencedTaskId());
+        } else if (relativeResolution.requiresClarification()) {
+            frame.setConflictCode("TASK_REFERENCE_UNRESOLVED");
+            frame.setClarificationQuestion(relativeResolution.clarificationQuestion());
+        }
         TaskDraftTransition transition = reducer.reduce(draft, frame);
         draft = draftService.saveActiveDraft(userId, draft.getSessionId(), draft);
         transitionLogService.recordTaskDraftTransition(userId, draft, "TASK_DRAFT_REDUCED", transition);
@@ -152,6 +168,47 @@ public class UpdateTaskDraftTool extends AbstractAgentTool {
         }
         return "\n\n接着安排「" + nextDraft.getTitle() + "」（" + nextDraft.getPlanDate()
                 + "）。准备几点开始，预计多久？";
+    }
+
+    @SuppressWarnings("unchecked")
+    private RelativeTaskTimeResolver.Resolution resolveTaskReference(
+            Long userId,
+            ConversationTaskDraft draft,
+            ToolCall call,
+            String text,
+            LocalTime explicitStartTime
+    ) {
+        if (explicitStartTime != null) {
+            return RelativeTaskTimeResolver.Resolution.notApplicable();
+        }
+        Object referenceValue = call == null ? null : call.arg("start_time_reference");
+        if (referenceValue instanceof Map<?, ?> rawReference) {
+            Map<String, Object> reference = (Map<String, Object>) rawReference;
+            return relativeTaskTimeResolver.resolveStructured(
+                    userId,
+                    draft,
+                    parseLong(reference.get("task_id")),
+                    textValue(reference.get("task_query")),
+                    textValue(reference.get("relation")),
+                    textValue(reference.get("boundary"))
+            );
+        }
+        return relativeTaskTimeResolver.resolve(userId, draft, text);
+    }
+
+    private Long parseLong(Object value) {
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        try {
+            return value == null ? null : Long.parseLong(value.toString());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private String textValue(Object value) {
+        return value == null ? null : value.toString().trim();
     }
 
     private int minutesBetween(LocalTime start, LocalTime end) {

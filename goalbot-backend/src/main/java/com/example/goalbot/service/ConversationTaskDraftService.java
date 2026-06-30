@@ -9,6 +9,8 @@ public interface ConversationTaskDraftService {
 
     Optional<ConversationTaskDraft> getActiveDraft(Long userId);
 
+    List<ConversationTaskDraft> listActiveDrafts(Long userId);
+
     ConversationTaskDraft saveActiveDraft(Long userId, Long sessionId, ConversationTaskDraft draft);
 
     List<ConversationTaskDraft> enqueueDrafts(Long userId, Long sessionId, List<ConversationTaskDraft> drafts);

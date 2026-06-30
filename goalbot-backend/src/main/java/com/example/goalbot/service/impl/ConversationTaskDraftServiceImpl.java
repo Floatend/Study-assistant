@@ -44,6 +44,17 @@ public class ConversationTaskDraftServiceImpl implements ConversationTaskDraftSe
 
     @Override
     @Transactional
+    public List<ConversationTaskDraft> listActiveDrafts(Long userId) {
+        expireStaleDrafts(userId);
+        return conversationTaskDraftMapper.selectList(new LambdaQueryWrapper<ConversationTaskDraft>()
+                .eq(ConversationTaskDraft::getUserId, userId)
+                .eq(ConversationTaskDraft::getStatus, DRAFT_COLLECTING)
+                .ge(ConversationTaskDraft::getExpiresAt, LocalDateTime.now())
+                .orderByAsc(ConversationTaskDraft::getId));
+    }
+
+    @Override
+    @Transactional
     public ConversationTaskDraft saveActiveDraft(Long userId, Long sessionId, ConversationTaskDraft draft) {
         expireStaleDrafts(userId);
         LocalDateTime expiresAt = LocalDateTime.now().plus(DRAFT_TTL);

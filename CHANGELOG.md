@@ -6,9 +6,19 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Added
 
+- Added an optional Dify Workflow `AgentPlanner` that returns structured `AgentPlan` objects with ordered `actions[]`.
+- Added `OFF`, `SHADOW`, and `PRIMARY` planner rollout modes with confidence and action-count limits.
+- Added planner context assembly for active and queued drafts, nearby tasks, goals, and recent messages.
+- Added an allow-listed `AgentPlanExecutor`; Dify still cannot write MySQL or call business services directly.
+- Added backend validation for Planner target types (`NONE`, `ACTIVE_DRAFT`, `TASK`, and `GOAL`).
+- Added structured `start_time_reference` support so a plan can express “after task 501 ends” without inventing a clock time.
+- Added native `tasks[]` execution in `CreateTaskTool`, allowing one plan to preserve several task titles without punctuation-based parsing.
+- Added `agent_plan_log` and structured `agent_plan` application logs for shadow evaluation and production diagnosis.
+- Added [docs/dify-agent-planner.md](docs/dify-agent-planner.md) with the complete Workflow contract and rollout procedure.
 - Added a deterministic task-draft pipeline: `TaskDraftTurnParser -> TaskDraftReducer -> tool execution`.
 - Added a persistent multi-task draft queue. A message such as `今天写高数卷子，新工科英语复习` now keeps both tasks and collects their schedules in order.
 - Added a conservative backend task-list rule so explicit multi-task planning does not depend on Dify returning a singular `taskTitle`.
+- Added deterministic relative task-time references such as `接着高数`, `高数之后`, `等高数结束后`, and `接着上一个`.
 - Added typed per-turn semantic frames with slot source metadata for date, start time, end time, and duration.
 - Added `conversation_transition_log` to persist `state_before`, `semantic_frame`, `state_after`, the reducer decision, and the clarification sent to the user.
 - Added structured application logs named `dialogue_transition` with user, session, draft, transition type, decision, and changed slots.
@@ -16,8 +26,12 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Planner failures, malformed JSON, unsupported tools, low confidence, and unconfigured Workflow now fall back to the existing backend route.
+- Dify chat, the existing intent Workflow, and the new planner Workflow use independent API keys and URLs.
 - Active task drafts now recognize replies such as `现在开始`, `到中午十二点`, `60min`, `2h`, `结束`, and `截止` as slot-completion turns.
 - Completing or cancelling the current queued draft now automatically introduces the next task instead of returning the conversation to `IDLE`.
+- A relative time reference queries tasks on the current draft date and uses the matched task's `end_time` as the current draft's `start_time`.
+- Missing, ambiguous, or unscheduled referenced tasks now produce a targeted clarification without changing the queued task title.
 - Queue expiry is refreshed whenever the user updates the current task, preventing later queued items from expiring while the first item is being clarified.
 - Task-draft tools no longer merge nullable values directly. Only explicitly extracted slots update the existing draft.
 - A duration derives the end time from the stored start time. An explicit end time derives the duration.
@@ -32,6 +46,8 @@ This file records user-visible behavior changes, database migrations, and verifi
 - Fixed empty fields from later turns overwriting start time or duration collected in earlier turns.
 - Fixed comma-separated natural task lists reaching `CreateTaskTool` with `taskTitle=null` and returning “还缺任务名”.
 - Prevented ordinary comma-separated chat from being treated as a task list unless planning language or actionable task phrases are present.
+- Fixed `接着高数` being reclassified as a new `CREATE_TASK` intent and overwriting the queued `新工科英语复习` draft.
+- Added a tool-layer invariant that a new singular `CREATE_TASK` frame cannot overwrite an existing active draft, even when an upstream classifier makes the wrong routing decision.
 
 ### Database
 
@@ -39,6 +55,7 @@ Existing databases must run:
 
 ```sql
 SOURCE C:/absolute/path/to/goalbot-backend/sql/conversation_transition_log.sql;
+SOURCE C:/absolute/path/to/goalbot-backend/sql/agent_plan_log.sql;
 ```
 
 Fresh databases receive the table through `goalbot-backend/sql/init.sql`. Docker volumes that already contain MySQL data do not rerun initialization scripts, so they still need the additive migration.
@@ -46,5 +63,5 @@ Fresh databases receive the table through `goalbot-backend/sql/init.sql`. Docker
 ### Verification
 
 - Backend compile succeeded with Java 17 target.
-- Backend clean test: 15 passed, 0 failed. Coverage includes task-list routing, queue creation, next-task continuation, temporal reducer, and checkin regressions.
+- Backend clean test: 29 passed, 0 failed. Coverage includes Planner parsing and fallback, tool and target allow-list rejection, primary plan execution, structured multi-task arrays, structured and text-based relative task references, task-list routing, queue continuation, temporal reducer, draft overwrite protection, and checkin regressions.
 - Frontend production build succeeded. Vite reported only the existing large-chunk optimization warning.

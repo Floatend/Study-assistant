@@ -32,6 +32,12 @@ public class DifyClient {
                 && StringUtils.hasText(resolveWorkflowApiKey());
     }
 
+    public boolean isPlannerWorkflowConfigured() {
+        return properties.isEnabled()
+                && StringUtils.hasText(properties.getPlannerApiUrl())
+                && StringUtils.hasText(properties.getPlannerApiKey());
+    }
+
     public String chat(String query, Map<String, Object> inputs, String user) {
         if (!isConfigured()) {
             throw new DifyException("Dify chat is not configured");
@@ -72,6 +78,37 @@ public class DifyClient {
             throw new DifyException("Dify workflow is not configured");
         }
 
+        return postWorkflow(
+                resolveWorkflowUrl(),
+                resolveWorkflowApiKey(),
+                inputs,
+                user,
+                "workflow"
+        );
+    }
+
+    public Map<String, Object> runPlannerWorkflow(Map<String, Object> inputs, String user) {
+        if (!isPlannerWorkflowConfigured()) {
+            throw new DifyException("Dify planner workflow is not configured");
+        }
+
+        return postWorkflow(
+                appendPath(properties.getPlannerApiUrl(), "workflows/run"),
+                properties.getPlannerApiKey(),
+                inputs,
+                user,
+                "planner workflow"
+        );
+    }
+
+    private Map<String, Object> postWorkflow(
+            String url,
+            String apiKey,
+            Map<String, Object> inputs,
+            String user,
+            String label
+    ) {
+
         DifyWorkflowRequest request = new DifyWorkflowRequest(
                 inputs == null ? Map.of() : inputs,
                 "blocking",
@@ -80,27 +117,27 @@ public class DifyClient {
 
         try {
             DifyWorkflowResponse response = restTemplate.postForObject(
-                    resolveWorkflowUrl(),
-                    new HttpEntity<>(request, headers(resolveWorkflowApiKey())),
+                    url,
+                    new HttpEntity<>(request, headers(apiKey)),
                     DifyWorkflowResponse.class
             );
             if (response == null || response.getData() == null) {
-                throw new DifyException("Dify workflow response is empty");
+                throw new DifyException("Dify " + label + " response is empty");
             }
             if (StringUtils.hasText(response.getData().getError())) {
-                throw new DifyException("Dify workflow failed: " + response.getData().getError());
+                throw new DifyException("Dify " + label + " failed: " + response.getData().getError());
             }
             return response.getData().getOutputs() == null ? Map.of() : response.getData().getOutputs();
         } catch (HttpStatusCodeException ex) {
-            throw new DifyException("Dify workflow request failed: HTTP "
+            throw new DifyException("Dify " + label + " request failed: HTTP "
                     + ex.getStatusCode().value()
                     + " "
                     + truncate(ex.getResponseBodyAsString()), ex);
         } catch (ResourceAccessException ex) {
-            throw new DifyException("Dify workflow request failed: network or timeout - "
+            throw new DifyException("Dify " + label + " request failed: network or timeout - "
                     + truncate(ex.getMessage()), ex);
         } catch (RestClientException ex) {
-            throw new DifyException("Dify workflow request failed: " + truncate(ex.getMessage()), ex);
+            throw new DifyException("Dify " + label + " request failed: " + truncate(ex.getMessage()), ex);
         }
     }
 

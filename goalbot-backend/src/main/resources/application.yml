@@ -32,7 +32,14 @@ goalbot:
     api-key: ${DIFY_API_KEY:}
     workflow-api-url: ${DIFY_WORKFLOW_API_URL:}
     workflow-api-key: ${DIFY_WORKFLOW_API_KEY:}
+    planner-api-url: ${DIFY_PLANNER_API_URL:}
+    planner-api-key: ${DIFY_PLANNER_API_KEY:}
     timeout-seconds: ${DIFY_TIMEOUT_SECONDS:60}
+  agent:
+    planner:
+      mode: ${GOALBOT_AGENT_PLANNER_MODE:OFF}
+      min-confidence: ${GOALBOT_AGENT_PLANNER_MIN_CONFIDENCE:0.72}
+      max-actions: ${GOALBOT_AGENT_PLANNER_MAX_ACTIONS:8}
   feishu:
     app-id: ${FEISHU_APP_ID:}
     app-secret: ${FEISHU_APP_SECRET:}

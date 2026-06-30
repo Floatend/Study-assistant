@@ -17,5 +17,9 @@ public class DifyProperties {
 
     private String workflowApiKey;
 
+    private String plannerApiUrl;
+
+    private String plannerApiKey;
+
     private int timeoutSeconds = 60;
 }

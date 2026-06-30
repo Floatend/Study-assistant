@@ -17,9 +17,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -38,6 +42,10 @@ public class CreateTaskTool extends AbstractAgentTool {
     @Override
     public ToolResult execute(Long userId, ToolCall call) {
         String sourceText = stringArg(call, "source_text");
+        Object structuredTasks = call.arg("tasks");
+        if (structuredTasks instanceof List<?> taskItems && !taskItems.isEmpty()) {
+            return executeStructuredTasks(userId, call, sourceText, taskItems);
+        }
         List<BatchScheduleParser.Entry> batchEntries = BatchScheduleParser.parse(sourceText);
         if (!batchEntries.isEmpty()) {
             return createBatchTasks(userId, batchEntries);
@@ -64,6 +72,12 @@ public class CreateTaskTool extends AbstractAgentTool {
         }
 
         if (startTime == null || (endTime == null && (plannedMinutes == null || plannedMinutes <= 0))) {
+            ConversationTaskDraft existingDraft = draftService.getActiveDraft(userId).orElse(null);
+            if (existingDraft != null) {
+                return ToolResult.ok("我还在安排「" + existingDraft.getTitle() + "」，不会用新标题覆盖这个草稿。\n"
+                        + "如果你是在补充时间，可以说“下午 3 点”“60 分钟”或“接着高数”；"
+                        + "如果要放弃它，请说“取消当前任务”。", existingDraft);
+            }
             ConversationTaskDraft draft = new ConversationTaskDraft();
             draft.setSessionId(longArg(call, "session_id"));
             draft.setTitle(title);
@@ -103,6 +117,126 @@ public class CreateTaskTool extends AbstractAgentTool {
         TaskVO task = taskService.createTask(userId, request);
         draftService.completeActiveDraft(userId);
         return ToolResult.ok(taskCreatedReply(task), task);
+    }
+
+    private ToolResult executeStructuredTasks(
+            Long userId,
+            ToolCall parentCall,
+            String sourceText,
+            List<?> taskItems
+    ) {
+        List<ConversationTaskDraft> readyDrafts = new ArrayList<>();
+        List<ConversationTaskDraft> pendingDrafts = new ArrayList<>();
+        for (Object taskItem : taskItems) {
+            if (!(taskItem instanceof Map<?, ?> taskMap)) {
+                return ToolResult.failed("任务列表格式不正确，请重新描述要安排的任务。");
+            }
+            ConversationTaskDraft draft = structuredTaskDraft(parentCall, sourceText, taskMap);
+            if (!StringUtils.hasText(draft.getTitle())) {
+                return ToolResult.failed("我识别到了多个任务，但其中有任务缺少名称，请补充后再试。");
+            }
+            if (StringUtils.hasText(draft.getMissingSlots())) {
+                pendingDrafts.add(draft);
+            } else {
+                readyDrafts.add(draft);
+            }
+        }
+
+        if (!pendingDrafts.isEmpty()) {
+            ConversationTaskDraft existingDraft = draftService.getActiveDraft(userId).orElse(null);
+            if (existingDraft != null) {
+                return ToolResult.ok("我还在安排「" + existingDraft.getTitle() + "」，不会用新任务覆盖这个草稿。\n"
+                        + "请先补完当前任务，或说“取消当前任务”。", existingDraft);
+            }
+        }
+
+        List<TaskVO> createdTasks = readyDrafts.stream()
+                .map(draft -> createTask(userId, draft))
+                .toList();
+        if (pendingDrafts.isEmpty()) {
+            draftService.completeActiveDraft(userId);
+            return ToolResult.ok(batchCreatedReply(createdTasks), createdTasks);
+        }
+
+        Long sessionId = longArg(parentCall, "session_id");
+        List<ConversationTaskDraft> savedDrafts = draftService.enqueueDrafts(userId, sessionId, pendingDrafts);
+        recordQueuedDraftTransitions(userId, sourceText, savedDrafts);
+        return ToolResult.ok(structuredTasksReply(createdTasks, savedDrafts), savedDrafts);
+    }
+
+    private ConversationTaskDraft structuredTaskDraft(
+            ToolCall parentCall,
+            String sourceText,
+            Map<?, ?> taskMap
+    ) {
+        ToolCall itemCall = new ToolCall();
+        Map<String, Object> arguments = new LinkedHashMap<>();
+        taskMap.forEach((key, value) -> {
+            if (key != null) {
+                arguments.put(key.toString(), value);
+            }
+        });
+        itemCall.setArguments(arguments);
+
+        String title = stringArg(itemCall, "task_title");
+        if (!StringUtils.hasText(title)) {
+            title = stringArg(itemCall, "title");
+        }
+        LocalDate planDate = dateArg(itemCall, "plan_date");
+        if (planDate == null) {
+            planDate = dateArg(parentCall, "plan_date");
+        }
+        if (planDate == null) {
+            planDate = parseRelativeDate(sourceText);
+        }
+        LocalTime startTime = timeArg(itemCall, "start_time");
+        LocalTime endTime = timeArg(itemCall, "end_time");
+        Integer plannedMinutes = intArg(itemCall, "planned_minutes");
+        if (endTime == null && startTime != null && plannedMinutes != null && plannedMinutes > 0) {
+            endTime = startTime.plusMinutes(plannedMinutes);
+        }
+        if (plannedMinutes == null && startTime != null && endTime != null) {
+            long minutes = Duration.between(startTime, endTime).toMinutes();
+            if (minutes > 0 && minutes <= Integer.MAX_VALUE) {
+                plannedMinutes = (int) minutes;
+            }
+        }
+
+        Long goalId = longArg(itemCall, "goal_id");
+        if (goalId == null) {
+            goalId = longArg(parentCall, "goal_id");
+        }
+        String goalKeyword = stringArg(itemCall, "goal_keyword");
+        if (!StringUtils.hasText(goalKeyword)) {
+            goalKeyword = stringArg(parentCall, "goal_keyword");
+        }
+
+        ConversationTaskDraft draft = new ConversationTaskDraft();
+        draft.setSessionId(longArg(parentCall, "session_id"));
+        draft.setTitle(title);
+        draft.setDescription(stringArg(itemCall, "description"));
+        draft.setPlanDate(planDate == null ? LocalDate.now() : planDate);
+        draft.setStartTime(startTime);
+        draft.setEndTime(endTime);
+        draft.setPlannedMinutes(plannedMinutes);
+        draft.setGoalId(goalId);
+        draft.setGoalKeyword(goalKeyword);
+        draft.setMissingSlots(resolveMissingSlots(startTime, endTime, plannedMinutes));
+        draft.setSourceText(sourceText);
+        return draft;
+    }
+
+    private TaskVO createTask(Long userId, ConversationTaskDraft draft) {
+        TaskCreateRequest request = new TaskCreateRequest();
+        request.setGoalId(draft.getGoalId());
+        request.setTitle(draft.getTitle());
+        request.setDescription(draft.getDescription());
+        request.setPlanDate(draft.getPlanDate());
+        request.setStartTime(draft.getStartTime());
+        request.setEndTime(draft.getEndTime());
+        request.setPlannedMinutes(zero(draft.getPlannedMinutes()));
+        request.setStatus(0);
+        return taskService.createTask(userId, request);
     }
 
     private ToolResult createBatchTasks(Long userId, List<BatchScheduleParser.Entry> entries) {
@@ -147,11 +281,21 @@ public class CreateTaskTool extends AbstractAgentTool {
                 })
                 .toList();
         List<ConversationTaskDraft> savedDrafts = draftService.enqueueDrafts(userId, sessionId, drafts);
+        recordQueuedDraftTransitions(userId, sourceText, savedDrafts);
+        return ToolResult.ok(queuedTasksReply(savedDrafts), savedDrafts);
+    }
+
+    private void recordQueuedDraftTransitions(
+            Long userId,
+            String sourceText,
+            List<ConversationTaskDraft> savedDrafts
+    ) {
         for (int index = 0; index < savedDrafts.size(); index++) {
             ConversationTaskDraft savedDraft = savedDrafts.get(index);
             TaskDraftFrame frame = initialFrame(savedDraft, sourceText);
             String question = index == 0 ? askForMissing(
-                    savedDraft.getTitle(), savedDraft.getPlanDate(), null, null, null) : null;
+                    savedDraft.getTitle(), savedDraft.getPlanDate(), savedDraft.getStartTime(),
+                    savedDraft.getEndTime(), savedDraft.getPlannedMinutes()) : null;
             TaskDraftTransition transition = TaskDraftTransition.builder()
                     .rawText(sourceText)
                     .frame(frame)
@@ -166,7 +310,6 @@ public class CreateTaskTool extends AbstractAgentTool {
                     transition
             );
         }
-        return ToolResult.ok(queuedTasksReply(savedDrafts), savedDrafts);
     }
 
     private String resolveMissingSlots(LocalTime startTime, LocalTime endTime, Integer plannedMinutes) {
@@ -245,7 +388,30 @@ public class CreateTaskTool extends AbstractAgentTool {
         ConversationTaskDraft first = drafts.get(0);
         return "我识别到 " + drafts.size() + " 个任务：\n"
                 + lines
-                + "\n\n先安排「" + first.getTitle() + "」。准备几点开始，预计多久？";
+                + "\n\n先安排「" + first.getTitle() + "」。"
+                + missingSchedulePrompt(first);
+    }
+
+    private String missingSchedulePrompt(ConversationTaskDraft draft) {
+        boolean missingStart = draft.getStartTime() == null;
+        boolean missingDuration = draft.getEndTime() == null
+                && (draft.getPlannedMinutes() == null || draft.getPlannedMinutes() <= 0);
+        if (missingStart && missingDuration) {
+            return "准备几点开始，预计多久？";
+        }
+        if (missingStart) {
+            return "准备几点开始？";
+        }
+        return "预计安排多久？例如：60 分钟。";
+    }
+
+    private String structuredTasksReply(List<TaskVO> createdTasks, List<ConversationTaskDraft> pendingDrafts) {
+        StringBuilder reply = new StringBuilder();
+        if (!createdTasks.isEmpty()) {
+            reply.append(batchCreatedReply(createdTasks)).append("\n\n");
+        }
+        reply.append(queuedTasksReply(pendingDrafts));
+        return reply.toString();
     }
 
     private LocalDate parseRelativeDate(String text) {

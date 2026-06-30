@@ -41,7 +41,12 @@ DIFY_API_URL=https://api.dify.ai/v1
 DIFY_API_KEY=your_dify_api_key
 DIFY_WORKFLOW_API_URL=
 DIFY_WORKFLOW_API_KEY=
+DIFY_PLANNER_API_URL=
+DIFY_PLANNER_API_KEY=
 DIFY_TIMEOUT_SECONDS=60
+GOALBOT_AGENT_PLANNER_MODE=OFF
+GOALBOT_AGENT_PLANNER_MIN_CONFIDENCE=0.72
+GOALBOT_AGENT_PLANNER_MAX_ACTIONS=8
 FEISHU_APP_ID=cli_xxxxxxxxx
 FEISHU_APP_SECRET=your_feishu_app_secret
 FEISHU_VERIFICATION_TOKEN=
@@ -162,6 +167,10 @@ source goalbot-backend/sql/conversation_transition_log.sql;
 ```
 
 The task-draft path now uses a deterministic semantic-frame reducer. It preserves slots collected in earlier turns, derives end time or duration when possible, and asks a targeted question when a time expression conflicts with the stored state. See [docs/dialogue-agent-architecture.md](docs/dialogue-agent-architecture.md) for the state rules and diagnostic query. Release-by-release behavior and migration notes are kept in [CHANGELOG.md](CHANGELOG.md).
+
+While a draft is active, relative replies such as `接着高数` or `高数之后` are treated as schedule answers. GoalBot resolves the referenced task from MySQL and starts the current draft at that task's end time instead of creating or renaming a task.
+
+GoalBot also includes an optional Dify Workflow planner that returns a validated `AgentPlan` with `actions[]`. Keep it `OFF` by default, evaluate it in `SHADOW`, and enable `PRIMARY` only after reviewing the audit log. Existing databases must run `goalbot-backend/sql/agent_plan_log.sql`. See [docs/dify-agent-planner.md](docs/dify-agent-planner.md) for the exact Dify nodes, prompt, JSON contract, environment variables, rollout steps, and acceptance checks.
 
 ## ICS Calendar Import
 
