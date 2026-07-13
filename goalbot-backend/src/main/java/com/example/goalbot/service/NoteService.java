@@ -13,7 +13,11 @@ public interface NoteService extends IService<Note> {
 
     List<NoteVO> listNotes(Long userId, String keyword, Integer limit);
 
+    List<NoteVO> listPublishedNotes(String keyword, Integer limit);
+
     NoteVO getNote(Long userId, Long id);
+
+    NoteVO getPublishedNote(Long id);
 
     NoteVO createNote(Long userId, NoteCreateRequest request);
 

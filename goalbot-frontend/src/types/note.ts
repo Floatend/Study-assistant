@@ -6,6 +6,8 @@ export interface Note {
   summary?: string | null
   content: string
   tags?: string | null
+  published: boolean
+  authorName?: string | null
   wordCount: number
   createdAt: string
   updatedAt: string
@@ -20,4 +22,5 @@ export interface NotePayload {
   title: string
   content: string
   tags?: string
+  published?: boolean
 }

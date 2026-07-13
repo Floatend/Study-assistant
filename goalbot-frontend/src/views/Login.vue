@@ -2,7 +2,6 @@
   <main class="login-page">
     <section class="login-context">
       <div class="login-brand">
-        <div class="login-brand-mark">G</div>
         <div>
           <div class="login-brand-name">GoalBot</div>
           <div class="login-brand-subtitle">AI 日程与目标助手</div>
@@ -36,6 +35,7 @@
 
     <section class="login-form-area">
       <div class="login-panel">
+        <RouterLink class="back-to-blog" to="/">返回公开博客</RouterLink>
         <div class="login-heading">
           <span class="login-kicker">WELCOME BACK</span>
           <h2>登录工作区</h2>
@@ -122,19 +122,6 @@ async function submit() {
   display: flex;
   z-index: 1;
   align-items: center;
-  gap: 12px;
-}
-
-.login-brand-mark {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: #173e36;
-  font-weight: 900;
-  background: #dff3ea;
 }
 
 .login-brand-name {
@@ -228,6 +215,18 @@ async function submit() {
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 20px 55px rgba(24, 36, 48, 0.08);
+}
+
+.back-to-blog {
+  display: inline-block;
+  margin-bottom: 24px;
+  color: #2f7d68;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.back-to-blog:hover {
+  text-decoration: underline;
 }
 
 .login-heading {

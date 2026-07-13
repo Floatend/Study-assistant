@@ -6,7 +6,9 @@ import com.example.goalbot.common.BusinessException;
 import com.example.goalbot.dto.note.NoteCreateRequest;
 import com.example.goalbot.dto.note.NoteUpdateRequest;
 import com.example.goalbot.entity.Note;
+import com.example.goalbot.entity.User;
 import com.example.goalbot.mapper.NoteMapper;
+import com.example.goalbot.mapper.UserMapper;
 import com.example.goalbot.service.NoteService;
 import com.example.goalbot.vo.NoteVO;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +33,8 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
     private static final int DEFAULT_LIMIT = 8;
     private static final int MAX_LIMIT = 50;
     private static final long MAX_UPLOAD_BYTES = 2L * 1024L * 1024L;
+
+    private final UserMapper userMapper;
 
     @Override
     public List<NoteVO> listNotes(Long userId, String keyword, Integer limit) {
@@ -47,8 +54,46 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
     }
 
     @Override
+    public List<NoteVO> listPublishedNotes(String keyword, Integer limit) {
+        int normalizedLimit = normalizeLimit(limit);
+        List<Note> notes = list(new LambdaQueryWrapper<Note>()
+                .eq(Note::getPublished, true)
+                .and(StringUtils.hasText(keyword), query -> query
+                        .like(Note::getTitle, keyword)
+                        .or()
+                        .like(Note::getSummary, keyword)
+                        .or()
+                        .like(Note::getTags, keyword))
+                .orderByDesc(Note::getUpdatedAt)
+                .orderByDesc(Note::getCreatedAt)
+                .last("LIMIT " + normalizedLimit));
+        if (notes.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> userIds = notes.stream().map(Note::getUserId).collect(Collectors.toSet());
+        Map<Long, String> authorNames = userMapper.selectBatchIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, this::displayName, (first, ignored) -> first));
+        return notes.stream()
+                .map(note -> toPublicVO(note, authorNames.get(note.getUserId())))
+                .toList();
+    }
+
+    @Override
     public NoteVO getNote(Long userId, Long id) {
         return toVO(getOwnedNote(userId, id));
+    }
+
+    @Override
+    public NoteVO getPublishedNote(Long id) {
+        Note note = getOne(new LambdaQueryWrapper<Note>()
+                .eq(Note::getId, id)
+                .eq(Note::getPublished, true));
+        if (note == null) {
+            throw BusinessException.notFound("Published note not found");
+        }
+        User author = userMapper.selectById(note.getUserId());
+        return toPublicVO(note, author == null ? null : displayName(author));
     }
 
     @Override
@@ -59,6 +104,7 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         note.setTitle(cleanTitle(request.getTitle()));
         note.setContent(request.getContent().trim());
         note.setTags(cleanNullable(request.getTags()));
+        note.setPublished(Boolean.TRUE.equals(request.getPublished()));
         refreshDerivedFields(note);
         save(note);
         return toVO(note);
@@ -94,6 +140,7 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         note.setFileName(fileName);
         note.setContent(content);
         note.setTags(cleanNullable(tags));
+        note.setPublished(false);
         refreshDerivedFields(note);
         save(note);
         return toVO(note);
@@ -114,6 +161,9 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         }
         if (request.getTags() != null) {
             note.setTags(cleanNullable(request.getTags()));
+        }
+        if (request.getPublished() != null) {
+            note.setPublished(request.getPublished());
         }
         refreshDerivedFields(note);
         updateById(note);
@@ -203,5 +253,15 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         NoteVO vo = new NoteVO();
         BeanUtils.copyProperties(note, vo);
         return vo;
+    }
+
+    private NoteVO toPublicVO(Note note, String authorName) {
+        NoteVO vo = toVO(note);
+        vo.setAuthorName(authorName);
+        return vo;
+    }
+
+    private String displayName(User user) {
+        return StringUtils.hasText(user.getNickname()) ? user.getNickname() : user.getUsername();
     }
 }

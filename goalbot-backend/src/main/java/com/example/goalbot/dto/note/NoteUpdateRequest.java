@@ -13,4 +13,6 @@ public class NoteUpdateRequest {
 
     @Size(max = 255)
     private String tags;
+
+    private Boolean published;
 }

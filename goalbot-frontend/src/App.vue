@@ -5,7 +5,6 @@
     <el-container class="app-shell">
       <el-aside class="app-aside" width="248px">
         <div class="brand">
-          <div class="brand-mark">G</div>
           <div class="brand-copy">
             <div class="brand-name">GoalBot</div>
             <div class="brand-subtitle">AI 日程与目标助手</div>

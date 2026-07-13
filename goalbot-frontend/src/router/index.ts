@@ -3,8 +3,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/', name: 'PublicBlog', component: () => import('@/views/PublicBlog.vue'), meta: { public: true } },
     { path: '/login', name: 'Login', component: () => import('@/views/Login.vue'), meta: { public: true } },
-    { path: '/', redirect: '/dashboard' },
     { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue') },
     { path: '/goals', redirect: '/dashboard' },
     { path: '/tasks', name: 'Tasks', component: () => import('@/views/Tasks.vue') },

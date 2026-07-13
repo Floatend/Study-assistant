@@ -71,6 +71,15 @@
             </div>
           </div>
           <div class="reader-actions">
+            <el-tooltip :content="activeNote.published ? '撤下公开博客' : '发布到公开博客'" placement="top">
+              <el-button
+                :icon="activeNote.published ? Hide : View"
+                circle
+                plain
+                :type="activeNote.published ? 'success' : 'info'"
+                @click="togglePublication(activeNote)"
+              />
+            </el-tooltip>
             <el-button :icon="Edit" circle plain @click="openEdit(activeNote)" />
             <el-button :icon="Delete" circle plain type="danger" @click="handleDelete(activeNote)" />
           </div>
@@ -96,6 +105,9 @@
         <el-form-item label="标签">
           <el-input v-model="editorForm.tags" placeholder="学习, 项目, 生活" />
         </el-form-item>
+        <el-form-item label="公开博客">
+          <el-switch v-model="editorForm.published" active-text="发布" inactive-text="仅自己可见" />
+        </el-form-item>
         <el-form-item label="Markdown 正文" prop="content">
           <el-input v-model="editorForm.content" type="textarea" :rows="12" resize="vertical" />
         </el-form-item>
@@ -111,7 +123,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { Delete, Document, Edit, Notebook, Plus, Refresh, Search, Upload } from '@element-plus/icons-vue'
+import { Delete, Document, Edit, Hide, Notebook, Plus, Refresh, Search, Upload, View } from '@element-plus/icons-vue'
 import { createNote, deleteNote, fetchNote, fetchNotes, updateNote, uploadNote } from '@/api/note'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import type { Note } from '@/types/note'
@@ -130,7 +142,8 @@ const editorRef = ref<FormInstance>()
 const editorForm = reactive({
   title: '',
   tags: '',
-  content: ''
+  content: '',
+  published: false
 })
 
 const editorRules: FormRules = {
@@ -204,7 +217,8 @@ function openCreate() {
   Object.assign(editorForm, {
     title: '',
     tags: '',
-    content: '# 新笔记\n\n'
+    content: '# 新笔记\n\n',
+    published: false
   })
   editorVisible.value = true
 }
@@ -214,7 +228,8 @@ function openEdit(note: Note) {
   Object.assign(editorForm, {
     title: note.title,
     tags: note.tags ?? '',
-    content: note.content
+    content: note.content,
+    published: note.published
   })
   editorVisible.value = true
 }
@@ -229,7 +244,8 @@ async function submitEditor() {
     const payload = {
       title: editorForm.title.trim(),
       tags: editorForm.tags.trim(),
-      content: editorForm.content.trim()
+      content: editorForm.content.trim(),
+      published: editorForm.published
     }
     const saved = editingNote.value
       ? await updateNote(editingNote.value.id, payload)
@@ -241,6 +257,16 @@ async function submitEditor() {
   } finally {
     saving.value = false
   }
+}
+
+async function togglePublication(note: Note) {
+  const saved = await updateNote(note.id, { published: !note.published })
+  activeNote.value = saved
+  const item = notes.value.find((candidate) => candidate.id === note.id)
+  if (item) {
+    item.published = saved.published
+  }
+  ElMessage.success(saved.published ? '已发布到公开博客' : '已撤下公开博客')
 }
 
 async function handleDelete(note: Note) {

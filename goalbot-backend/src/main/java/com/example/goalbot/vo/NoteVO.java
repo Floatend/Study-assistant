@@ -21,6 +21,10 @@ public class NoteVO {
 
     private String tags;
 
+    private Boolean published;
+
+    private String authorName;
+
     private Integer wordCount;
 
     private LocalDateTime createdAt;

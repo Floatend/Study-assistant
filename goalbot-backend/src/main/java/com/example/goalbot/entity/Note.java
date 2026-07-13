@@ -1,6 +1,7 @@
 package com.example.goalbot.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -25,6 +26,9 @@ public class Note {
     private String content;
 
     private String tags;
+
+    @TableField("is_published")
+    private Boolean published;
 
     private Integer wordCount;
 

@@ -99,7 +99,7 @@ const html = computed(() => {
   border-radius: 4px;
   color: #9f1239;
   background: #f8e7ed;
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: inherit;
   font-size: 12px;
 }
 

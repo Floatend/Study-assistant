@@ -2,6 +2,31 @@
 
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
 
+## 2026-07-13
+
+### Changed
+
+- Made `/` the public Markdown blog homepage. The GoalBot task, calendar, Feishu, and AI workspace now remains behind `/login` and `/dashboard`.
+- Removed the decorative `G` square mark from the GoalBot navigation and login page.
+- Standardized the web UI font stack around PingFang SC, with Microsoft YaHei and system fallbacks for environments where PingFang is unavailable.
+- Added a clear “发布到公开博客 / 撤下公开博客” control to the personal notebook panel.
+
+### Added
+
+- Added read-only public endpoints: `GET /api/public/notes` and `GET /api/public/notes/{id}`.
+- Added `note.is_published` so private working notes are never exposed unless their owner explicitly publishes them. New and uploaded notes are private by default.
+- Added `goalbot-backend/sql/note_publication.sql` for existing databases.
+
+### Database
+
+Existing databases must run this additive migration once:
+
+```sql
+SOURCE /absolute/path/to/goalbot-backend/sql/note_publication.sql;
+```
+
+Fresh databases receive the new field through `goalbot-backend/sql/init.sql` and `goalbot-backend/sql/note.sql`.
+
 ## 2026-07-09
 
 ### Added

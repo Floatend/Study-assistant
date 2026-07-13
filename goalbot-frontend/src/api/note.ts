@@ -32,3 +32,11 @@ export function uploadNote(file: File, options: { title?: string; tags?: string 
     timeout: 60000
   })
 }
+
+export function fetchPublishedNotes(params?: NoteQuery) {
+  return request<Note[]>({ url: '/api/public/notes', method: 'GET', params })
+}
+
+export function fetchPublishedNote(id: number) {
+  return request<Note>({ url: `/api/public/notes/${id}`, method: 'GET' })
+}

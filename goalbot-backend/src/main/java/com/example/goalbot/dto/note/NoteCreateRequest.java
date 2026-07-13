@@ -16,4 +16,6 @@ public class NoteCreateRequest {
 
     @Size(max = 255)
     private String tags;
+
+    private Boolean published;
 }

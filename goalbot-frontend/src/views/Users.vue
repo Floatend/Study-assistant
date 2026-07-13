@@ -343,7 +343,7 @@ function formatDateTime(value?: string) {
 
 .mono-value {
   color: #4e5969;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: inherit;
   font-size: 12px;
   overflow-wrap: anywhere;
 }
