@@ -61,6 +61,8 @@
       />
     </div>
 
+    <NoteBlogPanel />
+
     <div class="panel">
       <div class="panel-header">
         <div>
@@ -127,6 +129,7 @@ import { createCheckin } from '@/api/checkin'
 import { deleteGoal } from '@/api/goal'
 import AiAdviceCard from '@/components/AiAdviceCard.vue'
 import GoalFormDialog from '@/components/GoalFormDialog.vue'
+import NoteBlogPanel from '@/components/NoteBlogPanel.vue'
 import TaskCard from '@/components/TaskCard.vue'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useGoalStore } from '@/stores/goal'

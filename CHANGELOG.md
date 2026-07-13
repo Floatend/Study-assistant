@@ -2,6 +2,38 @@
 
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
 
+## 2026-07-09
+
+### Added
+
+- Added a personal Blog/Notebook panel to the Dashboard so uploaded notes sit in the same workspace as tasks, goals, and AI advice.
+- Added Markdown note upload support for `.md`, `.markdown`, and `.txt` files.
+- Added manual note creation, note editing, note deletion, keyword search, note stats, and note detail preview.
+- Added a Things-inspired note reader style with a clean paper surface, blue section headings, pink emphasis, green block quotes, and light code blocks.
+- Added backend `/api/notes` CRUD and `/api/notes/upload` multipart endpoints.
+- Added the `note` table and MyBatis Plus note service layer.
+
+### Database
+
+Existing databases must run:
+
+```sql
+SOURCE C:/absolute/path/to/goalbot-backend/sql/note.sql;
+```
+
+On Linux servers, use the deployed path, for example:
+
+```sql
+SOURCE /home/glg/goalbot/Study-assistant/goalbot-backend/sql/note.sql;
+```
+
+Fresh databases receive the table through `goalbot-backend/sql/init.sql`.
+
+### Verification
+
+- Backend test suite passed: 29 tests, 0 failures.
+- Frontend production build passed. Vite reported the existing large-chunk warning.
+
 ## 2026-06-24
 
 ### Added
