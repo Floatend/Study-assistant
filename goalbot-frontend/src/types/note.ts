@@ -7,6 +7,7 @@ export interface Note {
   content: string
   tags?: string | null
   published: boolean
+  official: boolean
   authorName?: string | null
   wordCount: number
   createdAt: string
@@ -23,4 +24,5 @@ export interface NotePayload {
   content: string
   tags?: string
   published?: boolean
+  official?: boolean
 }

@@ -30,6 +30,9 @@ public class Note {
     @TableField("is_published")
     private Boolean published;
 
+    @TableField("is_official")
+    private Boolean official;
+
     private Integer wordCount;
 
     private LocalDateTime createdAt;

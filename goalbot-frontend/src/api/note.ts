@@ -33,10 +33,10 @@ export function uploadNote(file: File, options: { title?: string; tags?: string 
   })
 }
 
-export function fetchPublishedNotes(params?: NoteQuery) {
+export function fetchOfficialNotes(params?: NoteQuery) {
   return request<Note[]>({ url: '/api/public/notes', method: 'GET', params })
 }
 
-export function fetchPublishedNote(id: number) {
+export function fetchOfficialNote(id: number) {
   return request<Note>({ url: `/api/public/notes/${id}`, method: 'GET' })
 }

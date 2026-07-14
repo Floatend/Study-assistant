@@ -2,6 +2,31 @@
 
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
 
+## 2026-07-14
+
+### Changed
+
+- Reframed `/` as the personal promotional homepage for `linge.xin`; it no longer loads or renders note content directly.
+- Added public subpages: `/notes` for official notes and `/about` for the personal site introduction.
+- Reworked the public navigation so personal-site content and the private GoalBot workspace are intentionally separate.
+- Replaced generic public-note visibility with an explicit official-site publishing workflow. A note must be marked as both official and published before it can reach `/api/public/notes`.
+- Restricted official-site publishing to administrator accounts. Ordinary users can continue to keep and edit their own private notes, but cannot expose them through the public site.
+
+### Added
+
+- Added a generated, project-local personal workspace hero image and subtle motion that respects `prefers-reduced-motion`.
+- Added `note.is_official` and the `goalbot-backend/sql/note_official.sql` migration for existing databases.
+
+### Database
+
+Existing databases should run the repeatable compatibility migration once:
+
+```sql
+SOURCE /absolute/path/to/goalbot-backend/sql/note_official.sql;
+```
+
+It safely adds any missing public-note columns and indexes, including the earlier `is_published` migration.
+
 ## 2026-07-13
 
 ### Changed

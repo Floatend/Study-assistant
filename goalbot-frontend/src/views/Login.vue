@@ -35,7 +35,7 @@
 
     <section class="login-form-area">
       <div class="login-panel">
-        <RouterLink class="back-to-blog" to="/">返回公开博客</RouterLink>
+        <RouterLink class="back-to-blog" to="/">返回个人主页</RouterLink>
         <div class="login-heading">
           <span class="login-kicker">WELCOME BACK</span>
           <h2>登录工作区</h2>

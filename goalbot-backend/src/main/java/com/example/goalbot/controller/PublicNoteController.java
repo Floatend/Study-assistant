@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Read-only public blog boundary. Only notes explicitly published by their owner are exposed here.
+ * Read-only site content boundary. Only notes explicitly approved for the official site are exposed here.
  */
 @RestController
 @RequiredArgsConstructor
@@ -23,14 +23,14 @@ public class PublicNoteController {
     private final NoteService noteService;
 
     @GetMapping
-    public Result<List<NoteVO>> listPublishedNotes(
+    public Result<List<NoteVO>> listOfficialNotes(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer limit) {
-        return Result.success(noteService.listPublishedNotes(keyword, limit));
+        return Result.success(noteService.listOfficialNotes(keyword, limit));
     }
 
     @GetMapping("/{id}")
-    public Result<NoteVO> getPublishedNote(@PathVariable Long id) {
-        return Result.success(noteService.getPublishedNote(id));
+    public Result<NoteVO> getOfficialNote(@PathVariable Long id) {
+        return Result.success(noteService.getOfficialNote(id));
     }
 }

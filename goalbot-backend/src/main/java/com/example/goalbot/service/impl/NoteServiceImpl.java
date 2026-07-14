@@ -54,10 +54,11 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
     }
 
     @Override
-    public List<NoteVO> listPublishedNotes(String keyword, Integer limit) {
+    public List<NoteVO> listOfficialNotes(String keyword, Integer limit) {
         int normalizedLimit = normalizeLimit(limit);
         List<Note> notes = list(new LambdaQueryWrapper<Note>()
                 .eq(Note::getPublished, true)
+                .eq(Note::getOfficial, true)
                 .and(StringUtils.hasText(keyword), query -> query
                         .like(Note::getTitle, keyword)
                         .or()
@@ -85,12 +86,13 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
     }
 
     @Override
-    public NoteVO getPublishedNote(Long id) {
+    public NoteVO getOfficialNote(Long id) {
         Note note = getOne(new LambdaQueryWrapper<Note>()
                 .eq(Note::getId, id)
-                .eq(Note::getPublished, true));
+                .eq(Note::getPublished, true)
+                .eq(Note::getOfficial, true));
         if (note == null) {
-            throw BusinessException.notFound("Published note not found");
+            throw BusinessException.notFound("Official note not found");
         }
         User author = userMapper.selectById(note.getUserId());
         return toPublicVO(note, author == null ? null : displayName(author));
@@ -104,7 +106,9 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         note.setTitle(cleanTitle(request.getTitle()));
         note.setContent(request.getContent().trim());
         note.setTags(cleanNullable(request.getTags()));
-        note.setPublished(Boolean.TRUE.equals(request.getPublished()));
+        boolean official = Boolean.TRUE.equals(request.getOfficial());
+        note.setOfficial(official);
+        note.setPublished(official);
         refreshDerivedFields(note);
         save(note);
         return toVO(note);
@@ -141,6 +145,7 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         note.setContent(content);
         note.setTags(cleanNullable(tags));
         note.setPublished(false);
+        note.setOfficial(false);
         refreshDerivedFields(note);
         save(note);
         return toVO(note);
@@ -162,8 +167,9 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         if (request.getTags() != null) {
             note.setTags(cleanNullable(request.getTags()));
         }
-        if (request.getPublished() != null) {
-            note.setPublished(request.getPublished());
+        if (request.getOfficial() != null) {
+            note.setOfficial(request.getOfficial());
+            note.setPublished(request.getOfficial());
         }
         refreshDerivedFields(note);
         updateById(note);

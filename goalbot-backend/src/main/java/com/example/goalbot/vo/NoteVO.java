@@ -23,6 +23,8 @@ public class NoteVO {
 
     private Boolean published;
 
+    private Boolean official;
+
     private String authorName;
 
     private Integer wordCount;

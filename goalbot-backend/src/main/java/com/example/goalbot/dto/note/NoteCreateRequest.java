@@ -18,4 +18,6 @@ public class NoteCreateRequest {
     private String tags;
 
     private Boolean published;
+
+    private Boolean official;
 }

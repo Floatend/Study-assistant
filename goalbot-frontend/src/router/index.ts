@@ -4,6 +4,8 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'PublicBlog', component: () => import('@/views/PublicBlog.vue'), meta: { public: true } },
+    { path: '/notes', name: 'OfficialNotes', component: () => import('@/views/OfficialNotes.vue'), meta: { public: true } },
+    { path: '/about', name: 'About', component: () => import('@/views/About.vue'), meta: { public: true } },
     { path: '/login', name: 'Login', component: () => import('@/views/Login.vue'), meta: { public: true } },
     { path: '/dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue') },
     { path: '/goals', redirect: '/dashboard' },

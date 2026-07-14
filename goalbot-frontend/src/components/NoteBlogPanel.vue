@@ -1,10 +1,10 @@
 <template>
   <section class="panel blog-panel">
     <div class="panel-header blog-header">
-      <div>
-        <div class="blog-kicker">Notebook Blog</div>
-        <h2 class="panel-title">个人 Blog</h2>
-        <p class="panel-subtitle">上传 Obsidian/Markdown 笔记，在主页形成一个轻量知识展示面板。</p>
+        <div>
+          <div class="blog-kicker">Notebook Blog</div>
+          <h2 class="panel-title">个人笔记</h2>
+          <p class="panel-subtitle">记录只属于你的学习与思考；管理员可将指定笔记发布到官网的官方笔记页。</p>
       </div>
       <div class="blog-actions">
         <el-button :icon="Plus" type="primary" @click="openCreate">写一篇</el-button>
@@ -71,13 +71,13 @@
             </div>
           </div>
           <div class="reader-actions">
-            <el-tooltip :content="activeNote.published ? '撤下公开博客' : '发布到公开博客'" placement="top">
+            <el-tooltip v-if="userStore.isAdmin" :content="activeNote.official ? '从官网撤下' : '发布到官网官方笔记'" placement="top">
               <el-button
-                :icon="activeNote.published ? Hide : View"
+                :icon="activeNote.official ? Hide : Promotion"
                 circle
                 plain
-                :type="activeNote.published ? 'success' : 'info'"
-                @click="togglePublication(activeNote)"
+                :type="activeNote.official ? 'success' : 'info'"
+                @click="toggleOfficial(activeNote)"
               />
             </el-tooltip>
             <el-button :icon="Edit" circle plain @click="openEdit(activeNote)" />
@@ -105,8 +105,8 @@
         <el-form-item label="标签">
           <el-input v-model="editorForm.tags" placeholder="学习, 项目, 生活" />
         </el-form-item>
-        <el-form-item label="公开博客">
-          <el-switch v-model="editorForm.published" active-text="发布" inactive-text="仅自己可见" />
+        <el-form-item v-if="userStore.isAdmin" label="官网发布">
+          <el-switch v-model="editorForm.official" active-text="官方笔记" inactive-text="仅自己可见" />
         </el-form-item>
         <el-form-item label="Markdown 正文" prop="content">
           <el-input v-model="editorForm.content" type="textarea" :rows="12" resize="vertical" />
@@ -123,9 +123,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { Delete, Document, Edit, Hide, Notebook, Plus, Refresh, Search, Upload, View } from '@element-plus/icons-vue'
+import { Delete, Document, Edit, Hide, Notebook, Plus, Promotion, Refresh, Search, Upload } from '@element-plus/icons-vue'
 import { createNote, deleteNote, fetchNote, fetchNotes, updateNote, uploadNote } from '@/api/note'
 import MarkdownContent from '@/components/MarkdownContent.vue'
+import { useUserStore } from '@/stores/user'
 import type { Note } from '@/types/note'
 
 const notes = ref<Note[]>([])
@@ -143,8 +144,9 @@ const editorForm = reactive({
   title: '',
   tags: '',
   content: '',
-  published: false
+  official: false
 })
+const userStore = useUserStore()
 
 const editorRules: FormRules = {
   title: [{ required: true, message: '请输入笔记标题', trigger: 'blur' }],
@@ -218,7 +220,7 @@ function openCreate() {
     title: '',
     tags: '',
     content: '# 新笔记\n\n',
-    published: false
+    official: false
   })
   editorVisible.value = true
 }
@@ -229,7 +231,7 @@ function openEdit(note: Note) {
     title: note.title,
     tags: note.tags ?? '',
     content: note.content,
-    published: note.published
+    official: note.official
   })
   editorVisible.value = true
 }
@@ -245,7 +247,7 @@ async function submitEditor() {
       title: editorForm.title.trim(),
       tags: editorForm.tags.trim(),
       content: editorForm.content.trim(),
-      published: editorForm.published
+      ...(userStore.isAdmin ? { official: editorForm.official } : {})
     }
     const saved = editingNote.value
       ? await updateNote(editingNote.value.id, payload)
@@ -259,14 +261,15 @@ async function submitEditor() {
   }
 }
 
-async function togglePublication(note: Note) {
-  const saved = await updateNote(note.id, { published: !note.published })
+async function toggleOfficial(note: Note) {
+  const saved = await updateNote(note.id, { official: !note.official })
   activeNote.value = saved
   const item = notes.value.find((candidate) => candidate.id === note.id)
   if (item) {
+    item.official = saved.official
     item.published = saved.published
   }
-  ElMessage.success(saved.published ? '已发布到公开博客' : '已撤下公开博客')
+  ElMessage.success(saved.official ? '已发布到官网官方笔记' : '已从官网撤下')
 }
 
 async function handleDelete(note: Note) {

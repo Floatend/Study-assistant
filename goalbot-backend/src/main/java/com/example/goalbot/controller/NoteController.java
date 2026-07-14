@@ -50,6 +50,9 @@ public class NoteController extends BaseController {
     public Result<NoteVO> createNote(
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @Valid @RequestBody NoteCreateRequest request) {
+        if (Boolean.TRUE.equals(request.getOfficial())) {
+            requireAdmin();
+        }
         return Result.success(noteService.createNote(currentUserId(headerUserId), request));
     }
 
@@ -67,6 +70,9 @@ public class NoteController extends BaseController {
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @PathVariable Long id,
             @Valid @RequestBody NoteUpdateRequest request) {
+        if (Boolean.TRUE.equals(request.getOfficial())) {
+            requireAdmin();
+        }
         return Result.success(noteService.updateNote(currentUserId(headerUserId), id, request));
     }
 
