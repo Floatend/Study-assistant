@@ -6,6 +6,8 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Brightened the public-site palette around coral, turquoise, yellow, and deep teal, and removed the public pages' serif English display fonts so they consistently inherit the PingFang system stack.
+- Added lightweight public-site interaction: pointer-responsive hero depth, hover-responsive direction bands, a smooth-scroll exploration control, and a live reading-progress / active-heading state on public knowledge-base articles.
 - Rebuilt the public `linge.xin` experience around an editorial, negative-space narrative: the homepage introduces the site and its direction without loading article content; `/about` now follows the same public visual language.
 - Reworked `/notes` into a public learning archive with search, category filters, an article index, Markdown heading outline, and previous/next article navigation.
 - Moved note authoring out of Dashboard into the administrator-only `/notebook` writing desk. It supports Markdown import, category management, draft/organized/public states, split editor-preview mode, and keyboard save.
