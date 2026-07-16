@@ -1,0 +1,4 @@
+interface:
+  display_name: "Editorial Web Direction"
+  short_description: "Build calm editorial sites and usable knowledge bases."
+  default_prompt: "Use $monaka-editorial-web to design or refine this personal website with calm editorial storytelling and a practical public knowledge base."

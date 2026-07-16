@@ -6,6 +6,7 @@
 import DOMPurify from 'dompurify'
 import MarkdownIt from 'markdown-it'
 import { computed } from 'vue'
+import { createHeadingId } from '@/utils/markdown'
 
 const props = defineProps<{
   content?: string | null
@@ -18,12 +19,22 @@ const markdown = new MarkdownIt({
   typographer: true
 })
 
+const defaultHeadingOpen = markdown.renderer.rules.heading_open
+markdown.renderer.rules.heading_open = (tokens, index, options, env, self) => {
+  const context = env as { headingIds?: Map<string, number> }
+  const headingText = tokens[index + 1]?.content ?? ''
+  tokens[index].attrSet('id', createHeadingId(headingText, context.headingIds ?? (context.headingIds = new Map())))
+  return defaultHeadingOpen
+    ? defaultHeadingOpen(tokens, index, options, env, self)
+    : self.renderToken(tokens, index, options)
+}
+
 const html = computed(() => {
   const raw = props.content?.trim()
   if (!raw) {
     return ''
   }
-  return DOMPurify.sanitize(markdown.render(raw), {
+  return DOMPurify.sanitize(markdown.render(raw, { headingIds: new Map() }), {
     USE_PROFILES: { html: true }
   })
 })

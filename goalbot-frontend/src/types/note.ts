@@ -6,6 +6,7 @@ export interface Note {
   summary?: string | null
   content: string
   tags?: string | null
+  category?: string | null
   published: boolean
   official: boolean
   authorName?: string | null
@@ -16,13 +17,21 @@ export interface Note {
 
 export interface NoteQuery {
   keyword?: string
+  category?: string
+  published?: boolean
   limit?: number
+}
+
+export interface NoteCategory {
+  name: string
+  count: number
 }
 
 export interface NotePayload {
   title: string
   content: string
   tags?: string
+  category?: string
   published?: boolean
   official?: boolean
 }

@@ -11,6 +11,7 @@ import com.example.goalbot.mapper.NoteMapper;
 import com.example.goalbot.mapper.UserMapper;
 import com.example.goalbot.service.NoteService;
 import com.example.goalbot.vo.NoteVO;
+import com.example.goalbot.vo.NoteCategoryVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -30,23 +31,28 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements NoteService {
 
-    private static final int DEFAULT_LIMIT = 8;
-    private static final int MAX_LIMIT = 50;
+    private static final int DEFAULT_LIMIT = 24;
+    private static final int MAX_LIMIT = 100;
     private static final long MAX_UPLOAD_BYTES = 2L * 1024L * 1024L;
+    private static final String UNCATEGORIZED = "未分类";
 
     private final UserMapper userMapper;
 
     @Override
-    public List<NoteVO> listNotes(Long userId, String keyword, Integer limit) {
+    public List<NoteVO> listNotes(Long userId, String keyword, String category, Boolean published, Integer limit) {
         int normalizedLimit = normalizeLimit(limit);
         LambdaQueryWrapper<Note> wrapper = new LambdaQueryWrapper<Note>()
                 .eq(Note::getUserId, userId)
+                .eq(published != null, Note::getPublished, published)
+                .and(StringUtils.hasText(category), query -> applyCategoryFilter(query, category))
                 .and(StringUtils.hasText(keyword), query -> query
                         .like(Note::getTitle, keyword)
                         .or()
                         .like(Note::getSummary, keyword)
                         .or()
-                        .like(Note::getTags, keyword))
+                        .like(Note::getTags, keyword)
+                        .or()
+                        .like(Note::getCategory, keyword))
                 .orderByDesc(Note::getUpdatedAt)
                 .orderByDesc(Note::getCreatedAt)
                 .last("LIMIT " + normalizedLimit);
@@ -54,17 +60,20 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
     }
 
     @Override
-    public List<NoteVO> listOfficialNotes(String keyword, Integer limit) {
+    public List<NoteVO> listOfficialNotes(String keyword, String category, Integer limit) {
         int normalizedLimit = normalizeLimit(limit);
         List<Note> notes = list(new LambdaQueryWrapper<Note>()
                 .eq(Note::getPublished, true)
                 .eq(Note::getOfficial, true)
+                .and(StringUtils.hasText(category), query -> applyCategoryFilter(query, category))
                 .and(StringUtils.hasText(keyword), query -> query
                         .like(Note::getTitle, keyword)
                         .or()
                         .like(Note::getSummary, keyword)
                         .or()
-                        .like(Note::getTags, keyword))
+                        .like(Note::getTags, keyword)
+                        .or()
+                        .like(Note::getCategory, keyword))
                 .orderByDesc(Note::getUpdatedAt)
                 .orderByDesc(Note::getCreatedAt)
                 .last("LIMIT " + normalizedLimit));
@@ -78,6 +87,21 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         return notes.stream()
                 .map(note -> toPublicVO(note, authorNames.get(note.getUserId())))
                 .toList();
+    }
+
+    @Override
+    public List<NoteCategoryVO> listCategories(Long userId) {
+        return toCategoryVOs(list(new LambdaQueryWrapper<Note>()
+                .eq(Note::getUserId, userId)
+                .select(Note::getCategory)));
+    }
+
+    @Override
+    public List<NoteCategoryVO> listOfficialCategories() {
+        return toCategoryVOs(list(new LambdaQueryWrapper<Note>()
+                .eq(Note::getPublished, true)
+                .eq(Note::getOfficial, true)
+                .select(Note::getCategory)));
     }
 
     @Override
@@ -106,9 +130,10 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         note.setTitle(cleanTitle(request.getTitle()));
         note.setContent(request.getContent().trim());
         note.setTags(cleanNullable(request.getTags()));
+        note.setCategory(cleanCategory(request.getCategory()));
         boolean official = Boolean.TRUE.equals(request.getOfficial());
         note.setOfficial(official);
-        note.setPublished(official);
+        note.setPublished(official || Boolean.TRUE.equals(request.getPublished()));
         refreshDerivedFields(note);
         save(note);
         return toVO(note);
@@ -116,7 +141,7 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
 
     @Override
     @Transactional
-    public NoteVO uploadNote(Long userId, MultipartFile file, String title, String tags) {
+    public NoteVO uploadNote(Long userId, MultipartFile file, String title, String tags, String category) {
         if (file == null || file.isEmpty()) {
             throw BusinessException.badRequest("Note file is required");
         }
@@ -144,6 +169,7 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         note.setFileName(fileName);
         note.setContent(content);
         note.setTags(cleanNullable(tags));
+        note.setCategory(cleanCategory(category));
         note.setPublished(false);
         note.setOfficial(false);
         refreshDerivedFields(note);
@@ -167,9 +193,20 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         if (request.getTags() != null) {
             note.setTags(cleanNullable(request.getTags()));
         }
+        if (request.getCategory() != null) {
+            note.setCategory(cleanCategory(request.getCategory()));
+        }
+        if (request.getPublished() != null) {
+            note.setPublished(request.getPublished());
+            if (!request.getPublished()) {
+                note.setOfficial(false);
+            }
+        }
         if (request.getOfficial() != null) {
             note.setOfficial(request.getOfficial());
-            note.setPublished(request.getOfficial());
+            if (request.getOfficial()) {
+                note.setPublished(true);
+            }
         }
         refreshDerivedFields(note);
         updateById(note);
@@ -225,6 +262,31 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
         return Math.min(limit, MAX_LIMIT);
     }
 
+    private void applyCategoryFilter(LambdaQueryWrapper<Note> wrapper, String category) {
+        String normalized = cleanCategory(category);
+        if (UNCATEGORIZED.equals(normalized)) {
+            wrapper.and(query -> query.isNull(Note::getCategory).or().eq(Note::getCategory, ""));
+            return;
+        }
+        wrapper.eq(Note::getCategory, normalized);
+    }
+
+    private List<NoteCategoryVO> toCategoryVOs(List<Note> notes) {
+        Map<String, Long> counts = notes.stream()
+                .map(Note::getCategory)
+                .map(this::displayCategory)
+                .collect(Collectors.groupingBy(category -> category, Collectors.counting()));
+        return counts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .map(entry -> new NoteCategoryVO(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
+    private String displayCategory(String category) {
+        return StringUtils.hasText(category) ? category : UNCATEGORIZED;
+    }
+
     private boolean isSupportedFile(String fileName) {
         if (!StringUtils.hasText(fileName)) {
             return true;
@@ -253,6 +315,14 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
 
     private String cleanNullable(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    private String cleanCategory(String value) {
+        String cleaned = cleanNullable(value);
+        if (!StringUtils.hasText(cleaned)) {
+            return null;
+        }
+        return cleaned.length() <= 64 ? cleaned : cleaned.substring(0, 64);
     }
 
     private NoteVO toVO(Note note) {

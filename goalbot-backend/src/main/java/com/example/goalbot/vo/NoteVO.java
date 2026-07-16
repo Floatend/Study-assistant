@@ -21,6 +21,8 @@ public class NoteVO {
 
     private String tags;
 
+    private String category;
+
     private Boolean published;
 
     private Boolean official;

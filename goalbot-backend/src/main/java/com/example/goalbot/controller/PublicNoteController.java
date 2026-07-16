@@ -3,6 +3,7 @@ package com.example.goalbot.controller;
 import com.example.goalbot.common.Result;
 import com.example.goalbot.service.NoteService;
 import com.example.goalbot.vo.NoteVO;
+import com.example.goalbot.vo.NoteCategoryVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,8 +26,14 @@ public class PublicNoteController {
     @GetMapping
     public Result<List<NoteVO>> listOfficialNotes(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer limit) {
-        return Result.success(noteService.listOfficialNotes(keyword, limit));
+        return Result.success(noteService.listOfficialNotes(keyword, category, limit));
+    }
+
+    @GetMapping("/categories")
+    public Result<List<NoteCategoryVO>> listOfficialCategories() {
+        return Result.success(noteService.listOfficialCategories());
     }
 
     @GetMapping("/{id}")

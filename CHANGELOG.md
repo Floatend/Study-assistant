@@ -2,6 +2,38 @@
 
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
 
+## 2026-07-16
+
+### Changed
+
+- Rebuilt the public `linge.xin` experience around an editorial, negative-space narrative: the homepage introduces the site and its direction without loading article content; `/about` now follows the same public visual language.
+- Reworked `/notes` into a public learning archive with search, category filters, an article index, Markdown heading outline, and previous/next article navigation.
+- Moved note authoring out of Dashboard into the administrator-only `/notebook` writing desk. It supports Markdown import, category management, draft/organized/public states, split editor-preview mode, and keyboard save.
+- Restricted every `/api/notes` management endpoint to administrator accounts. Ordinary GoalBot users no longer have a notebook entry point or private-note API access.
+- Kept public exposure explicit: `/api/public/notes` only returns notes that are both `is_published = 1` and `is_official = 1`.
+
+### Added
+
+- Added note categories, category indexes, and `GET /api/notes/categories` plus `GET /api/public/notes/categories`.
+- Added shared Markdown heading IDs so the reader outline always targets the rendered article heading.
+- Added the reusable `$monaka-editorial-web` Skill under `skills/monaka-editorial-web` and installed it in the local Codex skill directory.
+
+### Database
+
+Existing databases must run the repeatable migration once:
+
+```sql
+SOURCE /absolute/path/to/goalbot-backend/sql/note_knowledge_base.sql;
+```
+
+It adds `note.category` and the category lookup indexes without changing or deleting existing note data.
+
+### Verification
+
+- Backend Maven test reports: 29 tests, 0 failures, 0 errors.
+- Frontend `npm run build` passed. Vite reported the existing large-chunk warning only.
+- Local Vite routes returned HTTP 200 for `/`, `/notes`, `/about`, and `/notebook`.
+
 ## 2026-07-14
 
 ### Changed

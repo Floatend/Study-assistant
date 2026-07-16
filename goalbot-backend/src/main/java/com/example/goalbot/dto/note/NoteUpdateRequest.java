@@ -14,6 +14,9 @@ public class NoteUpdateRequest {
     @Size(max = 255)
     private String tags;
 
+    @Size(max = 64)
+    private String category;
+
     private Boolean published;
 
     private Boolean official;

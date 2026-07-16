@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS `note` (
   `summary` VARCHAR(512) DEFAULT NULL COMMENT 'Preview summary',
   `content` LONGTEXT NOT NULL COMMENT 'Markdown or plain text content',
   `tags` VARCHAR(255) DEFAULT NULL COMMENT 'Comma separated tags',
+  `category` VARCHAR(64) DEFAULT NULL COMMENT 'Knowledge base category',
   `is_published` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Whether this note is visible on the public blog',
   `is_official` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Whether this note is approved for the official site',
   `word_count` INT NOT NULL DEFAULT 0 COMMENT 'Approximate character count',
@@ -57,8 +58,10 @@ CREATE TABLE IF NOT EXISTS `note` (
   KEY `idx_note_user_created` (`user_id`, `created_at`),
   KEY `idx_note_user_updated` (`user_id`, `updated_at`),
   KEY `idx_note_user_title` (`user_id`, `title`),
+  KEY `idx_note_user_category_updated` (`user_id`, `category`, `updated_at`),
   KEY `idx_note_published_updated` (`is_published`, `updated_at`),
   KEY `idx_note_official_updated` (`is_official`, `is_published`, `updated_at`),
+  KEY `idx_note_official_category_updated` (`is_official`, `is_published`, `category`, `updated_at`),
   CONSTRAINT `fk_note_user`
     FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
     ON DELETE CASCADE

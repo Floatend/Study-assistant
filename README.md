@@ -557,6 +557,18 @@ The Vite dev server proxies `/api` to `http://localhost:8080`.
 
 AI advice and review content render Markdown through `markdown-it` and sanitize generated HTML through `DOMPurify`. The Dashboard is the daily workspace: it shows today's tasks, quick checkin, AI advice, and goal management. The old Goals and Checkin routes redirect back to Dashboard.
 
+## Public Site And Learning Archive
+
+`/` is the public personal site for `linge.xin`; it introduces the site and directs visitors to the learning archive rather than rendering note content on the first screen. `/notes` is the public learning archive, with keyword search, category filtering, article outlines, and previous/next navigation.
+
+Note authoring is intentionally administrator-only. Administrators use `/notebook` to create or import Markdown, organize categories and tags, and explicitly publish selected learning results to the public archive. Ordinary GoalBot users have no notebook route and cannot use `/api/notes` management endpoints. Public endpoints only return notes where both `is_official` and `is_published` are true.
+
+For existing databases, run the repeatable knowledge-base migration after deploying this feature:
+
+```sql
+SOURCE /absolute/path/to/goalbot-backend/sql/note_knowledge_base.sql;
+```
+
 ## Phase 1 Acceptance Path
 
 1. Create a goal in the `Dashboard` goal management section.

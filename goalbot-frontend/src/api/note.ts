@@ -1,5 +1,5 @@
 import { request } from './request'
-import type { Note, NotePayload, NoteQuery } from '@/types/note'
+import type { Note, NoteCategory, NotePayload, NoteQuery } from '@/types/note'
 
 export function fetchNotes(params?: NoteQuery) {
   return request<Note[]>({ url: '/api/notes', method: 'GET', params })
@@ -7,6 +7,10 @@ export function fetchNotes(params?: NoteQuery) {
 
 export function fetchNote(id: number) {
   return request<Note>({ url: `/api/notes/${id}`, method: 'GET' })
+}
+
+export function fetchNoteCategories() {
+  return request<NoteCategory[]>({ url: '/api/notes/categories', method: 'GET' })
 }
 
 export function createNote(data: NotePayload) {
@@ -21,7 +25,7 @@ export function deleteNote(id: number) {
   return request<void>({ url: `/api/notes/${id}`, method: 'DELETE' })
 }
 
-export function uploadNote(file: File, options: { title?: string; tags?: string } = {}) {
+export function uploadNote(file: File, options: { title?: string; tags?: string; category?: string } = {}) {
   const formData = new FormData()
   formData.append('file', file)
   return request<Note>({
@@ -39,4 +43,8 @@ export function fetchOfficialNotes(params?: NoteQuery) {
 
 export function fetchOfficialNote(id: number) {
   return request<Note>({ url: `/api/public/notes/${id}`, method: 'GET' })
+}
+
+export function fetchOfficialNoteCategories() {
+  return request<NoteCategory[]>({ url: '/api/public/notes/categories', method: 'GET' })
 }

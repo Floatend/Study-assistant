@@ -6,6 +6,7 @@ import com.example.goalbot.dto.note.NoteCreateRequest;
 import com.example.goalbot.dto.note.NoteUpdateRequest;
 import com.example.goalbot.service.NoteService;
 import com.example.goalbot.vo.NoteVO;
+import com.example.goalbot.vo.NoteCategoryVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -35,14 +36,25 @@ public class NoteController extends BaseController {
     public Result<List<NoteVO>> listNotes(
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean published,
             @RequestParam(required = false) Integer limit) {
-        return Result.success(noteService.listNotes(currentUserId(headerUserId), keyword, limit));
+        requireAdmin();
+        return Result.success(noteService.listNotes(currentUserId(headerUserId), keyword, category, published, limit));
+    }
+
+    @GetMapping("/categories")
+    public Result<List<NoteCategoryVO>> listCategories(
+            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId) {
+        requireAdmin();
+        return Result.success(noteService.listCategories(currentUserId(headerUserId)));
     }
 
     @GetMapping("/{id}")
     public Result<NoteVO> getNote(
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @PathVariable Long id) {
+        requireAdmin();
         return Result.success(noteService.getNote(currentUserId(headerUserId), id));
     }
 
@@ -50,9 +62,7 @@ public class NoteController extends BaseController {
     public Result<NoteVO> createNote(
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @Valid @RequestBody NoteCreateRequest request) {
-        if (Boolean.TRUE.equals(request.getOfficial())) {
-            requireAdmin();
-        }
+        requireAdmin();
         return Result.success(noteService.createNote(currentUserId(headerUserId), request));
     }
 
@@ -61,8 +71,10 @@ public class NoteController extends BaseController {
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @RequestPart("file") MultipartFile file,
             @RequestParam(required = false) String title,
-            @RequestParam(required = false) String tags) {
-        return Result.success(noteService.uploadNote(currentUserId(headerUserId), file, title, tags));
+            @RequestParam(required = false) String tags,
+            @RequestParam(required = false) String category) {
+        requireAdmin();
+        return Result.success(noteService.uploadNote(currentUserId(headerUserId), file, title, tags, category));
     }
 
     @PutMapping("/{id}")
@@ -70,9 +82,7 @@ public class NoteController extends BaseController {
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @PathVariable Long id,
             @Valid @RequestBody NoteUpdateRequest request) {
-        if (Boolean.TRUE.equals(request.getOfficial())) {
-            requireAdmin();
-        }
+        requireAdmin();
         return Result.success(noteService.updateNote(currentUserId(headerUserId), id, request));
     }
 
@@ -80,6 +90,7 @@ public class NoteController extends BaseController {
     public Result<Void> deleteNote(
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,
             @PathVariable Long id) {
+        requireAdmin();
         noteService.deleteNote(currentUserId(headerUserId), id);
         return Result.success();
     }

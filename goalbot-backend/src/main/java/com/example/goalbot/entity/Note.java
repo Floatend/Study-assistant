@@ -27,6 +27,8 @@ public class Note {
 
     private String tags;
 
+    private String category;
+
     @TableField("is_published")
     private Boolean published;
 

@@ -33,6 +33,10 @@
             <el-icon><TrendCharts /></el-icon>
             <span>统计</span>
           </el-menu-item>
+          <el-menu-item v-if="userStore.isAdmin" index="/notebook">
+            <el-icon><Document /></el-icon>
+            <span>站长笔记</span>
+          </el-menu-item>
           <el-menu-item index="/settings">
             <el-icon><Setting /></el-icon>
             <span>配置</span>
@@ -112,6 +116,7 @@ import {
   ArrowDown,
   Calendar,
   DataBoard,
+  Document,
   Key,
   List,
   Notebook,
@@ -146,6 +151,7 @@ const titles: Record<string, string> = {
   '/calendar': '时间表',
   '/review': '复盘',
   '/analytics': '统计',
+  '/notebook': '站长笔记',
   '/settings': '配置',
   '/users': '用户管理'
 }
@@ -156,6 +162,7 @@ const subtitles: Record<string, string> = {
   '/calendar': '按日、周、月查看任务安排',
   '/review': '沉淀每日复盘与阶段总结',
   '/analytics': '查看投入、完成和趋势',
+  '/notebook': '撰写、整理并发布官网学习成果',
   '/settings': '配置主动消息、飞书和 Dify 状态',
   '/users': '管理账号、权限、状态和飞书绑定'
 }
