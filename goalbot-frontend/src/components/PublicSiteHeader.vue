@@ -20,4 +20,6 @@
 .site-workspace-link span { display:inline-block; margin-left:2px; transition:transform .25s ease; }
 .site-workspace-link:hover span { transform:translate(2px,-2px); }
 @media(max-width:620px){.site-header{align-items:flex-start;flex-direction:column;gap:13px;padding:18px 0}.site-nav{width:100%;justify-content:space-between;gap:11px}.site-nav a{font-size:12px}}
+/* Shared public-site theme. */
+.site-header{border-bottom-color:#e3e8f5;color:#1f2a44}.site-nav a{color:#65708c}.site-nav a:hover,.site-nav a.router-link-exact-active{color:#4d6bfe}.site-nav .site-workspace-link{color:#3559e8}
 </style>

@@ -6,6 +6,7 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Rebalanced the public-site color system into a calmer intelligent-blue palette with pale blue, mint, and peach content bands; retained the existing motion and public/private workspace split.
 - Brightened the public-site palette around coral, turquoise, yellow, and deep teal, and removed the public pages' serif English display fonts so they consistently inherit the PingFang system stack.
 - Added lightweight public-site interaction: pointer-responsive hero depth, hover-responsive direction bands, a smooth-scroll exploration control, and a live reading-progress / active-heading state on public knowledge-base articles.
 - Rebuilt the public `linge.xin` experience around an editorial, negative-space narrative: the homepage introduces the site and its direction without loading article content; `/about` now follows the same public visual language.
