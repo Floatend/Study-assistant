@@ -6,7 +6,7 @@
 import DOMPurify from 'dompurify'
 import MarkdownIt from 'markdown-it'
 import { computed } from 'vue'
-import { createHeadingId } from '@/utils/markdown'
+import { createHeadingId, normalizeObsidianMarkdown } from '@/utils/markdown'
 
 const props = defineProps<{
   content?: string | null
@@ -34,7 +34,7 @@ const html = computed(() => {
   if (!raw) {
     return ''
   }
-  return DOMPurify.sanitize(markdown.render(raw, { headingIds: new Map() }), {
+  return DOMPurify.sanitize(markdown.render(normalizeObsidianMarkdown(raw), { headingIds: new Map() }), {
     USE_PROFILES: { html: true }
   })
 })
@@ -103,6 +103,14 @@ const html = computed(() => {
   border-radius: 4px;
   color: #566273;
   background: #f4f8f6;
+}
+
+.markdown-content :deep(blockquote > p:first-child > strong:first-child) {
+  display: inline-block;
+  margin-bottom: 3px;
+  color: #2563eb;
+  font-size: 11px;
+  letter-spacing: .08em;
 }
 
 .markdown-content :deep(code) {

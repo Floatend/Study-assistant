@@ -51,6 +51,7 @@
         </aside>
       </section>
     </div>
+    <BackToTopButton />
   </main>
 </template>
 
@@ -59,6 +60,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { fetchOfficialNote, fetchOfficialNoteCategories, fetchOfficialNotes } from '@/api/note'
+import BackToTopButton from '@/components/BackToTopButton.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
 import type { Note, NoteCategory } from '@/types/note'

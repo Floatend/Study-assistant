@@ -79,6 +79,7 @@
         <span v-if="!activeHeadings.length">正文没有标题</span>
       </aside>
     </section>
+    <BackToTopButton />
 
     <el-dialog v-model="editorVisible" class="notebook-editor-dialog" width="min(1220px, calc(100vw - 32px))" :close-on-click-modal="false" :destroy-on-close="false" top="4vh">
       <template #header>
@@ -117,6 +118,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'v
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { ChatLineSquare, Delete, DocumentAdd, EditPen, Hide, List, Plus, Promotion, Refresh, Search, Tickets, Upload } from '@element-plus/icons-vue'
 import { createNote, deleteNote, fetchNote, fetchNoteCategories, fetchNotes, updateNote, uploadNote } from '@/api/note'
+import BackToTopButton from '@/components/BackToTopButton.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import type { Note, NoteCategory } from '@/types/note'
 import { extractMarkdownHeadings } from '@/utils/markdown'

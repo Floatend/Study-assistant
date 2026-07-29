@@ -6,6 +6,8 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Added a reusable back-to-top control to public notes and the administrator notebook reader.
+- Added shared Obsidian callout normalization for `> [!NOTE]`, `[!NOTE]`, and `!note` forms, while leaving fenced code examples unchanged.
 - Rebalanced the public-site color system into a calmer intelligent-blue palette with pale blue, mint, and peach content bands; retained the existing motion and public/private workspace split.
 - Brightened the public-site palette around coral, turquoise, yellow, and deep teal, and removed the public pages' serif English display fonts so they consistently inherit the PingFang system stack.
 - Added lightweight public-site interaction: pointer-responsive hero depth, hover-responsive direction bands, a smooth-scroll exploration control, and a live reading-progress / active-heading state on public knowledge-base articles.
