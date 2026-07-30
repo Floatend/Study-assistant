@@ -44,18 +44,52 @@ export function normalizeObsidianMarkdown(content?: string | null): string {
       }
       if (fence) return line
 
-      const callout = line.match(/^\s*>\s*\[!([A-Za-z][\w-]*)\](?:[+-])?(?:\s+(.*?))?\s*$/)
-      if (callout) return `> **${callout[1].toUpperCase()}**${callout[2] ? ` ${callout[2]}` : ''}`
+      const callout = line.match(/^\s*>\s*\[!([A-Za-z][\w-]*)\]([+-])?(?:\s+(.*?))?\s*$/)
+      if (callout) return formatCalloutLine(callout[1], callout[2], callout[3])
 
-      const standaloneCallout = line.match(/^\s*\[!([A-Za-z][\w-]*)\](?:\s+(.*?))?\s*$/)
-      if (standaloneCallout) return `> **${standaloneCallout[1].toUpperCase()}**${standaloneCallout[2] ? ` ${standaloneCallout[2]}` : ''}`
+      const standaloneCallout = line.match(/^\s*\[!([A-Za-z][\w-]*)\]([+-])?(?:\s+(.*?))?\s*$/)
+      if (standaloneCallout) return formatCalloutLine(standaloneCallout[1], standaloneCallout[2], standaloneCallout[3])
 
       const shorthandCallout = line.match(/^\s*!([A-Za-z][\w-]*)\b(?:\s+(.*?))?\s*$/)
-      if (shorthandCallout) return `> **${shorthandCallout[1].toUpperCase()}**${shorthandCallout[2] ? ` ${shorthandCallout[2]}` : ''}`
+      if (shorthandCallout) return formatCalloutLine(shorthandCallout[1], undefined, shorthandCallout[2])
 
       return line
     })
     .join('\n')
+}
+
+function formatCalloutLine(type: string, fold: string | undefined, title: string | undefined): string {
+  const marker = `**[!${type.toUpperCase()}]${fold ?? ''}**`
+  return `> ${marker}${title ? ` ${title}` : ''}`
+}
+
+/**
+ * Turn the normalized marker blockquote into the DOM shape used by Obsidian
+ * callouts. The HTML was sanitized before this controlled decoration step.
+ */
+export function enhanceObsidianCallouts(html: string): string {
+  if (!html || typeof DOMParser === 'undefined') return html
+
+  const document = new DOMParser().parseFromString(html, 'text/html')
+  document.body.querySelectorAll('blockquote').forEach((blockquote) => {
+    const firstChild = blockquote.firstElementChild
+    const marker = firstChild?.firstElementChild
+    if (!firstChild || firstChild.tagName !== 'P' || !marker || marker.tagName !== 'STRONG') return
+
+    const match = marker.textContent?.trim().match(/^\[!([A-Za-z][\w-]*)\]([+-])?$/)
+    if (!match) return
+
+    const label = document.createElement('span')
+    label.className = 'obsidian-callout-label'
+    label.textContent = match[1].toUpperCase()
+    marker.replaceWith(label)
+    firstChild.classList.add('obsidian-callout-title')
+    blockquote.classList.add('obsidian-callout')
+    blockquote.setAttribute('data-callout', match[1].toLowerCase())
+    if (match[2]) blockquote.setAttribute('data-callout-fold', match[2] === '-' ? 'closed' : 'open')
+  })
+
+  return document.body.innerHTML
 }
 
 export function createHeadingId(text: string, counters: HeadingCounter = new Map()): string {

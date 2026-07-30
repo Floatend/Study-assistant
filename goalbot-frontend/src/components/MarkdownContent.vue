@@ -6,7 +6,7 @@
 import DOMPurify from 'dompurify'
 import MarkdownIt from 'markdown-it'
 import { computed } from 'vue'
-import { createHeadingId, normalizeObsidianMarkdown } from '@/utils/markdown'
+import { createHeadingId, enhanceObsidianCallouts, normalizeObsidianMarkdown } from '@/utils/markdown'
 
 const props = defineProps<{
   content?: string | null
@@ -34,9 +34,10 @@ const html = computed(() => {
   if (!raw) {
     return ''
   }
-  return DOMPurify.sanitize(markdown.render(normalizeObsidianMarkdown(raw), { headingIds: new Map() }), {
+  const sanitized = DOMPurify.sanitize(markdown.render(normalizeObsidianMarkdown(raw), { headingIds: new Map() }), {
     USE_PROFILES: { html: true }
   })
+  return enhanceObsidianCallouts(sanitized)
 })
 </script>
 
@@ -111,6 +112,73 @@ const html = computed(() => {
   color: #2563eb;
   font-size: 11px;
   letter-spacing: .08em;
+}
+
+.markdown-content :deep(.obsidian-callout) {
+  --callout-color: 46, 128, 242;
+  margin: 18px 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(var(--callout-color), .35);
+  border-left: 4px solid rgb(var(--callout-color));
+  border-radius: 8px;
+  color: #30415f;
+  background: rgba(var(--callout-color), .09);
+  font-style: normal;
+  box-shadow: 0 2px 8px rgba(31, 60, 140, .06);
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout="tip"]),
+.markdown-content :deep(.obsidian-callout[data-callout="success"]) {
+  --callout-color: 36, 166, 151;
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout="warning"]),
+.markdown-content :deep(.obsidian-callout[data-callout="caution"]) {
+  --callout-color: 218, 142, 41;
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout="danger"]),
+.markdown-content :deep(.obsidian-callout[data-callout="failure"]) {
+  --callout-color: 215, 77, 92;
+}
+
+.markdown-content :deep(.obsidian-callout-title) {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 13px 5px;
+  color: rgb(var(--callout-color));
+  font-style: normal;
+  font-weight: 750;
+}
+
+.markdown-content :deep(.obsidian-callout-label) {
+  flex: 0 0 auto;
+  font-size: 12px;
+  letter-spacing: .06em;
+}
+
+.markdown-content :deep(.obsidian-callout-label)::before {
+  margin-right: 5px;
+  content: '✦';
+}
+
+.markdown-content :deep(.obsidian-callout > p:not(.obsidian-callout-title)),
+.markdown-content :deep(.obsidian-callout > ul),
+.markdown-content :deep(.obsidian-callout > ol),
+.markdown-content :deep(.obsidian-callout > pre),
+.markdown-content :deep(.obsidian-callout > h1),
+.markdown-content :deep(.obsidian-callout > h2),
+.markdown-content :deep(.obsidian-callout > h3),
+.markdown-content :deep(.obsidian-callout > h4) {
+  margin-right: 13px;
+  margin-left: 13px;
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout-fold="closed"] > :not(.obsidian-callout-title)) {
+  display: none;
 }
 
 .markdown-content :deep(code) {

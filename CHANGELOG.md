@@ -2,6 +2,19 @@
 
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
 
+## 2026-07-31
+
+### Changed
+
+- Upgraded Obsidian note callouts from generic blockquotes to Obsidian-compatible `data-callout` markup with a title row, type label, color band, and light background.
+- Preserved `[!NOTE]+` and `[!NOTE]-` fold state in rendered notes, while keeping fenced code examples unchanged.
+- Tuned the `NOTE`, `TIP`, `WARNING`, and `DANGER` callout colors from the Things theme's blue and green palette.
+
+### Verification
+
+- Frontend production build passed after the callout DOM and style changes.
+- Local Vite routes returned HTTP 200 for `/`, `/notes`, and `/about`.
+
 ## 2026-07-16
 
 ### Changed
