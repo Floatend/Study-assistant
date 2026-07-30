@@ -1,22 +1,105 @@
 <template>
-  <div class="markdown-content" v-html="html"></div>
+  <div ref="markdownRoot" class="markdown-content" v-html="html"></div>
 </template>
 
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
+import hljs from 'highlight.js/lib/core'
+import bash from 'highlight.js/lib/languages/bash'
+import cpp from 'highlight.js/lib/languages/cpp'
+import css from 'highlight.js/lib/languages/css'
+import java from 'highlight.js/lib/languages/java'
+import javascript from 'highlight.js/lib/languages/javascript'
+import json from 'highlight.js/lib/languages/json'
+import markdownLanguage from 'highlight.js/lib/languages/markdown'
+import python from 'highlight.js/lib/languages/python'
+import sql from 'highlight.js/lib/languages/sql'
+import typescript from 'highlight.js/lib/languages/typescript'
+import xml from 'highlight.js/lib/languages/xml'
 import MarkdownIt from 'markdown-it'
-import { computed } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createHeadingId, enhanceObsidianCallouts, normalizeObsidianMarkdown } from '@/utils/markdown'
 
 const props = defineProps<{
   content?: string | null
 }>()
 
+const markdownRoot = ref<HTMLDivElement>()
+
+hljs.registerLanguage('bash', bash)
+hljs.registerLanguage('cpp', cpp)
+hljs.registerLanguage('css', css)
+hljs.registerLanguage('java', java)
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('json', json)
+hljs.registerLanguage('markdown', markdownLanguage)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('sql', sql)
+hljs.registerLanguage('typescript', typescript)
+hljs.registerLanguage('xml', xml)
+
+const languageAliases: Record<string, string> = {
+  c: 'cpp',
+  'c++': 'cpp',
+  cc: 'cpp',
+  h: 'cpp',
+  hpp: 'cpp',
+  html: 'xml',
+  jsx: 'javascript',
+  md: 'markdown',
+  py: 'python',
+  sh: 'bash',
+  shell: 'bash',
+  tsx: 'typescript',
+  vue: 'xml',
+  yml: 'yaml'
+}
+
+const languageLabels: Record<string, string> = {
+  bash: 'Shell',
+  cpp: 'C++',
+  css: 'CSS',
+  java: 'Java',
+  javascript: 'JavaScript',
+  json: 'JSON',
+  markdown: 'Markdown',
+  python: 'Python',
+  sql: 'SQL',
+  typescript: 'TypeScript',
+  xml: 'HTML / XML'
+}
+
+function normalizeLanguage(info: string) {
+  const raw = info.trim().split(/\s+/)[0]?.replace(/^\{\.?|\}$/g, '').toLowerCase() ?? ''
+  return languageAliases[raw] ?? raw
+}
+
+function highlightCode(code: string, info: string) {
+  const language = normalizeLanguage(info)
+  if (!language || !hljs.getLanguage(language)) return ''
+  try {
+    return hljs.highlight(code, { language, ignoreIllegals: true }).value
+  } catch {
+    return ''
+  }
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character] ?? character)
+}
+
 const markdown = new MarkdownIt({
   html: false,
   linkify: true,
   breaks: true,
-  typographer: true
+  typographer: true,
+  highlight: (code, language) => highlightCode(code, language)
 })
 
 const defaultHeadingOpen = markdown.renderer.rules.heading_open
@@ -29,6 +112,16 @@ markdown.renderer.rules.heading_open = (tokens, index, options, env, self) => {
     : self.renderToken(tokens, index, options)
 }
 
+markdown.renderer.rules.fence = (tokens, index) => {
+  const token = tokens[index]
+  const language = normalizeLanguage(token.info)
+  const label = languageLabels[language] ?? (language ? language.toUpperCase() : 'TEXT')
+  const highlighted = highlightCode(token.content, token.info)
+  const renderedCode = highlighted || markdown.utils.escapeHtml(token.content)
+  const languageClass = language ? ` class="language-${escapeHtml(language)}"` : ''
+  return `<div class="code-block-shell"><div class="code-block-toolbar"><span class="code-block-language">${escapeHtml(label)}</span><button class="code-copy-button" type="button" aria-label="复制代码">复制</button></div><pre><code${languageClass}>${renderedCode}</code></pre></div>`
+}
+
 const html = computed(() => {
   const raw = props.content?.trim()
   if (!raw) {
@@ -39,6 +132,30 @@ const html = computed(() => {
   })
   return enhanceObsidianCallouts(sanitized)
 })
+
+async function copyCode(button: HTMLButtonElement) {
+  const code = button.closest('.code-block-shell')?.querySelector('code')?.textContent ?? ''
+  if (!code) return
+  try {
+    await navigator.clipboard.writeText(code)
+    const originalLabel = button.textContent ?? '复制'
+    button.textContent = '已复制'
+    window.setTimeout(() => { button.textContent = originalLabel }, 1400)
+  } catch {
+    button.textContent = '复制失败'
+    window.setTimeout(() => { button.textContent = '复制' }, 1400)
+  }
+}
+
+function handleMarkdownClick(event: Event) {
+  const target = event.target as HTMLElement | null
+  const button = target?.closest<HTMLButtonElement>('.code-copy-button')
+  if (button && markdownRoot.value?.contains(button)) void copyCode(button)
+}
+
+onMounted(() => markdownRoot.value?.addEventListener('click', handleMarkdownClick))
+onBeforeUnmount(() => markdownRoot.value?.removeEventListener('click', handleMarkdownClick))
+watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 })))
 </script>
 
 <style scoped>
@@ -155,14 +272,27 @@ const html = computed(() => {
 }
 
 .markdown-content :deep(.obsidian-callout-label) {
+  display: inline-flex;
+  align-items: center;
   flex: 0 0 auto;
+  gap: 5px;
   font-size: 12px;
   letter-spacing: .06em;
 }
 
-.markdown-content :deep(.obsidian-callout-label)::before {
-  margin-right: 5px;
-  content: '✦';
+.markdown-content :deep(.obsidian-callout-icon) {
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+}
+
+.markdown-content :deep(.obsidian-callout-svg) {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 .markdown-content :deep(.obsidian-callout > p:not(.obsidian-callout-title)),
@@ -191,17 +321,104 @@ const html = computed(() => {
 }
 
 .markdown-content :deep(pre) {
-  margin: 10px 0;
-  padding: 12px;
+  margin: 0;
+  padding: 18px 20px 20px;
   overflow-x: auto;
-  border-radius: 8px;
-  background: #111827;
+  background: #f0f2f5;
 }
 
-.markdown-content :deep(pre code) {
-  padding: 0;
-  color: #e5e7eb;
+.markdown-content :deep(.code-block-shell) {
+  margin: 18px 0 22px;
+  overflow: hidden;
+  border: 1px solid #e0e5ec;
+  border-radius: 8px;
+  background: #f0f2f5;
+  box-shadow: 0 5px 18px rgba(41, 54, 78, .06);
+}
+
+.markdown-content :deep(.code-block-toolbar) {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 10px 0 14px;
+  border-bottom: 1px solid #e0e5ec;
+  color: #687487;
+  background: #e8ebf0;
+  font-size: 11px;
+}
+
+.markdown-content :deep(.code-block-language) {
+  margin-right: auto;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.markdown-content :deep(.code-copy-button) {
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 4px;
+  color: #647086;
   background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: color .2s ease, background-color .2s ease;
+}
+
+.markdown-content :deep(.code-copy-button:hover) {
+  color: #245de8;
+  background: rgba(255, 255, 255, .7);
+}
+
+.markdown-content :deep(.code-block-shell pre code) {
+  display: block;
+  min-width: max-content;
+  padding: 0;
+  color: #263247;
+  background: transparent;
+  font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.85;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.markdown-content :deep(.hljs-comment),
+.markdown-content :deep(.hljs-quote) {
+  color: #9aa5b4;
+  font-style: italic;
+}
+
+.markdown-content :deep(.hljs-keyword),
+.markdown-content :deep(.hljs-selector-tag),
+.markdown-content :deep(.hljs-literal),
+.markdown-content :deep(.hljs-type) {
+  color: #b51da8;
+}
+
+.markdown-content :deep(.hljs-string),
+.markdown-content :deep(.hljs-attr),
+.markdown-content :deep(.hljs-variable),
+.markdown-content :deep(.hljs-template-variable) {
+  color: #2765e8;
+}
+
+.markdown-content :deep(.hljs-number),
+.markdown-content :deep(.hljs-symbol),
+.markdown-content :deep(.hljs-bullet) {
+  color: #d35c22;
+}
+
+.markdown-content :deep(.hljs-title),
+.markdown-content :deep(.hljs-function),
+.markdown-content :deep(.hljs-built_in) {
+  color: #2753b8;
+}
+
+.markdown-content :deep(.hljs-meta),
+.markdown-content :deep(.hljs-name) {
+  color: #008d8a;
 }
 
 .markdown-content :deep(a) {

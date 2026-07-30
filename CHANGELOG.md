@@ -7,12 +7,15 @@ This file records user-visible behavior changes, database migrations, and verifi
 ### Changed
 
 - Upgraded Obsidian note callouts from generic blockquotes to Obsidian-compatible `data-callout` markup with a title row, type label, color band, and light background.
+- Replaced the placeholder Callout marker with type-specific Element Plus icon geometry: pencil for notes, lightning for tips/failures, and warning for caution states.
+- Added `highlight.js` syntax highlighting for common note code languages, with language labels, a copy action, and an Obsidian-inspired light code surface.
 - Preserved `[!NOTE]+` and `[!NOTE]-` fold state in rendered notes, while keeping fenced code examples unchanged.
 - Tuned the `NOTE`, `TIP`, `WARNING`, and `DANGER` callout colors from the Things theme's blue and green palette.
 
 ### Verification
 
 - Frontend production build passed after the callout DOM and style changes.
+- Frontend production build passed after the icon and code-block rendering changes.
 - Local Vite routes returned HTTP 200 for `/`, `/notes`, and `/about`.
 
 ## 2026-07-16
