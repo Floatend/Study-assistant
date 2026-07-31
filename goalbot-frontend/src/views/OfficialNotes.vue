@@ -11,26 +11,7 @@
         <aside class="knowledge-library">
           <el-input v-model="keyword" :prefix-icon="Search" clearable placeholder="搜索学习笔记" @clear="loadNotes" @keyup.enter="loadNotes" />
           <div class="library-label">分类索引</div>
-          <button class="category-link" :class="{ active: !selectedCategory }" type="button" @click="selectCategory('')"><span>全部文章</span><small>{{ totalCount }}</small></button>
-          <el-tree
-            v-if="categoryTree.length"
-            class="category-tree"
-            :data="categoryTree"
-            node-key="key"
-            :props="{ label: 'label', children: 'children' }"
-            :default-expand-all="true"
-            :expand-on-click-node="false"
-            highlight-current
-            @node-click="selectCategoryNode"
-          >
-            <template #default="{ data }">
-              <div class="category-tree-node" :class="{ active: selectedCategory === data.value, group: data.children.length }">
-                <el-icon class="category-tree-icon"><FolderOpened v-if="data.children.length" /><Document v-else /></el-icon>
-                <span class="category-tree-label">{{ data.label }}</span>
-                <small class="category-tree-count">{{ data.count }}</small>
-              </div>
-            </template>
-          </el-tree>
+          <NoteCategoryTree :categories="categories" :model-value="selectedCategory" :all-count="totalCount" all-label="全部文章" @select="selectCategoryNode" />
           <div class="library-label notes-label">文章列表</div>
           <el-scrollbar class="public-note-scroll">
             <button v-for="note in notes" :key="note.id" class="public-note-link" :class="{ active: activeNote?.id === note.id }" type="button" @click="selectNote(note)">
@@ -75,13 +56,15 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Document, FolderOpened, Search } from '@element-plus/icons-vue'
+import { Search } from '@element-plus/icons-vue'
 import { fetchOfficialNote, fetchOfficialNoteCategories, fetchOfficialNotes } from '@/api/note'
 import BackToTopButton from '@/components/BackToTopButton.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
+import NoteCategoryTree from '@/components/NoteCategoryTree.vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
 import type { Note, NoteCategory } from '@/types/note'
 import { extractMarkdownHeadings } from '@/utils/markdown'
+import { buildNoteCategoryTree, findNoteCategoryNode, summarizeNoteCategories } from '@/utils/noteCategories'
 
 const route = useRoute()
 const router = useRouter()
@@ -97,17 +80,7 @@ const activeHeadingId = ref('')
 const selectedCategoryDescendants = ref<string[] | null>(null)
 let scrollFrame: number | undefined
 
-interface CategoryTreeNode {
-  key: string
-  label: string
-  value: string
-  count: number
-  leafValues: string[]
-  children: CategoryTreeNode[]
-}
-
 const totalCount = computed(() => categories.value.reduce((total, category) => total + category.count, 0))
-const categoryTree = computed(() => buildCategoryTree(categories.value))
 const activeTags = computed(() => activeNote.value?.tags?.split(',').map((tag) => tag.trim()).filter(Boolean) ?? [])
 const headings = computed(() => extractMarkdownHeadings(activeNote.value?.content))
 const activeIndex = computed(() => notes.value.findIndex((note) => note.id === activeNote.value?.id))
@@ -116,11 +89,11 @@ const nextNote = computed(() => activeIndex.value >= 0 && activeIndex.value < no
 
 onMounted(async () => {
   const requestedCategory = typeof route.query.category === 'string' ? route.query.category : ''
-  categories.value = await fetchOfficialNoteCategories()
+  try { categories.value = await fetchOfficialNoteCategories() } catch { categories.value = [] }
   selectedCategory.value = requestedCategory
-  const initialCategoryNode = findCategoryNode(categoryTree.value, requestedCategory)
+  const initialCategoryNode = findNoteCategoryNode(buildNoteCategoryTree(categories.value), requestedCategory)
   selectedCategoryDescendants.value = initialCategoryNode?.children.length ? initialCategoryNode.leafValues : null
-  await loadNotes(false)
+  try { await loadNotes(false) } catch { notes.value = []; activeNote.value = null }
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
@@ -139,7 +112,7 @@ watch(() => route.query.category, async (value) => {
   const category = typeof value === 'string' ? value : ''
   if (category === selectedCategory.value) return
   selectedCategory.value = category
-  const node = findCategoryNode(categoryTree.value, category)
+  const node = findNoteCategoryNode(buildNoteCategoryTree(categories.value), category)
   selectedCategoryDescendants.value = node?.children.length ? node.leafValues : null
   await loadNotes(false)
 })
@@ -156,6 +129,7 @@ async function loadNotes(syncRoute = true) {
       limit: 100,
     })
     notes.value = descendants ? items.filter((note) => descendants.includes(note.category || '未分类')) : items
+    if (!categories.value.length) categories.value = summarizeNoteCategories(items)
     const requestedId = Number(route.query.note)
     const target = notes.value.find((note) => note.id === requestedId) ?? notes.value[0]
     if (target) await selectNote(target, syncRoute)
@@ -163,55 +137,11 @@ async function loadNotes(syncRoute = true) {
   } finally { loading.value = false }
 }
 
-async function selectCategory(category: string) {
+async function selectCategoryNode(category: string, descendants: string[] | null) {
   selectedCategory.value = category
-  selectedCategoryDescendants.value = null
+  selectedCategoryDescendants.value = descendants
   await router.replace({ query: category ? { category } : {} })
   await loadNotes()
-}
-
-async function selectCategoryNode(node: CategoryTreeNode) {
-  selectedCategory.value = node.value
-  selectedCategoryDescendants.value = node.children.length ? [...node.leafValues] : null
-  await router.replace({ query: { category: node.value } })
-  await loadNotes()
-}
-
-function splitCategoryPath(category: string) {
-  return category.split(/\s*(?:\/|>|::|\\)\s*/).map((part) => part.trim()).filter(Boolean)
-}
-
-function buildCategoryTree(items: NoteCategory[]): CategoryTreeNode[] {
-  const roots: CategoryTreeNode[] = []
-  for (const item of items) {
-    const parts = splitCategoryPath(item.name)
-    if (!parts.length) continue
-    let current = roots
-    const path: string[] = []
-    parts.forEach((part, index) => {
-      path.push(part)
-      let node = current.find((candidate) => candidate.label === part)
-      if (!node) {
-        node = { key: path.join('/'), label: part, value: index === parts.length - 1 ? item.name : path.join('/'), count: 0, leafValues: [], children: [] }
-        current.push(node)
-      }
-      node.count += item.count
-      if (!node.leafValues.includes(item.name)) node.leafValues.push(item.name)
-      node.value = index === parts.length - 1 ? item.name : path.join('/')
-      current = node.children
-    })
-  }
-  return roots
-}
-
-function findCategoryNode(nodes: CategoryTreeNode[], value: string): CategoryTreeNode | null {
-  if (!value) return null
-  for (const node of nodes) {
-    if (node.value === value) return node
-    const match = findCategoryNode(node.children, value)
-    if (match) return match
-  }
-  return null
 }
 
 async function selectNote(note: Note, syncRoute = true) {

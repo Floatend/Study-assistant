@@ -7,6 +7,8 @@ This file records user-visible behavior changes, database migrations, and verifi
 ### Changed
 
 - Removed the public notes page intro sentence and replaced the flat category list with an expandable animated category tree. Categories support `/`, `>`, `::`, and `\\` path separators; selecting a parent category includes all descendant notes.
+- Moved the category tree into a shared component used by both the public notes reader and the administrator notebook, with a visible empty state and category-path input guidance.
+- Removed Obsidian callout labels, icons, fold behavior, and colored callout panels from Markdown rendering; `NOTE`, `WARNING`, `TIP`, and similar markers now become ordinary quoted content.
 - Upgraded Obsidian note callouts from generic blockquotes to Obsidian-compatible `data-callout` markup with a title row, type label, color band, and light background.
 - Replaced the placeholder Callout marker with type-specific Element Plus icon geometry: pencil for notes, lightning for tips/failures, and warning for caution states.
 - Added `highlight.js` syntax highlighting for common note code languages, with language labels, a copy action, and an Obsidian-inspired light code surface.
