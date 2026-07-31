@@ -2,6 +2,10 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import type { Result } from '@/types/common'
 
+type GoalBotRequestConfig = AxiosRequestConfig & {
+  silent?: boolean
+}
+
 const http = axios.create({
   baseURL: '/',
   timeout: 20000
@@ -30,12 +34,15 @@ http.interceptors.response.use(
   },
   (error) => {
     if (error?.response?.status === 401) clearExpiredSession()
-    ElMessage.error(error?.message || '网络请求失败')
+    const responseMessage = error?.response?.data?.message
+    const status = error?.response?.status
+    const message = responseMessage || (status ? `请求失败（HTTP ${status}）` : error?.message || '网络请求失败')
+    if (!error?.config?.silent) ElMessage.error(message)
     return Promise.reject(error)
   }
 )
 
-export function request<T>(config: AxiosRequestConfig) {
+export function request<T>(config: GoalBotRequestConfig) {
   return http.request<unknown, T>(config)
 }
 

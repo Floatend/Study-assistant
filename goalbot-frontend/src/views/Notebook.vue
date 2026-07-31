@@ -121,6 +121,7 @@ import MarkdownContent from '@/components/MarkdownContent.vue'
 import NoteCategoryTree from '@/components/NoteCategoryTree.vue'
 import type { Note, NoteCategory } from '@/types/note'
 import { extractMarkdownHeadings } from '@/utils/markdown'
+import { summarizeNoteCategories } from '@/utils/noteCategories'
 
 const notes = ref<Note[]>([])
 const categories = ref<NoteCategory[]>([])
@@ -152,13 +153,17 @@ async function loadNotes() {
   try {
     const published = statusFilter.value === 'all' ? undefined : statusFilter.value === 'published'
     const descendants = categoryFilterDescendants.value
-    const [items, categoryItems] = await Promise.all([
-      fetchNotes({ keyword: keyword.value.trim() || undefined, category: descendants ? undefined : categoryFilter.value || undefined, published, limit: 100 }),
-      fetchNoteCategories()
-    ])
+    const items = await fetchNotes({ keyword: keyword.value.trim() || undefined, category: descendants ? undefined : categoryFilter.value || undefined, published, limit: 100 })
     notes.value = descendants ? items.filter((note) => descendants.includes(note.category || '未分类')) : items
-    categories.value = categoryItems
-    const candidate = activeNote.value ? items.find((note) => note.id === activeNote.value?.id) : items[0]
+
+    // 分类树是辅助导航，不能阻塞笔记正文加载。接口暂时不可用时，用当前结果恢复基本分类能力。
+    try {
+      categories.value = await fetchNoteCategories({ silent: true })
+    } catch {
+      categories.value = summarizeNoteCategories(items)
+    }
+
+    const candidate = activeNote.value ? notes.value.find((note) => note.id === activeNote.value?.id) : notes.value[0]
     if (candidate) await selectNote(candidate)
     else activeNote.value = null
   } finally { loading.value = false }

@@ -9,8 +9,8 @@ export function fetchNote(id: number) {
   return request<Note>({ url: `/api/notes/${id}`, method: 'GET' })
 }
 
-export function fetchNoteCategories() {
-  return request<NoteCategory[]>({ url: '/api/notes/categories', method: 'GET' })
+export function fetchNoteCategories(options: { silent?: boolean } = {}) {
+  return request<NoteCategory[]>({ url: '/api/notes/categories', method: 'GET', ...options })
 }
 
 export function createNote(data: NotePayload) {
