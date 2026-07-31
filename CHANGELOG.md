@@ -6,6 +6,7 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Removed the public notes page intro sentence and replaced the flat category list with an expandable animated category tree. Categories support `/`, `>`, `::`, and `\\` path separators; selecting a parent category includes all descendant notes.
 - Upgraded Obsidian note callouts from generic blockquotes to Obsidian-compatible `data-callout` markup with a title row, type label, color band, and light background.
 - Replaced the placeholder Callout marker with type-specific Element Plus icon geometry: pencil for notes, lightning for tips/failures, and warning for caution states.
 - Added `highlight.js` syntax highlighting for common note code languages, with language labels, a copy action, and an Obsidian-inspired light code surface.
@@ -14,6 +15,8 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Verification
 
+- Frontend type checking and production build passed after the category tree changes.
+- Local `/notes` route returned HTTP 200 and no longer renders the removed intro sentence.
 - Frontend production build passed after the callout DOM and style changes.
 - Frontend production build passed after the icon and code-block rendering changes.
 - Local Vite routes returned HTTP 200 for `/`, `/notes`, and `/about`.
