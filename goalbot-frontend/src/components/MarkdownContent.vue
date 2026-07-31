@@ -16,6 +16,7 @@ import python from 'highlight.js/lib/languages/python'
 import sql from 'highlight.js/lib/languages/sql'
 import typescript from 'highlight.js/lib/languages/typescript'
 import xml from 'highlight.js/lib/languages/xml'
+import yaml from 'highlight.js/lib/languages/yaml'
 import MarkdownIt from 'markdown-it'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { createHeadingId, enhanceObsidianCallouts, normalizeObsidianMarkdown } from '@/utils/markdown'
@@ -37,6 +38,7 @@ hljs.registerLanguage('python', python)
 hljs.registerLanguage('sql', sql)
 hljs.registerLanguage('typescript', typescript)
 hljs.registerLanguage('xml', xml)
+hljs.registerLanguage('yaml', yaml)
 
 const languageAliases: Record<string, string> = {
   c: 'cpp',
@@ -66,7 +68,8 @@ const languageLabels: Record<string, string> = {
   python: 'Python',
   sql: 'SQL',
   typescript: 'TypeScript',
-  xml: 'HTML / XML'
+  xml: 'HTML / XML',
+  yaml: 'YAML'
 }
 
 function normalizeLanguage(info: string) {
@@ -112,6 +115,45 @@ markdown.renderer.rules.heading_open = (tokens, index, options, env, self) => {
     : self.renderToken(tokens, index, options)
 }
 
+const defaultTableOpen = markdown.renderer.rules.table_open
+const defaultTableClose = markdown.renderer.rules.table_close
+markdown.renderer.rules.table_open = (tokens, index, options, env, self) => {
+  const table = defaultTableOpen
+    ? defaultTableOpen(tokens, index, options, env, self)
+    : self.renderToken(tokens, index, options)
+  return `<div class="markdown-table-wrap">${table}`
+}
+markdown.renderer.rules.table_close = (tokens, index, options, env, self) => {
+  const table = defaultTableClose
+    ? defaultTableClose(tokens, index, options, env, self)
+    : self.renderToken(tokens, index, options)
+  return `${table}</div>`
+}
+
+const defaultImage = markdown.renderer.rules.image
+markdown.renderer.rules.image = (tokens, index, options, env, self) => {
+  tokens[index].attrSet('loading', 'lazy')
+  tokens[index].attrSet('decoding', 'async')
+  return defaultImage
+    ? defaultImage(tokens, index, options, env, self)
+    : self.renderToken(tokens, index, options)
+}
+
+markdown.core.ruler.after('inline', 'task-list-items', (state) => {
+  state.tokens.forEach((token, index) => {
+    if (token.type !== 'inline' || state.tokens[index - 2]?.type !== 'list_item_open') return
+    const firstChild = token.children?.[0]
+    const match = firstChild?.type === 'text' ? firstChild.content.match(/^\[([ xX])\]\s+/) : null
+    if (!firstChild || !match) return
+
+    const checkbox = new state.Token('html_inline', '', 0)
+    checkbox.content = `<input class="task-list-checkbox" type="checkbox" disabled${match[1].toLowerCase() === 'x' ? ' checked' : ''}>`
+    firstChild.content = firstChild.content.slice(match[0].length)
+    token.children?.unshift(checkbox)
+    state.tokens[index - 2].attrJoin('class', 'task-list-item')
+  })
+})
+
 markdown.renderer.rules.fence = (tokens, index) => {
   const token = tokens[index]
   const language = normalizeLanguage(token.info)
@@ -150,11 +192,39 @@ async function copyCode(button: HTMLButtonElement) {
 function handleMarkdownClick(event: Event) {
   const target = event.target as HTMLElement | null
   const button = target?.closest<HTMLButtonElement>('.code-copy-button')
-  if (button && markdownRoot.value?.contains(button)) void copyCode(button)
+  if (button && markdownRoot.value?.contains(button)) {
+    void copyCode(button)
+    return
+  }
+
+  const title = target?.closest<HTMLElement>('.obsidian-callout.is-foldable > .obsidian-callout-title')
+  if (title && markdownRoot.value?.contains(title)) toggleCallout(title)
 }
 
-onMounted(() => markdownRoot.value?.addEventListener('click', handleMarkdownClick))
-onBeforeUnmount(() => markdownRoot.value?.removeEventListener('click', handleMarkdownClick))
+function handleMarkdownKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  const title = (event.target as HTMLElement | null)?.closest<HTMLElement>('.obsidian-callout.is-foldable > .obsidian-callout-title')
+  if (!title || !markdownRoot.value?.contains(title)) return
+  event.preventDefault()
+  toggleCallout(title)
+}
+
+function toggleCallout(title: HTMLElement) {
+  const callout = title.parentElement
+  if (!callout?.classList.contains('obsidian-callout')) return
+  const closed = callout.getAttribute('data-callout-fold') === 'closed'
+  callout.setAttribute('data-callout-fold', closed ? 'open' : 'closed')
+  title.setAttribute('aria-expanded', String(closed))
+}
+
+onMounted(() => {
+  markdownRoot.value?.addEventListener('click', handleMarkdownClick)
+  markdownRoot.value?.addEventListener('keydown', handleMarkdownKeydown)
+})
+onBeforeUnmount(() => {
+  markdownRoot.value?.removeEventListener('click', handleMarkdownClick)
+  markdownRoot.value?.removeEventListener('keydown', handleMarkdownKeydown)
+})
 watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 })))
 </script>
 
@@ -163,6 +233,11 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   color: #25313f;
   font-size: 14px;
   line-height: 1.75;
+}
+
+.markdown-content:empty::before {
+  color: #98a2b3;
+  content: "正文预览会显示在这里";
 }
 
 .markdown-content :deep(*) {
@@ -207,6 +282,19 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 
 .markdown-content :deep(li) {
   margin: 4px 0;
+}
+
+.markdown-content :deep(.task-list-item) {
+  margin-left: -20px;
+  list-style: none;
+}
+
+.markdown-content :deep(.task-list-checkbox) {
+  width: 15px;
+  height: 15px;
+  margin: 0 8px 0 0;
+  vertical-align: -2px;
+  accent-color: #4d6bfe;
 }
 
 .markdown-content :deep(strong) {
@@ -254,13 +342,36 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 
 .markdown-content :deep(.obsidian-callout-title) {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin: 0;
   padding: 10px 13px 5px;
   color: rgb(var(--callout-color));
   font-style: normal;
   font-weight: 750;
+}
+
+.markdown-content :deep(.obsidian-callout.is-foldable > .obsidian-callout-title) {
+  cursor: pointer;
+  outline: none;
+}
+
+.markdown-content :deep(.obsidian-callout.is-foldable > .obsidian-callout-title:focus-visible) {
+  box-shadow: 0 0 0 2px rgba(var(--callout-color), .28) inset;
+}
+
+.markdown-content :deep(.obsidian-callout-fold) {
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .18s ease;
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout-fold="closed"] .obsidian-callout-fold) {
+  transform: rotate(-45deg) translate(-1px, -1px);
 }
 
 .markdown-content :deep(.obsidian-callout-label) {
@@ -286,16 +397,17 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   fill: currentColor;
 }
 
-.markdown-content :deep(.obsidian-callout > p:not(.obsidian-callout-title)),
-.markdown-content :deep(.obsidian-callout > ul),
-.markdown-content :deep(.obsidian-callout > ol),
-.markdown-content :deep(.obsidian-callout > pre),
-.markdown-content :deep(.obsidian-callout > h1),
-.markdown-content :deep(.obsidian-callout > h2),
-.markdown-content :deep(.obsidian-callout > h3),
-.markdown-content :deep(.obsidian-callout > h4) {
-  margin-right: 13px;
-  margin-left: 13px;
+.markdown-content :deep(.obsidian-callout-content) {
+  padding: 0 13px 12px;
+  color: #30415f;
+}
+
+.markdown-content :deep(.obsidian-callout-content > :first-child) {
+  margin-top: 0;
+}
+
+.markdown-content :deep(.obsidian-callout-content > :last-child) {
+  margin-bottom: 0;
 }
 
 .markdown-content :deep(.obsidian-callout[data-callout-fold="closed"] > :not(.obsidian-callout-title)) {
@@ -307,8 +419,67 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   border-radius: 4px;
   color: #9f1239;
   background: #f8e7ed;
-  font-family: inherit;
+  font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   font-size: 12px;
+}
+
+.markdown-content :deep(.markdown-table-wrap) {
+  width: 100%;
+  margin: 18px 0 24px;
+  overflow-x: auto;
+  border: 1px solid #dfe5ef;
+  border-radius: 8px;
+}
+
+.markdown-content :deep(table) {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 13px;
+}
+
+.markdown-content :deep(th),
+.markdown-content :deep(td) {
+  padding: 10px 12px;
+  border-right: 1px solid #e6eaf1;
+  border-bottom: 1px solid #e6eaf1;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-content :deep(th:last-child),
+.markdown-content :deep(td:last-child) {
+  border-right: 0;
+}
+
+.markdown-content :deep(tr:last-child td) {
+  border-bottom: 0;
+}
+
+.markdown-content :deep(th) {
+  color: #39465a;
+  background: #f4f6fa;
+  font-weight: 750;
+}
+
+.markdown-content :deep(tr:nth-child(even) td) {
+  background: #fafbfe;
+}
+
+.markdown-content :deep(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 20px auto;
+  border: 1px solid #e1e6ef;
+  border-radius: 8px;
+}
+
+.markdown-content :deep(hr) {
+  margin: 30px 0;
+  border: 0;
+  border-top: 1px solid #dfe4ec;
 }
 
 .markdown-content :deep(pre) {
@@ -360,6 +531,13 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 .markdown-content :deep(.code-copy-button:hover) {
   color: #245de8;
   background: rgba(255, 255, 255, .7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .markdown-content :deep(.obsidian-callout-fold),
+  .markdown-content :deep(.code-copy-button) {
+    transition: none;
+  }
 }
 
 .markdown-content :deep(.code-block-shell pre code) {

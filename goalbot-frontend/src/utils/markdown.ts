@@ -16,18 +16,25 @@ export function extractMarkdownHeadings(content?: string | null): MarkdownHeadin
   if (!content) return []
 
   const counters: HeadingCounter = new Map()
-  return content
-    .split(/\r?\n/)
-    .map((line) => line.match(/^\s{0,3}(#{1,4})\s+(.+?)\s*#*\s*$/))
-    .filter((match): match is RegExpMatchArray => Boolean(match))
-    .map((match) => {
-      const text = cleanHeadingText(match[2])
-      return {
-        level: match[1].length,
-        text,
-        id: createHeadingId(text, counters)
-      }
-    })
+  const headings: MarkdownHeading[] = []
+  let fence: string | null = null
+
+  content.replace(/\r\n?/g, '\n').split('\n').forEach((line) => {
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/)
+    if (fenceMatch) {
+      if (!fence) fence = fenceMatch[1][0]
+      else if (fence === fenceMatch[1][0]) fence = null
+      return
+    }
+    if (fence) return
+
+    const match = line.match(/^\s{0,3}(#{1,4})\s+(.+?)\s*#*\s*$/)
+    if (!match) return
+    const text = cleanHeadingText(match[2])
+    headings.push({ level: match[1].length, text, id: createHeadingId(text, counters) })
+  })
+
+  return headings
 }
 
 /**
@@ -113,11 +120,40 @@ export function enhanceObsidianCallouts(html: string): string {
     const iconSvg = createCalloutIcon(document, match[1].toLowerCase())
     if (iconSvg) icon.append(iconSvg)
     label.append(icon)
-    marker.replaceWith(label)
-    firstChild.classList.add('obsidian-callout-title')
+
+    const title = document.createElement('p')
+    title.className = 'obsidian-callout-title'
+    title.append(label)
+    const content = document.createElement('div')
+    content.className = 'obsidian-callout-content'
+    let reachedBody = false
+
+    Array.from(firstChild.childNodes).forEach((node) => {
+      if (node === marker) return
+      if (!reachedBody && node.nodeName === 'BR') {
+        reachedBody = true
+        return
+      }
+      ;(reachedBody ? content : title).append(node)
+    })
+    Array.from(blockquote.children).slice(1).forEach((child) => content.append(child))
+
+    blockquote.replaceChildren(title)
+    if (content.textContent?.trim() || content.children.length) blockquote.append(content)
     blockquote.classList.add('obsidian-callout')
     blockquote.setAttribute('data-callout', match[1].toLowerCase())
-    if (match[2]) blockquote.setAttribute('data-callout-fold', match[2] === '-' ? 'closed' : 'open')
+    if (match[2]) {
+      const closed = match[2] === '-'
+      const fold = document.createElement('span')
+      fold.className = 'obsidian-callout-fold'
+      fold.setAttribute('aria-hidden', 'true')
+      title.append(fold)
+      title.setAttribute('role', 'button')
+      title.setAttribute('tabindex', '0')
+      title.setAttribute('aria-expanded', String(!closed))
+      blockquote.classList.add('is-foldable')
+      blockquote.setAttribute('data-callout-fold', closed ? 'closed' : 'open')
+    }
   })
 
   return document.body.innerHTML

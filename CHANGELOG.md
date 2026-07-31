@@ -6,6 +6,10 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Restored the administrator notebook's missing workspace styles and reorganized it into a clear category-and-note library, focused article reader, and optional heading outline.
+- Reworked the note editor into a viewport-bounded dialog with independently scrollable source and preview panes; mobile editing now opens in single-column write mode by default.
+- Improved shared Markdown rendering with fenced-code-aware heading extraction, YAML highlighting, responsive tables and images, task-list checkboxes, horizontal rules, and accessible Obsidian callout folding.
+- Split Obsidian callout titles from their body content so title colors, body text, and collapsed state render independently and consistently.
 - Removed the former GoalBot assistant workspace, including task, goal, calendar, check-in, review, analytics, settings, user-management, Dify, Feishu, reminder, agent-planner, and conversation modules.
 - Reduced the product to a public personal homepage, a public official-note archive, an about page, owner login, and an administrator-only Markdown notebook.
 - Reduced the Spring Boot API to owner authentication plus private and public note endpoints; non-administrator accounts can no longer sign in to the private site.
@@ -30,6 +34,9 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Verification
 
+- Frontend type checking and production build passed after the notebook workspace and Markdown renderer repairs.
+- Desktop browser checks passed for the three-column reader, tables, task items, code blocks, and interactive callout folding; the editor remains inside a 720px-high viewport.
+- Mobile browser checks passed at 390 x 844 with no horizontal overflow, a compact library flow, and single-column editing by default.
 - Backend `mvn clean test` passed after compiling the reduced 34-source Spring Boot application.
 - Public-note APIs returned `code: 0` after the repeatable schema created the previously missing local `note` table.
 - The consolidated note migration executed successfully twice against the same MySQL database, confirming repeatable column/index checks.
