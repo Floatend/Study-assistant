@@ -18,7 +18,7 @@ import typescript from 'highlight.js/lib/languages/typescript'
 import xml from 'highlight.js/lib/languages/xml'
 import MarkdownIt from 'markdown-it'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { createHeadingId, normalizeObsidianMarkdown } from '@/utils/markdown'
+import { createHeadingId, enhanceObsidianCallouts, normalizeObsidianMarkdown } from '@/utils/markdown'
 
 const props = defineProps<{
   content?: string | null
@@ -130,7 +130,7 @@ const html = computed(() => {
   const sanitized = DOMPurify.sanitize(markdown.render(normalizeObsidianMarkdown(raw), { headingIds: new Map() }), {
     USE_PROFILES: { html: true }
   })
-  return sanitized
+  return enhanceObsidianCallouts(sanitized)
 })
 
 async function copyCode(button: HTMLButtonElement) {
@@ -216,11 +216,90 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 
 .markdown-content :deep(blockquote) {
   margin: 10px 0;
-  padding: 4px 0 4px 16px;
-  border-left: 2px solid #d5dce8;
-  border-radius: 0;
+  padding: 8px 12px;
+  border-left: 3px solid #2f7d68;
+  border-radius: 4px;
   color: #566273;
-  background: transparent;
+  background: #f4f8f6;
+}
+
+.markdown-content :deep(.obsidian-callout) {
+  --callout-color: 46, 128, 242;
+  margin: 18px 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(var(--callout-color), .35);
+  border-left: 4px solid rgb(var(--callout-color));
+  border-radius: 8px;
+  color: #30415f;
+  background: rgba(var(--callout-color), .09);
+  font-style: normal;
+  box-shadow: 0 2px 8px rgba(31, 60, 140, .06);
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout="tip"]),
+.markdown-content :deep(.obsidian-callout[data-callout="success"]) {
+  --callout-color: 36, 166, 151;
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout="warning"]),
+.markdown-content :deep(.obsidian-callout[data-callout="caution"]) {
+  --callout-color: 218, 142, 41;
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout="danger"]),
+.markdown-content :deep(.obsidian-callout[data-callout="failure"]) {
+  --callout-color: 215, 77, 92;
+}
+
+.markdown-content :deep(.obsidian-callout-title) {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 13px 5px;
+  color: rgb(var(--callout-color));
+  font-style: normal;
+  font-weight: 750;
+}
+
+.markdown-content :deep(.obsidian-callout-label) {
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.markdown-content :deep(.obsidian-callout-icon) {
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+}
+
+.markdown-content :deep(.obsidian-callout-svg) {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.markdown-content :deep(.obsidian-callout > p:not(.obsidian-callout-title)),
+.markdown-content :deep(.obsidian-callout > ul),
+.markdown-content :deep(.obsidian-callout > ol),
+.markdown-content :deep(.obsidian-callout > pre),
+.markdown-content :deep(.obsidian-callout > h1),
+.markdown-content :deep(.obsidian-callout > h2),
+.markdown-content :deep(.obsidian-callout > h3),
+.markdown-content :deep(.obsidian-callout > h4) {
+  margin-right: 13px;
+  margin-left: 13px;
+}
+
+.markdown-content :deep(.obsidian-callout[data-callout-fold="closed"] > :not(.obsidian-callout-title)) {
+  display: none;
 }
 
 .markdown-content :deep(code) {
