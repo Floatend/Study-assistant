@@ -20,8 +20,6 @@ public class User {
 
     private String nickname;
 
-    private String feishuUserId;
-
     private String role;
 
     private Integer status;

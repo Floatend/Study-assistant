@@ -12,16 +12,15 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>goalbot-backend</artifactId>
+    <artifactId>linge-site-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>goalbot-backend</name>
-    <description>Personal goal management AI assistant backend</description>
+    <name>linge-site-backend</name>
+    <description>Personal editorial site and owner notebook backend</description>
 
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mybatis-plus.version>3.5.9</mybatis-plus.version>
-        <lark-oapi.version>2.4.21</lark-oapi.version>
     </properties>
 
     <dependencies>
@@ -39,19 +38,9 @@
             <version>${mybatis-plus.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-jsqlparser</artifactId>
-            <version>${mybatis-plus.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.larksuite.oapi</groupId>
-            <artifactId>oapi-sdk</artifactId>
-            <version>${lark-oapi.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@ConfigurationProperties(prefix = "goalbot.auth")
+@ConfigurationProperties(prefix = "site.auth")
 public class AuthProperties {
 
     private int sessionDays = 30;

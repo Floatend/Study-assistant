@@ -6,7 +6,7 @@
       <img class="hero-image" :src="workspaceHero" alt="窗边的个人学习与创作工作台" />
       <div class="hero-shade" aria-hidden="true" />
       <div class="home-inner hero-content">
-        <div class="hero-meta"><span>PERSONAL STUDY SYSTEM</span><span>EST. 2026</span></div>
+        <div class="hero-meta"><span>PERSONAL KNOWLEDGE ARCHIVE</span><span>EST. 2026</span></div>
         <div class="hero-copy">
           <p>在学习、记录与构建之间。</p>
           <h1>linge.xin</h1>
@@ -32,17 +32,17 @@
     </section>
 
     <section id="directions" class="directions-band">
-      <div class="home-inner directions-head"><p class="section-index">02 / THREE DIRECTIONS</p><span>把输入、行动与复盘连接起来。</span></div>
+      <div class="home-inner directions-head"><p class="section-index">02 / THREE DIRECTIONS</p><span>把输入、实践与写作连接起来。</span></div>
       <div class="home-inner directions-grid">
         <article class="direction direction-notes reveal"><p>01</p><h2>学习笔记</h2><span>把课程、技术与思考从一次性输入整理成可以回访的知识页。</span><RouterLink to="/notes">浏览知识库 <b>→</b></RouterLink></article>
-        <article class="direction direction-system reveal"><p>02</p><h2>GoalBot</h2><span>让自然语言对话、日程、任务和复盘最终落到真实可执行的时间表。</span><RouterLink to="/login">进入工作台 <b>→</b></RouterLink></article>
+        <article class="direction direction-system reveal"><p>02</p><h2>项目记录</h2><span>记录真实做过的设计、开发与部署，把零散经验整理成下一次仍然能用的方法。</span><RouterLink to="/notes">查看整理成果 <b>→</b></RouterLink></article>
         <article class="direction direction-lab reveal"><p>03</p><h2>持续构建</h2><span>给每一次试错保留痕迹，在小系统和长期项目中练习判断与创造。</span><RouterLink to="/about">了解方法 <b>→</b></RouterLink></article>
       </div>
     </section>
 
     <section class="pause-band"><div class="home-inner pause-copy reveal"><span>“</span><p>真正的系统不是把生活压缩得更满，<br />而是让重要的部分有机会发生。</p></div></section>
 
-    <section class="home-cta"><div class="home-inner cta-grid reveal"><p class="section-index">03 / START HERE</p><h2>从一篇笔记，<br />或一段更好的安排开始。</h2><div><RouterLink to="/notes" class="cta-link">阅读站长笔记 <span>→</span></RouterLink><RouterLink to="/login" class="cta-link quiet">登录 GoalBot <span>↗</span></RouterLink></div></div></section>
+    <section class="home-cta"><div class="home-inner cta-grid reveal"><p class="section-index">03 / START HERE</p><h2>从一篇笔记，<br />或一个正在推进的项目开始。</h2><div><RouterLink to="/notes" class="cta-link">阅读站长笔记 <span>→</span></RouterLink><RouterLink to="/login" class="cta-link quiet">站长入口 <span>↗</span></RouterLink></div></div></section>
 
     <footer class="home-footer"><div class="home-inner"><span class="footer-brand">linge.xin</span><span>Write slowly. Build deliberately.</span><span>© 2026</span></div></footer>
   </main>

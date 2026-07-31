@@ -12,7 +12,7 @@ public abstract class BaseController {
 
     protected void requireAdmin() {
         if (!currentUser().isAdmin()) {
-            throw BusinessException.forbidden("Administrator permission is required");
+            throw BusinessException.forbidden("需要站长管理员权限");
         }
     }
 }

@@ -13,8 +13,6 @@ public class UserVO {
 
     private String nickname;
 
-    private String feishuUserId;
-
     private String role;
 
     private Integer status;

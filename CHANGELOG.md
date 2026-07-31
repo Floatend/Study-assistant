@@ -6,6 +6,13 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Removed the former GoalBot assistant workspace, including task, goal, calendar, check-in, review, analytics, settings, user-management, Dify, Feishu, reminder, agent-planner, and conversation modules.
+- Reduced the product to a public personal homepage, a public official-note archive, an about page, owner login, and an administrator-only Markdown notebook.
+- Reduced the Spring Boot API to owner authentication plus private and public note endpoints; non-administrator accounts can no longer sign in to the private site.
+- Removed ECharts and FullCalendar from the frontend bundle and removed the Lark SDK and assistant-only backend dependencies.
+- Renamed user-facing branding and runtime settings to `linge.xin` and `SITE_*`. Existing Compose service names, Java package names, the `goalbot` database, and the `goalbot_mysql_data` volume remain unchanged for deployment compatibility.
+- Replaced the assistant-oriented README and deployment documentation with site-only instructions and removed the obsolete Dify planner and dialogue-agent documents.
+- Improved the login layout so its main headline wraps cleanly at desktop and mobile widths.
 - Removed the public notes page intro sentence and replaced the flat category list with an expandable animated category tree. Categories support `/`, `>`, `::`, and `\\` path separators; selecting a parent category includes all descendant notes.
 - Moved the category tree into a shared component used by both the public notes reader and the administrator notebook, with a visible empty state and category-path input guidance.
 - Kept Obsidian callout colors, icons, borders, backgrounds, and fold behavior while hiding only the `NOTE`, `WARNING`, `TIP`, and similar type labels.
@@ -15,8 +22,19 @@ This file records user-visible behavior changes, database migrations, and verifi
 - Preserved `[!NOTE]+` and `[!NOTE]-` fold state in rendered notes, while keeping fenced code examples unchanged.
 - Tuned the `NOTE`, `TIP`, `WARNING`, and `DANGER` callout colors from the Things theme's blue and green palette.
 
+### Database
+
+- Replaced the initial schema with a repeatable, non-destructive definition for `user`, `auth_session`, and `note`.
+- Existing assistant tables are not dropped automatically. Back up the database before archiving or removing them manually.
+- Existing deployments must run `goalbot-backend/sql/init.sql` and `goalbot-backend/sql/note_knowledge_base.sql` once to create any missing note table, fields, or indexes.
+
 ### Verification
 
+- Backend `mvn clean test` passed after compiling the reduced 34-source Spring Boot application.
+- Public-note APIs returned `code: 0` after the repeatable schema created the previously missing local `note` table.
+- The consolidated note migration executed successfully twice against the same MySQL database, confirming repeatable column/index checks.
+- The private note API returned the expected `401` response without an administrator token.
+- Desktop and mobile browser checks passed for the public homepage, notes archive, owner login, and protected notebook redirect.
 - Frontend type checking and production build passed after the category tree changes.
 - Local `/notes` route returned HTTP 200 and no longer renders the removed intro sentence.
 - Frontend production build passed after the callout DOM and style changes.

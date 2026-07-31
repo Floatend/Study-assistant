@@ -16,7 +16,6 @@ services:
     volumes:
       - goalbot_mysql_data:/var/lib/mysql
       - ./goalbot-backend/sql/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
-      - ./goalbot-backend/sql/multi_user_auth.sql:/docker-entrypoint-initdb.d/002-multi-user-auth.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 10s
@@ -40,29 +39,9 @@ services:
       MYSQL_URL: jdbc:mysql://goalbot-mysql:3306/goalbot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       MYSQL_USERNAME: ${MYSQL_USERNAME:-goalbot}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
-      GOALBOT_BOOTSTRAP_ADMIN_USERNAME: ${GOALBOT_BOOTSTRAP_ADMIN_USERNAME:-local_user}
-      GOALBOT_BOOTSTRAP_ADMIN_PASSWORD: ${GOALBOT_BOOTSTRAP_ADMIN_PASSWORD:?GOALBOT_BOOTSTRAP_ADMIN_PASSWORD is required}
-      GOALBOT_AUTH_SESSION_DAYS: ${GOALBOT_AUTH_SESSION_DAYS:-30}
-      GOALBOT_REMINDER_ENABLED: ${GOALBOT_REMINDER_ENABLED:-true}
-      DIFY_ENABLED: ${DIFY_ENABLED:-true}
-      DIFY_API_URL: ${DIFY_API_URL:-}
-      DIFY_API_KEY: ${DIFY_API_KEY:-}
-      DIFY_WORKFLOW_API_URL: ${DIFY_WORKFLOW_API_URL:-}
-      DIFY_WORKFLOW_API_KEY: ${DIFY_WORKFLOW_API_KEY:-}
-      DIFY_PLANNER_API_URL: ${DIFY_PLANNER_API_URL:-}
-      DIFY_PLANNER_API_KEY: ${DIFY_PLANNER_API_KEY:-}
-      DIFY_TIMEOUT_SECONDS: ${DIFY_TIMEOUT_SECONDS:-60}
-      GOALBOT_AGENT_PLANNER_MODE: ${GOALBOT_AGENT_PLANNER_MODE:-OFF}
-      GOALBOT_AGENT_PLANNER_MIN_CONFIDENCE: ${GOALBOT_AGENT_PLANNER_MIN_CONFIDENCE:-0.72}
-      GOALBOT_AGENT_PLANNER_MAX_ACTIONS: ${GOALBOT_AGENT_PLANNER_MAX_ACTIONS:-8}
-      FEISHU_APP_ID: ${FEISHU_APP_ID:-}
-      FEISHU_APP_SECRET: ${FEISHU_APP_SECRET:-}
-      FEISHU_VERIFICATION_TOKEN: ${FEISHU_VERIFICATION_TOKEN:-}
-      FEISHU_ENCRYPT_KEY: ${FEISHU_ENCRYPT_KEY:-}
-      FEISHU_DEFAULT_CHAT_ID: ${FEISHU_DEFAULT_CHAT_ID:-}
-      FEISHU_LONG_CONNECTION_ENABLED: ${FEISHU_LONG_CONNECTION_ENABLED:-false}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      SITE_BOOTSTRAP_ADMIN_USERNAME: ${SITE_BOOTSTRAP_ADMIN_USERNAME:-local_user}
+      SITE_BOOTSTRAP_ADMIN_PASSWORD: ${SITE_BOOTSTRAP_ADMIN_PASSWORD:?SITE_BOOTSTRAP_ADMIN_PASSWORD is required}
+      SITE_AUTH_SESSION_DAYS: ${SITE_AUTH_SESSION_DAYS:-30}
     networks:
       - goalbot-net
 

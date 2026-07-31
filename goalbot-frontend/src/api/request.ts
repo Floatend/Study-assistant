@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import type { Result } from '@/types/common'
 
-type GoalBotRequestConfig = AxiosRequestConfig & {
+type SiteRequestConfig = AxiosRequestConfig & {
   silent?: boolean
 }
 
@@ -12,7 +12,7 @@ const http = axios.create({
 })
 
 http.interceptors.request.use((config) => {
-  const token = localStorage.getItem('goalbot-auth-token')
+  const token = localStorage.getItem('linge-owner-auth-token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -42,13 +42,13 @@ http.interceptors.response.use(
   }
 )
 
-export function request<T>(config: GoalBotRequestConfig) {
+export function request<T>(config: SiteRequestConfig) {
   return http.request<unknown, T>(config)
 }
 
 function clearExpiredSession() {
-  localStorage.removeItem('goalbot-auth-token')
-  localStorage.removeItem('goalbot-auth-user')
+  localStorage.removeItem('linge-owner-auth-token')
+  localStorage.removeItem('linge-owner-auth-user')
   if (window.location.pathname !== '/login') {
     const redirect = `${window.location.pathname}${window.location.search}`
     window.location.assign(`/login?redirect=${encodeURIComponent(redirect)}`)

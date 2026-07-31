@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: goalbot-backend
+    name: linge-site-backend
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${MYSQL_URL:jdbc:mysql://localhost:3306/goalbot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
@@ -21,34 +21,11 @@ mybatis-plus:
     db-config:
       id-type: auto
 
-goalbot:
+site:
   auth:
-    session-days: ${GOALBOT_AUTH_SESSION_DAYS:30}
-    bootstrap-admin-username: ${GOALBOT_BOOTSTRAP_ADMIN_USERNAME:local_user}
-    bootstrap-admin-password: ${GOALBOT_BOOTSTRAP_ADMIN_PASSWORD:}
-  dify:
-    enabled: ${DIFY_ENABLED:true}
-    api-url: ${DIFY_API_URL:}
-    api-key: ${DIFY_API_KEY:}
-    workflow-api-url: ${DIFY_WORKFLOW_API_URL:}
-    workflow-api-key: ${DIFY_WORKFLOW_API_KEY:}
-    planner-api-url: ${DIFY_PLANNER_API_URL:}
-    planner-api-key: ${DIFY_PLANNER_API_KEY:}
-    timeout-seconds: ${DIFY_TIMEOUT_SECONDS:60}
-  agent:
-    planner:
-      mode: ${GOALBOT_AGENT_PLANNER_MODE:OFF}
-      min-confidence: ${GOALBOT_AGENT_PLANNER_MIN_CONFIDENCE:0.72}
-      max-actions: ${GOALBOT_AGENT_PLANNER_MAX_ACTIONS:8}
-  feishu:
-    app-id: ${FEISHU_APP_ID:}
-    app-secret: ${FEISHU_APP_SECRET:}
-    verification-token: ${FEISHU_VERIFICATION_TOKEN:}
-    encrypt-key: ${FEISHU_ENCRYPT_KEY:}
-    default-chat-id: ${FEISHU_DEFAULT_CHAT_ID:}
-    long-connection-enabled: ${FEISHU_LONG_CONNECTION_ENABLED:false}
-  reminder:
-    enabled: ${GOALBOT_REMINDER_ENABLED:true}
+    session-days: ${SITE_AUTH_SESSION_DAYS:${GOALBOT_AUTH_SESSION_DAYS:30}}
+    bootstrap-admin-username: ${SITE_BOOTSTRAP_ADMIN_USERNAME:${GOALBOT_BOOTSTRAP_ADMIN_USERNAME:local_user}}
+    bootstrap-admin-password: ${SITE_BOOTSTRAP_ADMIN_PASSWORD:${GOALBOT_BOOTSTRAP_ADMIN_PASSWORD:}}
 
 logging:
   level:

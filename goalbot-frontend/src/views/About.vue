@@ -9,8 +9,8 @@
       </section>
       <section class="about-principles">
         <article><p>01 / RECORD</p><h2>把值得回看的过程留下来。</h2><span>公开笔记只收录站长完成整理的学习、技术和项目实践。它不追逐更新频率，而是追求能在以后继续提供帮助。</span><RouterLink to="/notes">阅读学习笔记 <b>→</b></RouterLink></article>
-        <article><p>02 / ARRANGE</p><h2>让自然语言落到真实的日程里。</h2><span>GoalBot 把任务、时间表、复盘和飞书对话放回同一个私人工作流。对话可以自然，数据仍然必须可靠。</span><RouterLink to="/login">进入 GoalBot <b>↗</b></RouterLink></article>
-        <article><p>03 / RESPECT</p><h2>公开的归公开，私人的归私人。</h2><span>网站只展示站长主动发布的学习成果。任务、对话、复盘和未发布内容只留在个人系统里，不作为公开素材。</span></article>
+        <article><p>02 / EDIT</p><h2>先写下来，再把它整理成可以阅读的文章。</h2><span>站长工作台负责导入、分类、编辑和预览 Markdown。内容在成为公开文章以前，始终只是私人草稿。</span><RouterLink to="/login">进入站长工作台 <b>↗</b></RouterLink></article>
+        <article><p>03 / PUBLISH</p><h2>只有主动发布的内容，才属于公开网站。</h2><span>公开知识库只读取同时标记为“已整理”和“官网发布”的文章，后台草稿与账户信息不会成为公开素材。</span></article>
       </section>
       <section class="about-closing"><span>linge.xin</span><p>Make room for the work that matters.</p></section>
     </div>

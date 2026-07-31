@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import { fetchCurrentUser, login as loginApi, logout as logoutApi } from '@/api/auth'
 import type { LoginPayload, UserProfile } from '@/types/auth'
 
-const TOKEN_KEY = 'goalbot-auth-token'
-const USER_KEY = 'goalbot-auth-user'
+const TOKEN_KEY = 'linge-owner-auth-token'
+const USER_KEY = 'linge-owner-auth-user'
 
 function storedUser(): UserProfile | null {
   const value = localStorage.getItem(USER_KEY)

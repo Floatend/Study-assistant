@@ -1,10 +1,9 @@
-export type UserRole = 'ADMIN' | 'USER'
+export type UserRole = 'ADMIN'
 
 export interface UserProfile {
   id: number
   username: string
   nickname: string
-  feishuUserId?: string
   role: UserRole
   status: 0 | 1
   lastLoginAt?: string
@@ -26,19 +25,4 @@ export interface LoginResult {
 export interface PasswordChangePayload {
   currentPassword: string
   newPassword: string
-}
-
-export interface UserCreatePayload {
-  username: string
-  password: string
-  nickname?: string
-  feishuUserId?: string
-  role: UserRole
-}
-
-export interface UserUpdatePayload {
-  nickname?: string
-  feishuUserId?: string
-  role?: UserRole
-  status?: 0 | 1
 }

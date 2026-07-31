@@ -32,30 +32,30 @@ public class AdminBootstrapRunner implements ApplicationRunner {
 
         if (user == null) {
             if (!StringUtils.hasText(bootstrapPassword)) {
-                log.warn("GoalBot has no bootstrap admin '{}'. Set GOALBOT_BOOTSTRAP_ADMIN_PASSWORD before first login.", username);
+                log.warn("The site has no bootstrap administrator '{}'. Set SITE_BOOTSTRAP_ADMIN_PASSWORD before first login.", username);
                 return;
             }
             User admin = new User();
             admin.setUsername(username);
             admin.setPassword(passwordHasher.hash(bootstrapPassword));
-            admin.setNickname("GoalBot 管理员");
+            admin.setNickname("站长");
             admin.setRole("ADMIN");
             admin.setStatus(1);
             userMapper.insert(admin);
-            log.info("GoalBot bootstrap administrator '{}' was created.", username);
+            log.info("Site bootstrap administrator '{}' was created.", username);
             return;
         }
 
         if (!passwordHasher.isEncoded(user.getPassword())) {
             if (!StringUtils.hasText(bootstrapPassword)) {
-                log.warn("Bootstrap administrator '{}' still has no usable password. Set GOALBOT_BOOTSTRAP_ADMIN_PASSWORD.", username);
+                log.warn("Bootstrap administrator '{}' still has no usable password. Set SITE_BOOTSTRAP_ADMIN_PASSWORD.", username);
                 return;
             }
             user.setPassword(passwordHasher.hash(bootstrapPassword));
             user.setRole("ADMIN");
             user.setStatus(1);
             userMapper.updateById(user);
-            log.info("GoalBot bootstrap administrator '{}' password was initialized.", username);
+            log.info("Site bootstrap administrator '{}' password was initialized.", username);
         }
     }
 }

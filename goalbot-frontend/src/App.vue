@@ -1,94 +1,35 @@
 <template>
   <RouterView v-if="route.meta.public" />
 
-  <div v-else class="authenticated-app">
-    <el-container class="app-shell">
-      <el-aside class="app-aside" width="248px">
-        <div class="brand">
-          <div class="brand-copy">
-            <div class="brand-name">GoalBot</div>
-            <div class="brand-subtitle">AI 日程与目标助手</div>
-          </div>
-        </div>
+  <div v-else class="admin-shell">
+    <header class="admin-header">
+      <RouterLink class="admin-wordmark" to="/">linge.xin</RouterLink>
+      <nav class="admin-nav" aria-label="站长后台导航">
+        <RouterLink to="/notes">公开笔记</RouterLink>
+        <RouterLink to="/notebook">站长工作台</RouterLink>
+      </nav>
+      <el-dropdown trigger="click" @command="handleAccountCommand">
+        <button class="account-button" type="button">
+          <span>
+            <small>已登录</small>
+            <strong>{{ userStore.displayName }}</strong>
+          </span>
+          <el-icon><ArrowDown /></el-icon>
+        </button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="password" :icon="Key">修改密码</el-dropdown-item>
+            <el-dropdown-item command="logout" :icon="SwitchButton" divided>退出登录</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+    </header>
 
-        <div class="aside-label">Workspace</div>
-        <el-menu :default-active="route.path" router class="nav-menu">
-          <el-menu-item index="/dashboard">
-            <el-icon><DataBoard /></el-icon>
-            <span>首页</span>
-          </el-menu-item>
-          <el-menu-item index="/tasks">
-            <el-icon><List /></el-icon>
-            <span>任务</span>
-          </el-menu-item>
-          <el-menu-item index="/calendar">
-            <el-icon><Calendar /></el-icon>
-            <span>时间表</span>
-          </el-menu-item>
-          <el-menu-item index="/review">
-            <el-icon><Notebook /></el-icon>
-            <span>复盘</span>
-          </el-menu-item>
-          <el-menu-item index="/analytics">
-            <el-icon><TrendCharts /></el-icon>
-            <span>统计</span>
-          </el-menu-item>
-          <el-menu-item v-if="userStore.isAdmin" index="/notebook">
-            <el-icon><Document /></el-icon>
-            <span>站长笔记</span>
-          </el-menu-item>
-          <el-menu-item index="/settings">
-            <el-icon><Setting /></el-icon>
-            <span>配置</span>
-          </el-menu-item>
-          <el-menu-item v-if="userStore.isAdmin" index="/users">
-            <el-icon><UserFilled /></el-icon>
-            <span>用户管理</span>
-          </el-menu-item>
-        </el-menu>
+    <main class="admin-main">
+      <RouterView />
+    </main>
 
-        <div class="aside-status">
-          <span class="status-dot" />
-          <div>
-            <div class="aside-status-title">飞书助手在线</div>
-            <div class="aside-status-text">自然语言指令已接入</div>
-          </div>
-        </div>
-      </el-aside>
-
-      <el-container>
-        <el-header class="app-header">
-          <div>
-            <div class="page-kicker">GoalBot Workspace</div>
-            <h1>{{ pageTitle }}</h1>
-            <p>{{ pageSubtitle }}</p>
-          </div>
-          <div class="header-actions">
-            <el-dropdown trigger="click" @command="handleAccountCommand">
-              <button class="account-button" type="button">
-                <span class="account-avatar">{{ accountInitial }}</span>
-                <span class="account-copy">
-                  <strong>{{ userStore.displayName }}</strong>
-                  <small>{{ userStore.profile?.role === 'ADMIN' ? '管理员' : '个人用户' }}</small>
-                </span>
-                <el-icon><ArrowDown /></el-icon>
-              </button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="password" :icon="Key">修改密码</el-dropdown-item>
-                  <el-dropdown-item command="logout" :icon="SwitchButton" divided>退出登录</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
-        </el-header>
-        <el-main class="app-main">
-          <RouterView />
-        </el-main>
-      </el-container>
-    </el-container>
-
-    <el-dialog v-model="passwordVisible" title="修改密码" width="440px">
+    <el-dialog v-model="passwordVisible" title="修改密码" width="min(440px, calc(100vw - 32px))">
       <el-form ref="passwordRef" :model="passwordForm" :rules="passwordRules" label-position="top">
         <el-form-item label="当前密码" prop="currentPassword">
           <el-input v-model="passwordForm.currentPassword" type="password" show-password autocomplete="current-password" />
@@ -109,22 +50,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import {
-  ArrowDown,
-  Calendar,
-  DataBoard,
-  Document,
-  Key,
-  List,
-  Notebook,
-  Setting,
-  SwitchButton,
-  TrendCharts,
-  UserFilled
-} from '@element-plus/icons-vue'
+import { ArrowDown, Key, SwitchButton } from '@element-plus/icons-vue'
 import { changePassword } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
 
@@ -145,34 +74,8 @@ const passwordRules: FormRules = {
   }, trigger: 'blur' }]
 }
 
-const titles: Record<string, string> = {
-  '/dashboard': '今日工作台',
-  '/tasks': '任务管理',
-  '/calendar': '时间表',
-  '/review': '复盘',
-  '/analytics': '统计',
-  '/notebook': '站长笔记',
-  '/settings': '配置',
-  '/users': '用户管理'
-}
-
-const subtitles: Record<string, string> = {
-  '/dashboard': '目标、任务、建议和打卡集中处理',
-  '/tasks': '维护未来日程和每日行动项',
-  '/calendar': '按日、周、月查看任务安排',
-  '/review': '沉淀每日复盘与阶段总结',
-  '/analytics': '查看投入、完成和趋势',
-  '/notebook': '撰写、整理并发布官网学习成果',
-  '/settings': '配置主动消息、飞书和 Dify 状态',
-  '/users': '管理账号、权限、状态和飞书绑定'
-}
-
-const pageTitle = computed(() => titles[route.path] ?? 'GoalBot')
-const pageSubtitle = computed(() => subtitles[route.path] ?? '个人目标管理助手')
-const accountInitial = computed(() => userStore.displayName.slice(0, 1).toUpperCase())
-
 onMounted(async () => {
-  if (userStore.token) await userStore.loadCurrentUser()
+  if (!route.meta.public && userStore.token) await userStore.loadCurrentUser()
 })
 
 async function handleAccountCommand(command: string) {
@@ -192,10 +95,7 @@ async function submitPassword() {
   if (!valid) return
   passwordSaving.value = true
   try {
-    await changePassword({
-      currentPassword: passwordForm.currentPassword,
-      newPassword: passwordForm.newPassword
-    })
+    await changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword })
     userStore.clearSession()
     passwordVisible.value = false
     ElMessage.success('密码已修改，请重新登录')
@@ -207,72 +107,5 @@ async function submitPassword() {
 </script>
 
 <style scoped>
-.authenticated-app {
-  min-height: 100vh;
-}
-
-.account-button {
-  display: flex;
-  align-items: center;
-  min-width: 172px;
-  gap: 9px;
-  padding: 6px 8px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  color: var(--gb-text);
-  background: transparent;
-  cursor: pointer;
-}
-
-.account-button:hover {
-  border-color: var(--gb-border);
-  background: #f8faf9;
-}
-
-.account-avatar {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  place-items: center;
-  border-radius: 50%;
-  color: #236552;
-  font-size: 13px;
-  font-weight: 800;
-  background: #dff1ea;
-}
-
-.account-copy {
-  min-width: 0;
-  flex: 1;
-  text-align: left;
-}
-
-.account-copy strong,
-.account-copy small {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.account-copy strong {
-  font-size: 13px;
-}
-
-.account-copy small {
-  margin-top: 2px;
-  color: var(--gb-muted);
-  font-size: 11px;
-}
-
-@media (max-width: 760px) {
-  .account-copy {
-    display: none;
-  }
-
-  .account-button {
-    min-width: 0;
-  }
-}
+.admin-shell{min-height:100vh;color:#1f2a44;background:#f7f9ff}.admin-header{position:sticky;top:0;z-index:20;display:grid;min-height:70px;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 clamp(18px,4vw,58px);border-bottom:1px solid #e3e8f5;background:rgba(247,249,255,.92);backdrop-filter:blur(14px)}.admin-wordmark{color:#3559e8;font-size:21px;font-weight:800;text-decoration:none}.admin-nav{display:flex;gap:24px}.admin-nav a{color:#65708c;font-size:13px;font-weight:700;text-decoration:none}.admin-nav a:hover,.admin-nav a.router-link-exact-active{color:#3559e8}.account-button{display:flex;align-items:center;justify-self:end;gap:9px;padding:7px 0;border:0;color:#1f2a44;background:transparent;font-family:inherit;cursor:pointer}.account-button span{display:grid;text-align:right}.account-button small{color:#8a94a6;font-size:10px}.account-button strong{font-size:13px}.admin-main{padding:28px clamp(16px,3vw,42px) 44px}@media(max-width:700px){.admin-header{grid-template-columns:1fr auto;padding:12px 16px}.admin-nav{grid-row:2;grid-column:1/-1;justify-content:space-between;padding-top:11px;border-top:1px solid #e3e8f5}.account-button{grid-column:2}.admin-main{padding:18px 12px 32px}}
 </style>

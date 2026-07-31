@@ -1,215 +1,86 @@
-# GoalBot Ubuntu Cloud Deployment
+# Ubuntu Docker Deployment
 
-This guide deploys GoalBot with Docker Compose:
+This guide deploys the public personal site and its owner-only notebook on one Ubuntu host. The Compose service names remain `goalbot-*` for compatibility with existing deployments.
 
-- `goalbot-frontend`: Nginx serving the Vue static build and proxying `/api`.
-- `goalbot-backend`: Spring Boot API service.
-- `goalbot-mysql`: MySQL 8.4 with persistent data volume.
-
-## 1. Server Requirements
-
-Recommended minimum:
+## 1. Prerequisites
 
 - Ubuntu 22.04 or 24.04
-- 2 CPU cores
-- 2 GB RAM minimum, 4 GB recommended if Dify is also on the same server
-- Ports `22` and `80` open in the cloud firewall
-- Port `443` open later if you add HTTPS
+- Docker Engine with the Compose plugin
+- A checked-out repository
+- Ports `80` and `443` available when this host is the public entry
 
-## 2. Install Docker
+## 2. Configure Secrets
 
-On the Ubuntu server:
-
-```bash
-sudo apt update
-sudo apt install -y ca-certificates curl gnupg
-sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo systemctl enable --now docker
-```
-
-Optional, so you can run Docker without `sudo` after reconnecting SSH:
-
-```bash
-sudo usermod -aG docker $USER
-```
-
-## 3. Upload Or Pull Code
-
-Put this project on the server, for example:
-
-```bash
-cd /opt
-sudo mkdir -p goalbot
-sudo chown -R $USER:$USER goalbot
-cd /opt/goalbot
-```
-
-Then upload the project files here, or pull from your Git repository.
-
-## 4. Create Environment File
+From the repository root:
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-Must change:
+Set at least:
 
 ```dotenv
 HTTP_BIND_ADDRESS=0.0.0.0
 HTTP_PORT=80
-MYSQL_PASSWORD=your_strong_goalbot_password
-MYSQL_ROOT_PASSWORD=your_strong_root_password
-GOALBOT_BOOTSTRAP_ADMIN_PASSWORD=your_strong_initial_admin_password
+MYSQL_USERNAME=goalbot
+MYSQL_PASSWORD=replace_with_a_strong_password
+MYSQL_ROOT_PASSWORD=replace_with_another_strong_password
+SITE_BOOTSTRAP_ADMIN_USERNAME=local_user
+SITE_BOOTSTRAP_ADMIN_PASSWORD=replace_with_a_strong_owner_password
+SITE_AUTH_SESSION_DAYS=30
 ```
 
-The repository `.env.example` defaults to `127.0.0.1:18080` for the private home-server + FRP topology. For this all-in-one public cloud guide, explicitly use `0.0.0.0:80` as shown above.
+Do not commit `.env`.
 
-Fill these when the corresponding feature is enabled:
-
-```dotenv
-DIFY_API_URL=
-DIFY_API_KEY=
-DIFY_WORKFLOW_API_URL=
-DIFY_WORKFLOW_API_KEY=
-FEISHU_APP_ID=
-FEISHU_APP_SECRET=
-FEISHU_DEFAULT_CHAT_ID=
-FEISHU_LONG_CONNECTION_ENABLED=true
-```
-
-If Dify runs on the same Ubuntu host but outside this compose stack, use `host.docker.internal`, for example:
-
-```dotenv
-DIFY_API_URL=http://host.docker.internal:5001/v1/chat-messages
-DIFY_WORKFLOW_API_URL=http://host.docker.internal:5001/v1/workflows/run
-```
-
-## 5. Start Services
+## 3. Start a New Deployment
 
 ```bash
+docker compose config
 docker compose up -d --build
-```
-
-Check status:
-
-```bash
 docker compose ps
-docker compose logs -f goalbot-backend
 ```
 
-The first MySQL startup automatically runs:
+The MySQL container runs `goalbot-backend/sql/init.sql` automatically only when its data volume is created for the first time.
 
-```text
-goalbot-backend/sql/init.sql
-```
+## 4. Update an Existing Deployment
 
-That creates the `goalbot` schema and all current tables.
-
-## 6. Verify Deployment
-
-Replace `SERVER_IP` with your server public IP:
-
-```bash
-curl http://SERVER_IP/
-curl -X POST http://SERVER_IP/api/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"local_user","password":"your_strong_initial_admin_password"}'
-```
-
-In the browser:
-
-```text
-http://SERVER_IP/
-```
-
-Useful log commands:
-
-```bash
-docker compose logs -f goalbot-frontend
-docker compose logs -f goalbot-backend
-docker compose logs -f goalbot-mysql
-```
-
-## 7. Feishu Configuration
-
-For long connection mode:
-
-```dotenv
-FEISHU_LONG_CONNECTION_ENABLED=true
-FEISHU_APP_ID=cli_xxx
-FEISHU_APP_SECRET=xxx
-```
-
-No public event callback URL is required for long connection mode.
-
-If you switch back to URL event subscription later, configure Feishu event URL as:
-
-```text
-http://SERVER_IP/api/feishu/events
-```
-
-After adding HTTPS and a domain, use:
-
-```text
-https://your-domain.com/api/feishu/events
-```
-
-## 8. Existing Database Migration
-
-If the MySQL volume already existed before a new SQL migration was added, Docker will not rerun `init.sql`.
-
-Run a migration manually like this:
-
-```bash
-docker compose exec -T goalbot-mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" goalbot' < goalbot-backend/sql/multi_user_auth.sql
-```
-
-For a brand-new cloud deployment, no manual migration is needed because `init.sql` already contains the latest schema.
-
-## 9. Backup
-
-Create a backup:
+Back up the current database before pulling new code:
 
 ```bash
 mkdir -p backups
-docker compose exec -T goalbot-mysql sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --databases goalbot' > backups/goalbot-$(date +%F-%H%M).sql
+docker compose exec -T goalbot-mysql sh -c 'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --routines --triggers goalbot' > "backups/site-before-update-$(date +%Y%m%d-%H%M%S).sql"
 ```
 
-Restore a backup:
+Pull the update, make sure `.env` contains the `SITE_*` settings, and apply the repeatable schema files:
 
 ```bash
-docker compose exec -T goalbot-mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < backups/your-backup.sql
+git pull --ff-only
+docker compose exec -T goalbot-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < goalbot-backend/sql/init.sql
+docker compose exec -T goalbot-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" goalbot' < goalbot-backend/sql/note_knowledge_base.sql
+docker compose up -d --build goalbot-backend goalbot-frontend
 ```
 
-## 10. Update Deployment
+The migration does not drop historical assistant tables. Archive or remove them only after verifying the backup.
 
-After pulling new code:
+## 5. Verify
 
 ```bash
-docker compose up -d --build
-docker compose logs -f goalbot-backend
+docker compose ps
+docker compose logs --tail=100 goalbot-backend goalbot-frontend
+curl -fsS 'http://127.0.0.1/api/public/notes?limit=1'
+curl -I http://127.0.0.1/
+curl -I http://127.0.0.1/notes
+curl -I http://127.0.0.1/login
 ```
 
-If a schema migration was added, run the matching SQL file manually.
+Expected behavior:
 
-## 11. HTTPS Next Step
+- `/`, `/notes`, and `/login` return the frontend application.
+- `/api/public/notes` returns a JSON result with `code: 0`, even when the note list is empty.
+- `/api/notes` returns `401` without an administrator token.
+- Removed task, goal, AI, and Feishu controllers are no longer present in the backend.
 
-This compose stack exposes HTTP on port `80`.
+## 6. Roll Back
 
-For production, add HTTPS with one of these:
-
-- Cloudflare proxy in front of the server
-- Host-level Nginx + Certbot
-- Nginx Proxy Manager
-- Caddy
-
-When HTTPS is ready, Feishu URL event mode should use the HTTPS URL.
+Keep the database backup and the previous Git commit hash. If a release fails, restore the previous code first. Restore the SQL dump only when the database itself was changed incorrectly; do not overwrite newer note data merely to roll back frontend code.

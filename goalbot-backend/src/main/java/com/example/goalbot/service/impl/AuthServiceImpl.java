@@ -53,6 +53,9 @@ public class AuthServiceImpl implements AuthService {
         if (!Integer.valueOf(1).equals(user.getStatus())) {
             throw BusinessException.forbidden("该用户已被停用");
         }
+        if (!"ADMIN".equalsIgnoreCase(user.getRole())) {
+            throw BusinessException.forbidden("仅站长管理员账号可以登录");
+        }
 
         LocalDateTime now = LocalDateTime.now();
         authSessionMapper.delete(new LambdaQueryWrapper<AuthSession>()

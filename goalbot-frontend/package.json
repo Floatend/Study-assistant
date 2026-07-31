@@ -1,5 +1,5 @@
 {
-  "name": "goalbot-frontend",
+  "name": "linge-site-frontend",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -10,16 +10,9 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
-    "@fullcalendar/core": "^6.1.15",
-    "@fullcalendar/daygrid": "^6.1.15",
-    "@fullcalendar/interaction": "^6.1.15",
-    "@fullcalendar/list": "^6.1.15",
-    "@fullcalendar/timegrid": "^6.1.15",
-    "@fullcalendar/vue3": "^6.1.15",
     "@vitejs/plugin-vue": "^5.1.4",
     "axios": "^1.7.7",
     "dompurify": "^3.4.8",
-    "echarts": "^5.5.1",
     "element-plus": "^2.8.6",
     "highlight.js": "^11.11.1",
     "markdown-it": "^14.2.0",

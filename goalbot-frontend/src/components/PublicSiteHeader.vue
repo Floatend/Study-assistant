@@ -5,7 +5,7 @@
       <RouterLink to="/">首页</RouterLink>
       <RouterLink to="/notes">学习笔记</RouterLink>
       <RouterLink to="/about">关于</RouterLink>
-      <RouterLink class="site-workspace-link" to="/login">GoalBot <span aria-hidden="true">↗</span></RouterLink>
+      <RouterLink class="site-workspace-link" to="/login">站长入口 <span aria-hidden="true">↗</span></RouterLink>
     </nav>
   </header>
 </template>
