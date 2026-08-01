@@ -91,7 +91,7 @@
       </el-select>
       <template #footer>
         <el-button @click="moveDialog = false">取消</el-button>
-        <el-button type="primary" :disabled="!moveTarget && moveTarget !== ''" @click="confirmMove">移动</el-button>
+        <el-button type="primary" @click="confirmMove">移动</el-button>
       </template>
     </el-dialog>
   </section>
@@ -212,7 +212,7 @@ function onTileCommand(command: string, note: Note) {
 }
 
 function confirmMove() {
-  if (!moveNote.value || !moveTarget.value && moveTarget.value !== '') return
+  if (!moveNote.value) return
   const note = moveNote.value
   emit('move', note, moveTarget.value)
   moveDialog.value = false
