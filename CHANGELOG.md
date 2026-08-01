@@ -11,6 +11,9 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Changed
 
+- Unified the public homepage, about, notes, login, public header, and admin shell onto one consistent editorial-blue design-token system: 20px rounded card surfaces with soft gradient tints, a deep-navy gradient hero and dark quote band, pill navigation and call-to-action buttons, and a card-based notes library with a raised article reader and sticky outline.
+- Replaced the leftover warm-theme override blocks that had been stacked on top of the blue palette with single coherent styles per component, and removed the resulting dead CSS.
+- Softened the homepage sakura petals (white-to-blush gradient at lower opacity) over the new navy hero so they read as a quiet accent instead of competing with the headline.
 - Added a one-time, low-key sakura-petal entrance to the homepage hero while retaining pointer depth and respecting `prefers-reduced-motion`; it does not run as a continuous particle effect.
 - Improved formula layout for long display equations with horizontal scrolling rather than clipping, and kept inline formula spacing aligned with the reading text.
 

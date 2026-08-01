@@ -11,15 +11,15 @@
 </template>
 
 <style scoped>
-.site-header { display:flex; align-items:center; justify-content:space-between; min-height:76px; border-bottom:1px solid #f2cfa7; color:#093b4c; }
-.site-wordmark { color:inherit; font-size:21px; font-weight:800; letter-spacing:0; text-decoration:none; }
-.site-nav { display:flex; align-items:center; gap:23px; }
-.site-nav a { color:#456a73; font-size:13px; font-weight:600; text-decoration:none; transition:color .24s ease,transform .24s ease; }
-.site-nav a:hover,.site-nav a.router-link-exact-active { color:#008c88; transform:translateY(-1px); }
-.site-nav .site-workspace-link { color:#f15843; font-weight:800; }
+.site-header { display:flex; align-items:center; justify-content:space-between; min-height:76px; border-bottom:1px solid var(--gb-border); color:var(--gb-text); }
+.site-wordmark { color:inherit; font-size:20px; font-weight:800; letter-spacing:-.01em; text-decoration:none; }
+.site-nav { display:flex; align-items:center; gap:4px; }
+.site-nav a { position:relative; padding:8px 13px; border-radius:999px; color:var(--gb-muted); font-size:13px; font-weight:650; text-decoration:none; transition:color .22s ease,background-color .22s ease; }
+.site-nav a:hover { color:var(--gb-primary-dark); background:var(--gb-primary-soft); }
+.site-nav a.router-link-exact-active { color:var(--gb-primary-dark); background:var(--gb-primary-soft); }
+.site-nav .site-workspace-link { display:inline-flex; align-items:center; gap:3px; margin-left:8px; padding:8px 15px; border:1px solid var(--gb-border-strong); color:var(--gb-primary); background:var(--gb-surface); font-weight:750; }
+.site-nav .site-workspace-link:hover { color:var(--gb-primary-dark); border-color:var(--gb-primary); background:var(--gb-primary-soft); }
 .site-workspace-link span { display:inline-block; margin-left:2px; transition:transform .25s ease; }
 .site-workspace-link:hover span { transform:translate(2px,-2px); }
-@media(max-width:620px){.site-header{align-items:flex-start;flex-direction:column;gap:13px;padding:18px 0}.site-nav{width:100%;justify-content:space-between;gap:11px}.site-nav a{font-size:12px}}
-/* Shared public-site theme. */
-.site-header{border-bottom-color:#e3e8f5;color:#1f2a44}.site-nav a{color:#65708c}.site-nav a:hover,.site-nav a.router-link-exact-active{color:#4d6bfe}.site-nav .site-workspace-link{color:#3559e8}
+@media(max-width:620px){.site-header{align-items:flex-start;flex-direction:column;gap:13px;padding:18px 0}.site-nav{width:100%;justify-content:space-between;gap:2px}.site-nav a{font-size:12px;padding:7px 10px}.site-nav .site-workspace-link{margin-left:0}}
 </style>

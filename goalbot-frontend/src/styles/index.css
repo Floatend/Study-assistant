@@ -1,35 +1,56 @@
 :root {
   font-family: "PingFang SC", "PingFang TC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
   --el-font-family: "PingFang SC", "PingFang TC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #1f2a44;
-  background: #f7f9ff;
+  color: #182238;
+  background: #f6f8fd;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --gb-bg: #f7f9ff;
+
+  /* ---- linge.xin design tokens ---- */
+  --gb-bg: #f6f8fd;
   --gb-surface: #ffffff;
-  --gb-surface-soft: #f5f7ff;
-  --gb-border: #e3e8f5;
-  --gb-border-strong: #cdd6ec;
-  --gb-text: #1f2a44;
-  --gb-muted: #65708c;
-  --gb-subtle: #8a94a6;
+  --gb-surface-soft: #f1f4fb;
+  --gb-border: #e4e9f4;
+  --gb-border-strong: #cfd8ee;
+  --gb-text: #182238;
+  --gb-muted: #5c6b8c;
+  --gb-subtle: #8b97b3;
   --gb-primary: #4d6bfe;
   --gb-primary-dark: #3559e8;
   --gb-primary-soft: #eef2ff;
-  --gb-accent: #1c318e;
+  --gb-accent: #1c2b6b;
+  --gb-accent-deep: #111b4d;
+  --gb-mint: #a9f3e4;
   --gb-warning: #a76518;
-  --gb-shadow: 0 18px 46px rgba(31, 42, 68, 0.07);
+  --gb-shadow: 0 16px 44px rgba(31, 42, 68, 0.07);
+  --gb-shadow-lg: 0 30px 70px rgba(23, 32, 58, 0.14);
+  --gb-radius: 20px;
+  --gb-radius-sm: 12px;
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--gb-bg); }
 button, input, textarea, select { font: inherit; }
-::selection { color: #10205f; background: #baf4e9; }
+::selection { color: #14215e; background: #d6dfff; }
+
+/* Thin, quiet scrollbars */
+* { scrollbar-width: thin; scrollbar-color: #c6cfe4 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { border-radius: 8px; background: #c6cfe4; }
+*::-webkit-scrollbar-thumb:hover { background: #aab7d8; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+:focus-visible {
+  outline: 2px solid var(--gb-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
 .page-section { display: grid; gap: 18px; max-width: 1480px; margin: 0 auto; }
 
-.el-button { border-radius: 8px; font-weight: 650; }
+/* ---- Element Plus refinements ---- */
+.el-button { border-radius: 10px; font-weight: 650; }
 .el-button--primary {
   --el-button-bg-color: var(--gb-primary);
   --el-button-border-color: var(--gb-primary);
@@ -38,11 +59,17 @@ button, input, textarea, select { font: inherit; }
 }
 .el-input__wrapper,
 .el-select__wrapper,
-.el-textarea__inner { border-radius: 8px; box-shadow: 0 0 0 1px var(--gb-border) inset; }
+.el-textarea__inner { border-radius: 10px; box-shadow: 0 0 0 1px var(--gb-border) inset; }
 .el-input__wrapper:hover,
 .el-select__wrapper:hover,
 .el-textarea__inner:hover { box-shadow: 0 0 0 1px var(--gb-border-strong) inset; }
-.el-dialog { border-radius: 8px; }
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused,
+.el-textarea__inner:focus { box-shadow: 0 0 0 1px var(--gb-primary) inset, 0 0 0 3px rgba(77, 107, 254, .14); }
+.el-dialog { border-radius: 18px; }
+.el-message { border-radius: 12px; }
+.el-dropdown-menu { border-radius: 12px; }
+.el-popper.is-light { border-radius: 12px; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
