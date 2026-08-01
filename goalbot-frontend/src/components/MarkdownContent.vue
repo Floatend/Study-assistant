@@ -5,6 +5,8 @@
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js/lib/core'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 import bash from 'highlight.js/lib/languages/bash'
 import cpp from 'highlight.js/lib/languages/cpp'
 import css from 'highlight.js/lib/languages/css'
@@ -105,6 +107,114 @@ const markdown = new MarkdownIt({
   highlight: (code, language) => highlightCode(code, language)
 })
 
+function renderMath(latex: string, displayMode: boolean) {
+  try {
+    return katex.renderToString(latex, {
+      displayMode,
+      output: 'htmlAndMathml',
+      throwOnError: false,
+      strict: 'ignore',
+      trust: false
+    })
+  } catch {
+    return `<span class="math-render-error">${escapeHtml(latex)}</span>`
+  }
+}
+
+function isEscaped(source: string, index: number) {
+  let slashCount = 0
+  for (let cursor = index - 1; cursor >= 0 && source[cursor] === '\\'; cursor -= 1) slashCount += 1
+  return slashCount % 2 === 1
+}
+
+function findClosingDelimiter(source: string, start: number, delimiter: string) {
+  for (let cursor = start; cursor <= source.length - delimiter.length; cursor += 1) {
+    if (source.startsWith(delimiter, cursor) && !isEscaped(source, cursor)) return cursor
+  }
+  return -1
+}
+
+function mathInline(state: any, silent: boolean) {
+  const start = state.pos
+  const source = state.src as string
+  let opener = ''
+  let closer = ''
+
+  if (source.startsWith('\\(', start)) {
+    opener = '\\('
+    closer = '\\)'
+  } else if (source[start] === '$' && source[start + 1] !== '$' && !isEscaped(source, start)) {
+    opener = '$'
+    closer = '$'
+  } else {
+    return false
+  }
+
+  const contentStart = start + opener.length
+  const closeIndex = findClosingDelimiter(source, contentStart, closer)
+  if (closeIndex < 0) return false
+
+  const content = source.slice(contentStart, closeIndex)
+  if (!content.trim() || /^\s|\s$/.test(content)) return false
+
+  if (!silent) {
+    const token = state.push('math_inline', 'math', 0)
+    token.content = content
+    token.markup = opener
+  }
+  state.pos = closeIndex + closer.length
+  return true
+}
+
+function mathBlock(state: any, startLine: number, endLine: number, silent: boolean) {
+  const start = state.bMarks[startLine] + state.tShift[startLine]
+  const maximum = state.eMarks[startLine]
+  const firstLine = state.src.slice(start, maximum).trim()
+  const opener = firstLine.startsWith('$$') ? '$$' : firstLine.startsWith('\\[') ? '\\[' : ''
+  if (!opener) return false
+
+  const closer = opener === '$$' ? '$$' : '\\]'
+  const firstContent = firstLine.slice(opener.length)
+  const sameLineClose = findClosingDelimiter(firstContent, 0, closer)
+  let nextLine = startLine
+  let content = ''
+
+  if (sameLineClose >= 0) {
+    content = firstContent.slice(0, sameLineClose)
+  } else {
+    const lines = firstContent.trim() ? [firstContent] : []
+    nextLine += 1
+    while (nextLine < endLine) {
+      const lineStart = state.bMarks[nextLine] + state.tShift[nextLine]
+      const lineEnd = state.eMarks[nextLine]
+      const line = state.src.slice(lineStart, lineEnd)
+      const closeIndex = findClosingDelimiter(line, 0, closer)
+      if (closeIndex >= 0) {
+        lines.push(line.slice(0, closeIndex))
+        break
+      }
+      lines.push(line)
+      nextLine += 1
+    }
+    if (nextLine >= endLine) return false
+    content = lines.join('\n')
+  }
+
+  if (silent) return true
+  const token = state.push('math_block', 'math', 0)
+  token.block = true
+  token.content = content.trim()
+  token.map = [startLine, nextLine + 1]
+  token.markup = opener
+  state.line = nextLine + 1
+  return true
+}
+
+markdown.inline.ruler.after('backticks', 'math_inline', mathInline)
+markdown.block.ruler.before('fence', 'math_block', mathBlock, { alt: ['paragraph', 'reference', 'blockquote', 'list'] })
+markdown.renderer.rules.math_inline = (tokens, index) => renderMath(tokens[index].content, false)
+markdown.renderer.rules.math_block = (tokens, index) => `<div class="math-display">${renderMath(tokens[index].content, true)}</div>\n`
+
 const defaultHeadingOpen = markdown.renderer.rules.heading_open
 markdown.renderer.rules.heading_open = (tokens, index, options, env, self) => {
   const context = env as { headingIds?: Map<string, number> }
@@ -170,7 +280,7 @@ const html = computed(() => {
     return ''
   }
   const sanitized = DOMPurify.sanitize(markdown.render(normalizeObsidianMarkdown(raw), { headingIds: new Map() }), {
-    USE_PROFILES: { html: true }
+    USE_PROFILES: { html: true, mathMl: true }
   })
   return enhanceObsidianCallouts(sanitized)
 })
@@ -421,6 +531,34 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   background: #f8e7ed;
   font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   font-size: 12px;
+}
+
+.markdown-content :deep(.math-display) {
+  margin: 20px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 3px 0;
+  scrollbar-width: thin;
+}
+
+.markdown-content :deep(.katex-display) {
+  margin: 0;
+  text-align: center;
+}
+
+.markdown-content :deep(.katex) {
+  color: #243553;
+  font-size: 1.08em;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.markdown-content :deep(.math-render-error) {
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #b42335;
+  background: #fff0f1;
+  font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 }
 
 .markdown-content :deep(.markdown-table-wrap) {

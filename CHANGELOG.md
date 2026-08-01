@@ -2,6 +2,23 @@
 
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
 
+## 2026-08-01
+
+### Added
+
+- Added shared KaTeX math rendering for public notes, the administrator reader, and the editor preview. Notes now support inline `$...$` and `\(...\)` formulas plus display `$$...$$` and `\[...\]` formulas without interpreting formulas inside fenced code blocks.
+- Added the generated project-local `linge-sakura-hero.png` asset and replaced the public homepage hero image with a cherry-blossom campus scene that keeps clear left-side title space.
+
+### Changed
+
+- Added a one-time, low-key sakura-petal entrance to the homepage hero while retaining pointer depth and respecting `prefers-reduced-motion`; it does not run as a continuous particle effect.
+- Improved formula layout for long display equations with horizontal scrolling rather than clipping, and kept inline formula spacing aligned with the reading text.
+
+### Verification
+
+- Frontend type checking and production build passed after adding KaTeX. The build emitted only the existing dependency annotation and large-chunk warnings.
+- Browser verification confirmed that the public homepage loads the Sakura asset, displays the hero copy cleanly, renders eight entrance petals, and has no desktop horizontal overflow.
+
 ## 2026-07-31
 
 ### Changed
