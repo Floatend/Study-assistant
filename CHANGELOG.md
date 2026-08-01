@@ -6,6 +6,8 @@ This file records user-visible behavior changes, database migrations, and verifi
 
 ### Added
 
+- Added a visual board view to the owner notebook with category boxes: drag a note tile into any category box to re-categorize it in one gesture, create empty category boxes ahead of time (persisted locally), and delete boxes that are still empty.
+- Added a per-note tile menu on the board with edit, move-to-category (pick an existing category or type a new one), publish/unpublish, and delete actions; the board and the classic list view are switchable from the notebook toolbar.
 - Added shared KaTeX math rendering for public notes, the administrator reader, and the editor preview. Notes now support inline `$...$` and `\(...\)` formulas plus display `$$...$$` and `\[...\]` formulas without interpreting formulas inside fenced code blocks.
 - Added the generated project-local `linge-sakura-hero.png` asset and replaced the public homepage hero image with a cherry-blossom campus scene that keeps clear left-side title space.
 

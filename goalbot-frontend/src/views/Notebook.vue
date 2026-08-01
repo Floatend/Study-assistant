@@ -7,6 +7,10 @@
         <p>集中管理草稿、分类和官网文章。</p>
       </div>
       <div class="notebook-actions">
+        <el-radio-group v-model="viewMode" size="small" aria-label="视图切换">
+          <el-radio-button value="board">看板</el-radio-button>
+          <el-radio-button value="list">列表</el-radio-button>
+        </el-radio-group>
         <el-button :icon="Refresh" plain @click="loadNotes">刷新</el-button>
         <el-button :icon="Upload" plain :loading="uploading" @click="triggerUpload">导入 Markdown</el-button>
         <el-button :icon="Plus" type="primary" @click="openCreate">新建笔记</el-button>
@@ -14,7 +18,18 @@
       </div>
     </section>
 
-    <section class="notebook-layout">
+    <section v-if="viewMode === 'board'" class="notebook-board">
+      <NoteBoard
+        :notes="notes"
+        :categories="categories"
+        @open="openEdit"
+        @move="handleMoveNote"
+        @toggle-official="toggleOfficial"
+        @remove="handleDelete"
+      />
+    </section>
+
+    <section v-else class="notebook-layout">
       <aside class="notebook-library">
         <el-input v-model="keyword" :prefix-icon="Search" clearable placeholder="搜索标题、内容或标签" @clear="loadNotes" @keyup.enter="loadNotes" />
         <div class="library-filters">
@@ -119,6 +134,7 @@ import { ChatLineSquare, Delete, DocumentAdd, DocumentCopy, EditPen, Hide, InfoF
 import { createNote, deleteNote, fetchNote, fetchNoteCategories, fetchNotes, updateNote, uploadNote } from '@/api/note'
 import BackToTopButton from '@/components/BackToTopButton.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
+import NoteBoard from '@/components/NoteBoard.vue'
 import NoteCategoryTree from '@/components/NoteCategoryTree.vue'
 import type { Note, NoteCategory } from '@/types/note'
 import { extractMarkdownHeadings } from '@/utils/markdown'
@@ -131,6 +147,7 @@ const keyword = ref('')
 const categoryFilter = ref('')
 const categoryFilterDescendants = ref<string[] | null>(null)
 const statusFilter = ref<'all' | 'draft' | 'published'>('all')
+const viewMode = ref<'board' | 'list'>('board')
 const loading = ref(false)
 const activeLoading = ref(false)
 const uploading = ref(false)
@@ -230,6 +247,15 @@ async function toggleOfficial(note: Note) {
   const summary = notes.value.find((item) => item.id === saved.id)
   if (summary) Object.assign(summary, saved)
   ElMessage.success(saved.official ? '已发布到官网知识库' : '已从官网知识库下架')
+}
+
+async function handleMoveNote(note: Note, category: string) {
+  const saved = await updateNote(note.id, { category })
+  activeNote.value = saved
+  const summary = notes.value.find((item) => item.id === saved.id)
+  if (summary) Object.assign(summary, saved)
+  ElMessage.success(category ? `已移动到「${category}」` : '已移动到「未分类」')
+  await loadNotes()
 }
 
 async function handleDelete(note: Note) {
