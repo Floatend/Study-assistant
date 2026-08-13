@@ -2,6 +2,19 @@
 
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
 
+## 2026-08-13
+
+### Added
+
+- Added a public `/journey` resume timeline page inspired by editorial, personal "making things" portfolio sites. It combines projects, learning paths, courses, and certificates into one filterable timeline with category counts and a now badge.
+- Added a dedicated `src/data/timeline.ts` data file so the owner can add, remove, or reorder timeline entries without touching page markup.
+- Added the timeline to the public site navigation and to the site changelog.
+
+### Verification
+
+- Frontend type checking and production build passed after adding the timeline page and route.
+- Browser verification confirmed the desktop and mobile timeline render, filters update counts, and the empty certificate state is shown until real certificate entries are added.
+
 ## 2026-08-01
 
 ### Added

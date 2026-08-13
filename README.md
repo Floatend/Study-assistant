@@ -8,6 +8,7 @@ The former GoalBot task, calendar, goal, check-in, AI, Dify, and Feishu features
 
 ```text
 /           Public personal homepage
+/journey    Public resume timeline
 /notes      Public official-note archive
 /about      Public site introduction
 /login      Owner login
@@ -15,6 +16,7 @@ The former GoalBot task, calendar, goal, check-in, AI, Dify, and Feishu features
 ```
 
 Only notes with both `is_published = 1` and `is_official = 1` are visible on the public site.
+The timeline combines projects, learning paths, courses, and certificates from `goalbot-frontend/src/data/timeline.ts`; edit that file to keep the page current.
 
 ## Project Layout
 

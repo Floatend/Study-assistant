@@ -4,6 +4,7 @@
     <nav class="site-nav" aria-label="网站导航">
       <RouterLink to="/">首页</RouterLink>
       <RouterLink to="/notes">学习笔记</RouterLink>
+      <RouterLink to="/journey">时间线</RouterLink>
       <RouterLink to="/about">关于</RouterLink>
       <RouterLink class="site-workspace-link" to="/login">站长入口 <span aria-hidden="true">↗</span></RouterLink>
     </nav>
