@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-15 - Note summary cleanup
+
+### Fixed
+
+- Replaced the note summary generator so headings, tables, LaTeX source, code fences, and Obsidian frontmatter no longer leak into the excerpt shown above a note. It now prefers a short tagline or the first readable paragraph and regenerates summaries when notes are read, so previously imported notes are fixed without a manual database update.
+
+### Verification
+
+- The modified backend service class compiled successfully with the project dependencies and Lombok annotation processing.
+
 ## 2026-08-15 - Frontend editorial refresh polish
 
 - Fixed the compact public navigation so every route remains visible without horizontal scrolling on mobile.
