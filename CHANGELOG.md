@@ -1,6 +1,26 @@
 # Changelog
 
+## 2026-08-15 - Frontend editorial refresh polish
+
+- Fixed the compact public navigation so every route remains visible without horizontal scrolling on mobile.
+- Removed default hero heading and paragraph margins so the homepage exposes the next section in the first viewport.
+- Replaced duplicate public-note error toasts with one inline retry state.
+
 This file records user-visible behavior changes, database migrations, and verification results. Add new entries at the top and keep each entry tied to the date it was implemented.
+
+## 2026-08-15
+
+### Changed
+
+- Rebuilt the frontend around an Explore-first editorial system for the public site and an Operate-first system for the private notebook. The five-color palette now uses paper, warm surface, ink, sakura-leaf green, and sakura-pink semantic tokens.
+- Replaced the former indigo gradients, equal-weight feature cards, oversized count blocks, and decorative shadows with flat content bands, ruled editorial rows, restrained motion, and functional liquid-glass navigation or tool surfaces.
+- Updated the homepage, public notes reader, journey timeline, about page, login screen, shared navigation, Markdown renderer, category tree, note board, and private workspace to consume the shared color and spacing tokens.
+- Limited interface typography to a Song-style display stack and the PingFang system body stack. Monospace remains only where source code content requires it.
+
+### Verification
+
+- Frontend type checking and production build passed after the visual-system migration.
+- Desktop and mobile browser checks covered the public homepage, notes archive empty state, journey filters, about page, login page, and direct route loading without horizontal overflow.
 
 ## 2026-08-13
 

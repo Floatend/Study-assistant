@@ -1,6 +1,8 @@
 <template>
   <main class="login-page">
     <section class="login-context">
+      <img class="context-image" :src="workspaceHero" alt="安静的书桌与学习空间" />
+      <div class="context-shade" aria-hidden="true" />
       <RouterLink class="login-wordmark" to="/">linge.xin</RouterLink>
       <div class="context-copy">
         <span>EDITORIAL ACCESS</span>
@@ -42,6 +44,7 @@ import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { Lock, User } from '@element-plus/icons-vue'
+import workspaceHero from '@/assets/linge-workspace-hero.png'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -69,40 +72,32 @@ async function submit() {
 </script>
 
 <style scoped>
-.login-page { display:grid; min-height:100vh; grid-template-columns:minmax(420px,1.08fr) minmax(380px,.92fr); color:var(--gb-text); background:var(--gb-bg); }
-.login-context {
-  position:relative; display:flex; min-height:100vh; flex-direction:column; overflow:hidden;
-  padding:38px clamp(34px,5vw,76px) 48px; color:#fff;
-  background:linear-gradient(128deg,#131c4a 0%,#1b2a68 52%,#27409c 100%);
-}
-.login-context::before {
-  content:''; position:absolute; inset:0;
-  background:
-    radial-gradient(720px 420px at 84% 10%, rgba(111,139,255,.26), transparent 60%),
-    radial-gradient(560px 400px at 6% 90%, rgba(169,243,228,.13), transparent 60%);
-}
-.login-wordmark { position:relative; color:#fff; font-size:21px; font-weight:800; letter-spacing:-.01em; text-decoration:none; }
-.context-copy { position:relative; max-width:680px; margin:auto 0; }
-.context-copy>span,.login-heading>span { color:var(--gb-mint); font-size:11px; font-weight:800; letter-spacing:.14em; }
-.context-copy h1 { margin:18px 0; color:#fff; font-size:clamp(40px,4.4vw,62px); font-weight:800; letter-spacing:-.02em; line-height:1.1; }
-.context-copy p { max-width:580px; margin:0; color:rgba(226,232,255,.82); font-size:15px; line-height:1.9; }
-.context-index { position:relative; display:grid; grid-template-columns:auto 1fr; gap:8px 18px; color:rgba(226,232,255,.7); font-size:11px; }
-.context-index strong { color:#fff; font-size:12px; }
-.login-form-area { display:grid; place-items:center; padding:42px; }
-.login-panel { width:min(410px,100%); padding:36px; border:1px solid var(--gb-border); border-radius:var(--gb-radius); background:var(--gb-surface); box-shadow:var(--gb-shadow-lg); }
-.back-to-blog { display:inline-block; margin-bottom:34px; color:var(--gb-primary); font-size:13px; font-weight:700; text-decoration:none; }
-.login-heading { margin-bottom:28px; }
-.login-heading>span { color:var(--gb-primary); }
-.login-heading h2 { margin:10px 0 7px; font-size:28px; letter-spacing:-.01em; }
-.login-heading p { margin:0; color:var(--gb-muted); font-size:14px; }
-.login-button { width:100%; margin-top:6px; }
-@media(max-width:820px){
-  .login-page { grid-template-columns:1fr; }
-  .login-context { min-height:330px; padding:28px 22px; }
-  .context-copy { margin:56px 0; }
-  .context-copy h1 { font-size:34px; }
-  .context-index { display:none; }
-  .login-form-area { min-height:calc(100vh - 330px); padding:28px 18px; }
-  .login-panel { padding:26px; }
+.login-page { display: flex; min-height: 100vh; flex-direction: column; color: var(--text); background: var(--bg); }
+.login-context { position: relative; display: flex; min-height: 360px; flex-direction: column; justify-content: space-between; gap: var(--space-6); overflow: hidden; padding: var(--space-5); color: var(--surface); background: var(--brand); }
+.context-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.context-shade { position: absolute; inset: 0; background: color-mix(in srgb, var(--text) 76%, transparent); }
+.login-wordmark, .context-copy, .context-index { position: relative; z-index: 1; }
+.login-wordmark { align-self: flex-start; color: var(--surface); font-family: var(--font-display); font-size: 22px; font-weight: 700; text-decoration: none; }
+.context-copy { display: flex; max-width: 680px; flex-direction: column; gap: var(--space-4); }
+.context-copy>span, .login-heading>span { color: color-mix(in srgb, var(--surface) 78%, var(--accent)); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.context-copy h1 { color: var(--surface); font-size: 38px; line-height: 1.12; }
+.context-copy p { max-width: 54ch; color: color-mix(in srgb, var(--surface) 78%, transparent); font-size: 15px; line-height: 1.6; }
+.context-index { display: none; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); color: color-mix(in srgb, var(--surface) 62%, transparent); font-size: 11px; }
+.context-index strong { color: var(--surface); font-size: 12px; }
+.login-form-area { display: grid; flex: 1; place-items: center; padding: var(--space-5) var(--space-4); }
+.login-panel { display: flex; width: min(420px,100%); flex-direction: column; gap: var(--space-6); padding: var(--space-6); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--glass-strong); box-shadow: var(--shadow-float); backdrop-filter: blur(20px) saturate(1.15); }
+.back-to-blog { align-self: flex-start; color: var(--brand-strong); font-size: 14px; font-weight: 700; text-decoration: none; }
+.login-heading { display: flex; flex-direction: column; gap: var(--space-2); }
+.login-heading>span { color: var(--brand); }
+.login-heading h2 { color: var(--text); font-size: 30px; }
+.login-heading p { color: var(--muted); font-size: 14px; }
+.login-button { width: 100%; }
+
+@media (min-width: 840px) {
+  .login-page { display: grid; grid-template-columns: minmax(460px,1.08fr) minmax(390px,.92fr); }
+  .login-context { min-height: 100vh; padding: var(--space-6) clamp(40px,5vw,76px) var(--space-7); }
+  .context-copy h1 { font-size: 54px; }
+  .context-index { display: grid; }
+  .login-form-area { padding: var(--space-7); }
 }
 </style>

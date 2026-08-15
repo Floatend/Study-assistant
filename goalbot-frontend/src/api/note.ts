@@ -38,13 +38,13 @@ export function uploadNote(file: File, options: { title?: string; tags?: string;
 }
 
 export function fetchOfficialNotes(params?: NoteQuery) {
-  return request<Note[]>({ url: '/api/public/notes', method: 'GET', params })
+  return request<Note[]>({ url: '/api/public/notes', method: 'GET', params, silent: true })
 }
 
 export function fetchOfficialNote(id: number) {
-  return request<Note>({ url: `/api/public/notes/${id}`, method: 'GET' })
+  return request<Note>({ url: `/api/public/notes/${id}`, method: 'GET', silent: true })
 }
 
 export function fetchOfficialNoteCategories() {
-  return request<NoteCategory[]>({ url: '/api/public/notes/categories', method: 'GET' })
+  return request<NoteCategory[]>({ url: '/api/public/notes/categories', method: 'GET', silent: true })
 }

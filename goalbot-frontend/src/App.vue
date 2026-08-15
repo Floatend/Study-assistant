@@ -107,5 +107,33 @@ async function submitPassword() {
 </script>
 
 <style scoped>
-.admin-shell{min-height:100vh;color:var(--gb-text);background:var(--gb-bg)}.admin-header{position:sticky;top:0;z-index:20;display:grid;min-height:70px;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 clamp(18px,4vw,58px);border-bottom:1px solid var(--gb-border);background:rgba(246,248,253,.92);backdrop-filter:blur(14px)}.admin-wordmark{color:var(--gb-primary-dark);font-size:20px;font-weight:800;letter-spacing:-.01em;text-decoration:none}.admin-nav{display:flex;gap:6px}.admin-nav a{padding:8px 13px;border-radius:999px;color:var(--gb-muted);font-size:13px;font-weight:700;text-decoration:none;transition:color .2s ease,background-color .2s ease}.admin-nav a:hover,.admin-nav a.router-link-exact-active{color:var(--gb-primary-dark);background:var(--gb-primary-soft)}.account-button{display:flex;align-items:center;justify-self:end;gap:9px;padding:7px 0;border:0;color:var(--gb-text);background:transparent;font-family:inherit;cursor:pointer}.account-button span{display:grid;text-align:right}.account-button small{color:var(--gb-subtle);font-size:10px}.account-button strong{font-size:13px}.admin-main{padding:28px clamp(16px,3vw,42px) 44px}@media(max-width:700px){.admin-header{grid-template-columns:1fr auto;padding:12px 16px}.admin-nav{grid-row:2;grid-column:1/-1;justify-content:space-between;padding-top:11px;border-top:1px solid var(--gb-border)}.account-button{grid-column:2}.admin-main{padding:18px 12px 32px}}
+.admin-shell { min-height: 100vh; color: var(--text); background: var(--bg); }
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--glass-strong);
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+.admin-wordmark { color: var(--brand-strong); font-family: var(--font-display); font-size: 21px; font-weight: 700; text-decoration: none; }
+.admin-nav { grid-row: 2; grid-column: 1 / -1; display: flex; gap: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--line); }
+.admin-nav a { padding: 7px 11px; border-radius: 999px; color: var(--muted); font-size: 14px; font-weight: 700; text-decoration: none; transition: color .2s ease, background-color .2s ease; }
+.admin-nav a:hover, .admin-nav a.router-link-exact-active { color: var(--brand-strong); background: var(--brand-soft); }
+.account-button { display: flex; align-items: center; justify-self: end; gap: var(--space-2); padding: 7px 0; border: 0; color: var(--text); background: transparent; cursor: pointer; }
+.account-button span { display: grid; text-align: right; }
+.account-button small { color: var(--subtle); font-size: 11px; }
+.account-button strong { font-size: 14px; }
+.admin-main { padding: var(--space-4) var(--space-3) var(--space-7); }
+@media (min-width: 720px) {
+  .admin-header { min-height: 70px; grid-template-columns: 1fr auto 1fr; padding-inline: clamp(24px,4vw,58px); }
+  .admin-nav { grid-row: auto; grid-column: auto; padding-top: 0; border-top: 0; }
+  .account-button { grid-column: auto; }
+  .admin-main { padding: var(--space-6) clamp(20px,3vw,42px) var(--space-7); }
+}
 </style>

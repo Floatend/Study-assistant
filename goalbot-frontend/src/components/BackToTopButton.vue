@@ -48,12 +48,12 @@ onBeforeUnmount(() => window.removeEventListener('scroll', updateVisibility))
   gap: 6px;
   min-height: 38px;
   padding: 0 13px;
-  border: 1px solid #d8e1fb;
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
-  color: #3559e8;
-  background: rgba(255, 255, 255, .94);
-  box-shadow: 0 10px 26px rgba(35, 57, 126, .16);
-  backdrop-filter: blur(10px);
+  color: var(--brand-strong);
+  background: var(--glass-strong);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px) saturate(1.15);
   font: inherit;
   font-size: 12px;
   font-weight: 750;
@@ -62,9 +62,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', updateVisibility))
 }
 
 .back-to-top-button:hover {
-  border-color: #4d6bfe;
-  color: #1c318e;
-  box-shadow: 0 12px 30px rgba(35, 57, 126, .22);
+  border-color: var(--brand);
+  color: var(--brand-strong);
+  box-shadow: var(--shadow-float);
   transform: translateY(-3px);
 }
 

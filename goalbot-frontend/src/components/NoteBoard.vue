@@ -268,28 +268,28 @@ function formatDate(value?: string) {
   background: var(--gb-surface); box-shadow: var(--gb-shadow);
   transition: border-color .22s ease, box-shadow .22s ease, transform .22s ease;
 }
-.board-column.is-drag-over { border-color: var(--gb-primary); box-shadow: 0 0 0 3px rgba(77, 107, 254, .18), var(--gb-shadow-lg); transform: translateY(-2px); }
+.board-column.is-drag-over { border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring), var(--shadow-float); transform: translateY(-2px); }
 
 .board-column-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 16px 12px;
   border-bottom: 1px solid var(--gb-border); border-radius: var(--gb-radius) var(--gb-radius) 0 0;
 }
-.board-column-head.tint-0 { background: linear-gradient(180deg, #eef2ff 0%, #e7edff 100%); }
-.board-column-head.tint-1 { background: linear-gradient(180deg, #e2f6f1 0%, #d8f1ea 100%); }
-.board-column-head.tint-2 { background: linear-gradient(180deg, #fdf0e7 0%, #fae9dc 100%); }
+.board-column-head.tint-0 { background: var(--brand-soft); }
+.board-column-head.tint-1 { background: var(--surface-soft); }
+.board-column-head.tint-2 { background: var(--accent-soft); }
 
 .board-column-title { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .board-column-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--gb-primary); }
-.tint-1 .board-column-dot { background: #19a38f; }
-.tint-2 .board-column-dot { background: #e08a3c; }
+.tint-1 .board-column-dot { background: var(--brand-strong); }
+.tint-2 .board-column-dot { background: var(--accent); }
 .board-column-title strong { overflow: hidden; color: var(--gb-text); font-size: 14px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.board-column-title small { min-width: 22px; padding: 1px 7px; border-radius: 999px; color: var(--gb-primary-dark); background: rgba(255, 255, 255, .75); font-size: 11px; font-weight: 750; text-align: center; }
-.tint-1 .board-column-title small { color: #0c6f60; }
-.tint-2 .board-column-title small { color: #9c5a1c; }
+.board-column-title small { min-width: 22px; padding: 1px 7px; border-radius: 999px; color: var(--brand-strong); background: var(--glass-strong); font-size: 11px; font-weight: 750; text-align: center; }
+.tint-1 .board-column-title small { color: var(--brand-strong); }
+.tint-2 .board-column-title small { color: var(--accent); }
 
 .column-remove { display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 8px; color: var(--gb-subtle); background: transparent; cursor: pointer; transition: color .2s ease, background-color .2s ease; }
-.column-remove:hover { color: #d14b4b; background: rgba(209, 75, 75, .1); }
+.column-remove:hover { color: var(--accent); background: var(--accent-soft); }
 
 .board-column-body { display: grid; gap: 8px; padding: 12px; }
 
@@ -297,14 +297,14 @@ function formatDate(value?: string) {
   position: relative; display: grid; grid-template-columns: 7px minmax(0, 1fr) auto; gap: 10px;
   padding: 11px 10px 11px 12px;
   border: 1px solid var(--gb-border); border-radius: var(--gb-radius-sm);
-  background: #fff; cursor: grab;
+  background: var(--surface); cursor: grab;
   transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;
 }
-.note-tile:hover { border-color: var(--gb-border-strong); box-shadow: 0 8px 20px rgba(31, 42, 68, .08); transform: translateY(-1px); }
+.note-tile:hover { border-color: var(--line-strong); box-shadow: var(--shadow-soft); transform: translateY(-1px); }
 .note-tile.dragging { opacity: .45; }
-.note-tile .note-state { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: #a7afbf; }
-.note-tile .note-state.published { background: #d28a32; }
-.note-tile .note-state.official { background: #2c9b7c; }
+.note-tile .note-state { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--subtle); }
+.note-tile .note-state.published { background: var(--accent); }
+.note-tile .note-state.official { background: var(--brand); }
 
 .note-tile-copy { min-width: 0; }
 .note-tile-copy small, .note-tile-copy strong, .note-tile-copy em { display: block; overflow: hidden; text-overflow: ellipsis; }

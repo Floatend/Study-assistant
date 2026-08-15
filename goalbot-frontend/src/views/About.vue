@@ -9,8 +9,8 @@
       </section>
       <section class="about-principles">
         <article><p>01 / RECORD</p><h2>把值得回看的过程留下来。</h2><span>公开笔记只收录站长完成整理的学习、技术和项目实践。它不追逐更新频率，而是追求能在以后继续提供帮助。</span><RouterLink to="/notes">阅读学习笔记 <b>→</b></RouterLink></article>
-        <article><p>02 / EDIT</p><h2>先写下来，再把它整理成可以阅读的文章。</h2><span>站长工作台负责导入、分类、编辑和预览 Markdown。内容在成为公开文章以前，始终只是私人草稿。</span><RouterLink to="/login">进入站长工作台 <b>↗</b></RouterLink></article>
-        <article><p>03 / PUBLISH</p><h2>只有主动发布的内容，才属于公开网站。</h2><span>公开知识库只读取同时标记为“已整理”和“官网发布”的文章，后台草稿与账户信息不会成为公开素材。</span></article>
+        <article><p>02 / TRACE</p><h2>让课程、项目和阶段学习互相连接。</h2><span>时间线按照真实发生的顺序整理经历，让结果之外的路径也能被看见。</span><RouterLink to="/journey">查看履历时间线 <b>→</b></RouterLink></article>
+        <article><p>03 / PUBLISH</p><h2>只有主动发布的内容，才属于公开网站。</h2><span>公开知识库只读取同时标记为“已整理”和“官网发布”的文章，后台草稿与账户信息不会成为公开素材。</span><RouterLink to="/login">进入站长工作台 <b>↗</b></RouterLink></article>
       </section>
       <section class="about-closing"><span>linge.xin</span><p>Make room for the work that matters.</p></section>
     </div>
@@ -22,51 +22,47 @@ import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
 </script>
 
 <style scoped>
-.about-page { min-height:100vh; color:var(--gb-text); background:var(--gb-bg); }
-.about-shell { width:min(1180px,calc(100% - 8vw)); margin:0 auto; }
-
-.about-hero {
-  display:grid; grid-template-columns:.52fr 1.3fr .6fr; gap:30px; align-items:start;
-  padding:clamp(72px,12vw,160px) 0 clamp(64px,9vw,120px);
-  border-bottom:1px solid var(--gb-border);
-}
-.about-hero>p,.about-principles article>p { margin:0; color:var(--gb-primary); font-size:11px; font-weight:800; letter-spacing:.14em; }
-.about-hero h1 { margin:0; color:var(--gb-text); font-size:clamp(44px,5.8vw,78px); font-weight:800; letter-spacing:-.02em; line-height:1.1; }
-.about-hero>span { padding-top:12px; color:var(--gb-muted); font-size:15px; line-height:1.9; }
-
-.about-principles { display:grid; gap:20px; padding:clamp(44px,7vw,84px) 0; }
+.about-page { min-height: 100vh; color: var(--text); background: var(--bg); }
+.about-shell { width: min(100% - 32px, 1180px); margin-inline: auto; padding-block: var(--space-3) 0; }
+.about-hero { display: flex; flex-direction: column; gap: var(--space-5); padding-block: var(--space-8); border-bottom: 1px solid var(--line); }
+.about-hero>p, .about-principles article>p { color: var(--brand); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.about-hero h1 { color: var(--text); font-size: 46px; line-height: 1.12; }
+.about-hero>span { max-width: 34ch; color: var(--muted); font-size: 15px; line-height: 1.6; }
+.about-principles { display: flex; flex-direction: column; padding-block: var(--space-6) var(--space-8); }
 .about-principles article {
-  display:grid; grid-template-columns:.52fr 1.3fr .6fr; gap:30px;
-  padding:40px 36px;
-  border:1px solid var(--gb-border); border-radius:var(--gb-radius);
-  transition:background-color .3s ease,transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease;
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: var(--space-4);
+  padding-block: var(--space-6);
+  border-bottom: 1px solid var(--line);
+  transition: padding .26s ease, background-color .26s ease;
 }
-.about-principles article:nth-child(1) { background:linear-gradient(180deg,#eef2ff 0%,#e4eaff 100%); }
-.about-principles article:nth-child(2) { background:linear-gradient(180deg,#e2f6f1 0%,#d2efe8 100%); }
-.about-principles article:nth-child(3) { background:linear-gradient(180deg,#fdf0e7 0%,#fbe4d3 100%); }
-.about-principles article:hover { position:relative; z-index:1; transform:translateX(10px); box-shadow:var(--gb-shadow-lg); }
-.about-principles h2,.about-principles span { margin:0; }
-.about-principles h2 { color:var(--gb-text); font-size:clamp(22px,2.2vw,30px); font-weight:800; letter-spacing:-.01em; line-height:1.42; }
-.about-principles span { color:var(--gb-muted); font-size:14px; line-height:1.86; }
-.about-principles a { grid-column:2; display:inline-flex; align-items:center; gap:8px; margin-top:4px; color:var(--gb-primary); font-size:14px; font-weight:800; text-decoration:none; }
-.about-principles a b { font-size:18px; transition:transform .25s ease; }
-.about-principles a:hover b { transform:translateX(5px); }
-
+.about-principles article:hover { padding-inline: var(--space-4); background: var(--surface-soft); }
+.about-principles article>p { grid-row: 1 / span 3; }
+.about-principles h2 { color: var(--text); font-size: 27px; line-height: 1.35; }
+.about-principles article>span { color: var(--muted); font-size: 14px; line-height: 1.6; }
+.about-principles a { display: inline-flex; align-items: center; gap: var(--space-2); justify-self: start; color: var(--brand-strong); font-size: 14px; font-weight: 750; text-decoration: none; }
+.about-principles a b { transition: transform .24s ease; }
+.about-principles a:hover b { transform: translateX(5px); }
 .about-closing {
-  display:flex; align-items:end; justify-content:space-between; gap:20px;
-  margin:0 -4vw; padding:clamp(66px,10vw,128px) 4vw 44px;
-  background:linear-gradient(118deg,#131c4a 0%,#1b2a68 55%,#243580 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--space-5) var(--space-6);
+  color: var(--on-brand);
+  background: var(--brand);
 }
-.about-closing span { color:#fff; font-size:clamp(52px,10.5vw,132px); font-weight:800; letter-spacing:-.02em; line-height:.82; }
-.about-closing p { margin:0; color:var(--gb-mint); font-size:14px; font-weight:700; }
+.about-closing span { font-family: var(--font-display); font-size: 58px; font-weight: 700; line-height: .9; }
+.about-closing p { color: color-mix(in srgb, var(--surface) 74%, transparent); font-size: 14px; font-weight: 700; }
 
-@media(max-width:760px){
-  .about-shell { width:min(100% - 32px,1180px); }
-  .about-hero,.about-principles article { grid-template-columns:1fr; gap:19px; }
-  .about-principles article { padding:31px 24px; }
-  .about-principles article:hover { transform:none; }
-  .about-principles a { grid-column:auto; }
-  .about-closing { align-items:start; flex-direction:column; margin:0 -16px; padding-right:16px; padding-left:16px; }
-  .about-closing span { font-size:64px; }
+@media (min-width: 760px) {
+  .about-shell { width: min(100% - 64px, 1180px); }
+  .about-hero { display: grid; grid-template-columns: .5fr 1.25fr .65fr; gap: var(--space-7); align-items: start; padding-block: 112px; }
+  .about-hero h1 { font-size: 68px; }
+  .about-principles article { grid-template-columns: .45fr 1.25fr .65fr; gap: var(--space-7); align-items: start; padding-block: var(--space-7); }
+  .about-principles article>p { grid-row: auto; }
+  .about-principles a { grid-column: 2; }
+  .about-closing { flex-direction: row; align-items: flex-end; justify-content: space-between; padding: 104px var(--space-7) var(--space-6); }
+  .about-closing span { font-size: 104px; }
 }
 </style>

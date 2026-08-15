@@ -359,7 +359,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   gap: 10px;
   padding: 15px;
   border-right: 1px solid var(--gb-border);
-  background: #f7f8fc;
+  background: var(--surface-soft);
 }
 
 .library-filters {
@@ -372,7 +372,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   align-items: center;
   justify-content: space-between;
   margin-top: 4px;
-  color: #4c5870;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 750;
 }
@@ -394,7 +394,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .notebook-library :deep(.note-category-tree) {
   --category-accent: var(--gb-primary-dark);
   --category-active: var(--gb-primary-soft);
-  --category-hover: #eef1f8;
+  --category-hover: var(--surface-soft);
 }
 
 .notebook-library :deep(.category-tree-empty) {
@@ -426,14 +426,14 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 }
 
 .library-note:hover {
-  border-color: #dce2ef;
-  background: rgba(255, 255, 255, .78);
+  border-color: var(--line);
+  background: var(--glass);
 }
 
 .library-note.active {
-  border-color: #cbd5f0;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(31, 42, 68, .07);
+  border-color: var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
 }
 
 .note-state {
@@ -441,15 +441,15 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   height: 7px;
   margin-top: 6px;
   border-radius: 50%;
-  background: #a7afbf;
+  background: var(--subtle);
 }
 
 .note-state.published {
-  background: #d28a32;
+  background: var(--accent);
 }
 
 .note-state.official {
-  background: #2c9b7c;
+  background: var(--brand);
 }
 
 .library-note-copy {
@@ -481,7 +481,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .library-note-copy em {
   display: -webkit-box;
   margin-top: 5px;
-  color: #778198;
+  color: var(--muted);
   font-size: 12px;
   font-style: normal;
   line-height: 1.5;
@@ -492,7 +492,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .notebook-reader {
   min-width: 0;
   padding: 38px clamp(28px, 4vw, 68px) 56px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .reader-header,
@@ -503,7 +503,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 
 .reader-header {
   padding-bottom: 25px;
-  border-bottom: 1px solid #e7eaf1;
+  border-bottom: 1px solid var(--line);
 }
 
 .reader-meta,
@@ -515,13 +515,13 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 }
 
 .reader-meta {
-  color: #7c879d;
+  color: var(--muted);
   font-size: 12px;
 }
 
 .reader-meta span + span::before {
   margin-right: 9px;
-  color: #c0c7d4;
+  color: var(--subtle);
   content: "•";
 }
 
@@ -536,7 +536,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .reader-title-row h3 {
   min-width: 0;
   margin: 0;
-  color: #1f2a44;
+  color: var(--text);
   font-size: clamp(26px, 2.8vw, 38px);
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -548,7 +548,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 
 .reader-summary {
   margin: 15px 0 0;
-  color: #65708c;
+  color: var(--muted);
   font-size: 15px;
   line-height: 1.75;
 }
@@ -564,25 +564,25 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   align-items: center;
   padding: 0 8px;
   border-radius: 999px;
-  color: #18755f;
-  background: #e4f4ee;
+  color: var(--brand-strong);
+  background: var(--brand-soft);
   font-size: 11px;
   font-weight: 700;
 }
 
 .publication-mark.quiet {
-  color: #986218;
-  background: #fff1d8;
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .publication-mark.draft {
-  color: #667085;
-  background: #eef0f4;
+  color: var(--muted);
+  background: var(--surface-soft);
 }
 
 .reader-tag {
-  color: #536078;
-  background: #f0f2f7;
+  color: var(--muted);
+  background: var(--surface-soft);
   font-weight: 600;
 }
 
@@ -591,7 +591,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 }
 
 .notebook-reader :deep(.markdown-content) {
-  color: #2b3548;
+  color: var(--text);
   font-size: 16px;
   line-height: 1.92;
 }
@@ -601,13 +601,13 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .notebook-reader :deep(.markdown-content h3),
 .notebook-reader :deep(.markdown-content h4) {
   scroll-margin-top: 92px;
-  color: #1f2a44;
+  color: var(--text);
 }
 
 .notebook-reader :deep(.markdown-content h2) {
   margin-top: 42px;
   padding-bottom: 9px;
-  border-bottom: 1px solid #e8ebf2;
+  border-bottom: 1px solid var(--line);
 }
 
 .reader-outline {
@@ -615,18 +615,18 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   min-height: 100%;
   padding: 42px 16px;
   border-left: 1px solid var(--gb-border);
-  background: #fafbfe;
+  background: var(--surface-soft);
 }
 
 .reader-outline > p {
-  color: #65708c;
+  color: var(--muted);
   letter-spacing: .08em;
 }
 
 .reader-outline > span {
   display: block;
   margin-top: 15px;
-  color: #929bad;
+  color: var(--subtle);
   font-size: 12px;
 }
 
@@ -636,7 +636,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   overflow: hidden;
   margin-top: 11px;
   border: 0;
-  color: #67738b;
+  color: var(--muted);
   background: transparent;
   font-size: 12px;
   line-height: 1.45;
@@ -658,7 +658,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   justify-items: start;
   gap: 10px;
   padding: 48px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .reader-empty .el-icon {
@@ -748,7 +748,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   overflow: hidden;
   border: 1px solid var(--gb-border);
   border-radius: 7px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .editor-workspace.mode-split {
@@ -765,14 +765,14 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 
 .editor-source {
   border-right: 1px solid var(--gb-border);
-  background: #f8f9fc;
+  background: var(--surface-soft);
 }
 
 .editor-source label,
 .editor-preview > label {
   padding: 10px 13px;
   border-bottom: 1px solid var(--gb-border);
-  color: #737e94;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 700;
 }
@@ -786,7 +786,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   padding: 16px;
   border: 0;
   outline: 0;
-  color: #263247;
+  color: var(--text);
   background: transparent;
   font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   font-size: 13px;
@@ -801,7 +801,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 }
 
 .editor-preview-paper :deep(.markdown-content) {
-  color: #2b3548;
+  color: var(--text);
   line-height: 1.82;
 }
 
@@ -848,7 +848,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 
 :global(.notebook-editor-dialog .el-dialog__footer) {
   border-top: 1px solid var(--gb-border);
-  background: #fff;
+  background: var(--surface);
 }
 
 @media (prefers-reduced-motion: reduce) {

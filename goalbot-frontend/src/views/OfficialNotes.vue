@@ -38,8 +38,9 @@
         </article>
 
         <section v-else class="knowledge-empty">
-          <p>还没有可以阅读的内容。</p>
-          <RouterLink to="/">返回首页</RouterLink>
+          <p>{{ loadError || '还没有可以阅读的内容。' }}</p>
+          <button v-if="loadError" type="button" @click="loadNotes(false)">重新加载</button>
+          <RouterLink v-else to="/">返回首页</RouterLink>
         </section>
 
         <aside v-if="activeNote" class="article-outline">
@@ -75,6 +76,7 @@ const keyword = ref('')
 const selectedCategory = ref('')
 const loading = ref(false)
 const articleLoading = ref(false)
+const loadError = ref('')
 const readingProgress = ref(0)
 const activeHeadingId = ref('')
 const selectedCategoryDescendants = ref<string[] | null>(null)
@@ -93,7 +95,7 @@ onMounted(async () => {
   selectedCategory.value = requestedCategory
   const initialCategoryNode = findNoteCategoryNode(buildNoteCategoryTree(categories.value), requestedCategory)
   selectedCategoryDescendants.value = initialCategoryNode?.children.length ? initialCategoryNode.leafValues : null
-  try { await loadNotes(false) } catch { notes.value = []; activeNote.value = null }
+  await loadNotes(false)
   window.addEventListener('scroll', handleScroll, { passive: true })
 })
 
@@ -121,6 +123,7 @@ watch(activeNote, () => nextTick(updateReadingState))
 
 async function loadNotes(syncRoute = true) {
   loading.value = true
+  loadError.value = ''
   try {
     const descendants = selectedCategoryDescendants.value
     const items = await fetchOfficialNotes({
@@ -134,6 +137,10 @@ async function loadNotes(syncRoute = true) {
     const target = notes.value.find((note) => note.id === requestedId) ?? notes.value[0]
     if (target) await selectNote(target, syncRoute)
     else activeNote.value = null
+  } catch {
+    notes.value = []
+    activeNote.value = null
+    loadError.value = '笔记服务暂时不可用，请稍后重试。'
   } finally { loading.value = false }
 }
 
@@ -151,6 +158,8 @@ async function selectNote(note: Note, syncRoute = true) {
     if (syncRoute && Number(route.query.note) !== note.id) {
       await router.replace({ query: { ...(selectedCategory.value ? { category: selectedCategory.value } : {}), note: String(note.id) } })
     }
+  } catch {
+    loadError.value = '文章暂时无法打开，请稍后重试。'
   } finally { articleLoading.value = false }
 }
 
@@ -189,18 +198,18 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 
 <style scoped>
 .knowledge-page { min-height:100vh; color:var(--gb-text); background:var(--gb-bg); }
-.knowledge-shell { width:min(1320px,calc(100% - 8vw)); margin:0 auto; padding-bottom:64px; }
+.knowledge-shell { width:min(1320px,calc(100% - 8vw)); margin:0 auto; padding:var(--space-3) 0 var(--space-8); }
 
 /* ============ Intro ============ */
 .knowledge-intro { display:grid; grid-template-columns:1fr; gap:14px; padding:clamp(52px,8vw,108px) 0 38px; }
 .knowledge-intro p { margin:0; color:var(--gb-primary); font-size:11px; font-weight:800; letter-spacing:.14em; }
-.knowledge-intro h1 { margin:0; color:var(--gb-text); font-size:clamp(46px,6.4vw,84px); font-weight:800; letter-spacing:-.02em; line-height:.92; }
+.knowledge-intro h1 { margin:0; color:var(--text); font-size:64px; font-weight:700; line-height:1; }
 
 /* ============ Layout ============ */
 .knowledge-layout { display:grid; grid-template-columns:minmax(250px,.62fr) minmax(0,1.7fr) minmax(180px,.4fr); gap:22px; min-height:700px; align-items:start; }
 
 /* ============ Library ============ */
-.knowledge-library { padding:20px; border:1px solid var(--gb-border); border-radius:var(--gb-radius); background:var(--gb-surface); box-shadow:var(--gb-shadow); }
+.knowledge-library { padding:20px; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--glass); box-shadow:var(--shadow-soft); backdrop-filter:blur(18px) saturate(1.15); }
 .library-label { margin:22px 0 10px; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.12em; }
 .notes-label { margin-top:26px; }
 .public-note-scroll { height:380px; margin-right:-8px; padding-right:8px; }
@@ -220,22 +229,22 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .knowledge-article {
   position:relative; min-width:0;
   padding:44px clamp(30px,4.4vw,78px) 60px;
-  border:1px solid var(--gb-border); border-radius:var(--gb-radius);
-  background:var(--gb-surface); box-shadow:var(--gb-shadow);
+  border:1px solid var(--line); border-radius:var(--radius-sm);
+  background:var(--surface);
 }
 .reading-progress { position:sticky; top:0; z-index:3; width:100%; height:4px; margin:0 -1px 27px -1px; border-radius:4px; background:var(--gb-primary-soft); }
 .reading-progress span { display:block; height:100%; border-radius:4px; background:var(--gb-primary); transition:width .12s linear; }
 .article-head { max-width:820px; padding-bottom:28px; border-bottom:1px solid var(--gb-border); }
 .article-path { display:flex; gap:8px; color:var(--gb-primary); font-size:12px; font-weight:700; }
 .article-path b { color:var(--gb-subtle); font-weight:500; }
-.article-head h2 { margin:17px 0 0; color:var(--gb-text); font-size:clamp(28px,3.4vw,46px); font-weight:800; letter-spacing:-.01em; line-height:1.24; }
+.article-head h2 { margin:17px 0 0; color:var(--text); font-size:clamp(28px,3.4vw,46px); font-weight:700; line-height:1.24; }
 .article-head>p { margin:17px 0 0; color:var(--gb-muted); font-size:15px; line-height:1.82; }
 .article-meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:19px; color:var(--gb-subtle); font-size:12px; }
 .article-meta span+span::before { margin-right:10px; color:var(--gb-border-strong); content:'•'; }
 .article-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:15px; }
 .article-tags span { padding:4px 11px; border-radius:999px; color:var(--gb-primary-dark); background:var(--gb-primary-soft); font-size:12px; font-weight:650; }
 .article-body { max-width:820px; padding-top:32px; }
-.knowledge-article :deep(.markdown-content) { color:#2c3a55; font-size:16px; line-height:1.95; }
+.knowledge-article :deep(.markdown-content) { color:var(--text); font-size:16px; line-height:1.8; }
 .knowledge-article :deep(.markdown-content h1),
 .knowledge-article :deep(.markdown-content h2),
 .knowledge-article :deep(.markdown-content h3),
@@ -246,7 +255,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .article-pagination { display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:820px; margin-top:56px; padding-top:26px; border-top:1px solid var(--gb-border); }
 .article-pagination button {
   display:grid; gap:5px; padding:16px 18px;
-  border:1px solid var(--gb-border); border-radius:14px;
+  border:1px solid var(--line); border-radius:var(--radius-sm);
   color:var(--gb-primary-dark); background:var(--gb-surface);
   text-align:left; cursor:pointer;
   transition:border-color .22s ease,background-color .22s ease,transform .22s ease;
@@ -258,7 +267,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .article-pagination strong { font-size:13px; font-weight:750; }
 
 /* ============ Outline ============ */
-.article-outline { position:sticky; top:24px; padding:22px 20px; border:1px solid var(--gb-border); border-radius:var(--gb-radius); background:var(--gb-surface); box-shadow:var(--gb-shadow); }
+.article-outline { position:sticky; top:92px; padding:22px 20px; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--glass); box-shadow:var(--shadow-soft); backdrop-filter:blur(18px) saturate(1.15); }
 .article-outline>p { margin:0; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.1em; }
 .article-outline>span { display:block; margin-top:16px; color:var(--gb-subtle); font-size:12px; }
 .article-outline button {
@@ -274,8 +283,8 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 /* ============ Empty ============ */
 .knowledge-empty { display:grid; grid-column:2 / -1; min-height:560px; align-content:center; justify-items:center; gap:14px; padding:50px; border:1px dashed var(--gb-border-strong); border-radius:var(--gb-radius); background:var(--gb-surface); }
 .knowledge-empty p { margin:0; color:var(--gb-muted); font-size:16px; }
-.knowledge-empty a { display:inline-flex; margin-top:6px; padding:9px 24px; border-radius:999px; color:#fff; background:var(--gb-primary); font-size:13px; font-weight:750; text-decoration:none; transition:background-color .2s ease,transform .2s ease; }
-.knowledge-empty a:hover { background:var(--gb-primary-dark); transform:translateY(-1px); }
+.knowledge-empty a,.knowledge-empty button { display:inline-flex; padding:9px 24px; border:0; border-radius:var(--radius-sm); color:var(--on-brand); background:var(--brand); font-size:14px; font-weight:750; text-decoration:none; cursor:pointer; transition:background-color .2s ease,transform .2s ease; }
+.knowledge-empty a:hover,.knowledge-empty button:hover { background:var(--gb-primary-dark); transform:translateY(-1px); }
 
 @media(max-width:1100px){
   .knowledge-layout { grid-template-columns:minmax(240px,.62fr) minmax(0,1.7fr); }
@@ -292,6 +301,6 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
   .reading-progress { margin-bottom:22px; }
   .article-pagination { grid-template-columns:1fr; }
   .article-pagination button:last-child { text-align:left; }
-  .knowledge-intro h1 { font-size:52px; }
+  .knowledge-intro h1 { font-size:46px; }
 }
 </style>

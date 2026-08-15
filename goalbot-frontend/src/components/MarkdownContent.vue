@@ -340,13 +340,13 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 
 <style scoped>
 .markdown-content {
-  color: #25313f;
+  color: var(--text);
   font-size: 14px;
   line-height: 1.75;
 }
 
 .markdown-content:empty::before {
-  color: #98a2b3;
+  color: var(--subtle);
   content: "正文预览会显示在这里";
 }
 
@@ -367,7 +367,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 .markdown-content :deep(h3),
 .markdown-content :deep(h4) {
   margin: 14px 0 8px;
-  color: #1d2733;
+  color: var(--text);
   font-weight: 750;
   line-height: 1.35;
 }
@@ -404,50 +404,50 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   height: 15px;
   margin: 0 8px 0 0;
   vertical-align: -2px;
-  accent-color: #4d6bfe;
+  accent-color: var(--brand);
 }
 
 .markdown-content :deep(strong) {
-  color: #111827;
+  color: var(--text);
   font-weight: 750;
 }
 
 .markdown-content :deep(blockquote) {
   margin: 10px 0;
   padding: 8px 12px;
-  border-left: 3px solid #2f7d68;
+  border-left: 3px solid var(--brand);
   border-radius: 4px;
-  color: #566273;
-  background: #f4f8f6;
+  color: var(--muted);
+  background: var(--brand-soft);
 }
 
 .markdown-content :deep(.obsidian-callout) {
-  --callout-color: 46, 128, 242;
+  --callout-color: var(--brand);
   margin: 18px 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(var(--callout-color), .35);
-  border-left: 4px solid rgb(var(--callout-color));
+  border: 1px solid color-mix(in srgb, var(--callout-color) 35%, var(--surface));
+  border-left: 4px solid var(--callout-color);
   border-radius: 8px;
-  color: #30415f;
-  background: rgba(var(--callout-color), .09);
+  color: var(--text);
+  background: color-mix(in srgb, var(--callout-color) 9%, var(--surface));
   font-style: normal;
-  box-shadow: 0 2px 8px rgba(31, 60, 140, .06);
+  box-shadow: var(--shadow-soft);
 }
 
 .markdown-content :deep(.obsidian-callout[data-callout="tip"]),
 .markdown-content :deep(.obsidian-callout[data-callout="success"]) {
-  --callout-color: 36, 166, 151;
+  --callout-color: var(--brand-strong);
 }
 
 .markdown-content :deep(.obsidian-callout[data-callout="warning"]),
 .markdown-content :deep(.obsidian-callout[data-callout="caution"]) {
-  --callout-color: 218, 142, 41;
+  --callout-color: var(--accent);
 }
 
 .markdown-content :deep(.obsidian-callout[data-callout="danger"]),
 .markdown-content :deep(.obsidian-callout[data-callout="failure"]) {
-  --callout-color: 215, 77, 92;
+  --callout-color: var(--accent);
 }
 
 .markdown-content :deep(.obsidian-callout-title) {
@@ -456,7 +456,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   gap: 8px;
   margin: 0;
   padding: 10px 13px 5px;
-  color: rgb(var(--callout-color));
+  color: var(--callout-color);
   font-style: normal;
   font-weight: 750;
 }
@@ -467,7 +467,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 }
 
 .markdown-content :deep(.obsidian-callout.is-foldable > .obsidian-callout-title:focus-visible) {
-  box-shadow: 0 0 0 2px rgba(var(--callout-color), .28) inset;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--callout-color) 28%, transparent) inset;
 }
 
 .markdown-content :deep(.obsidian-callout-fold) {
@@ -509,7 +509,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 
 .markdown-content :deep(.obsidian-callout-content) {
   padding: 0 13px 12px;
-  color: #30415f;
+  color: var(--text);
 }
 
 .markdown-content :deep(.obsidian-callout-content > :first-child) {
@@ -527,8 +527,8 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 .markdown-content :deep(code) {
   padding: 2px 5px;
   border-radius: 4px;
-  color: #9f1239;
-  background: #f8e7ed;
+  color: var(--accent);
+  background: var(--accent-soft);
   font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   font-size: 12px;
 }
@@ -547,7 +547,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 }
 
 .markdown-content :deep(.katex) {
-  color: #243553;
+  color: var(--text);
   font-size: 1.08em;
   overflow-wrap: normal;
   white-space: nowrap;
@@ -556,8 +556,8 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 .markdown-content :deep(.math-render-error) {
   padding: 1px 5px;
   border-radius: 4px;
-  color: #b42335;
-  background: #fff0f1;
+  color: var(--accent);
+  background: var(--accent-soft);
   font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 }
 
@@ -565,7 +565,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   width: 100%;
   margin: 18px 0 24px;
   overflow-x: auto;
-  border: 1px solid #dfe5ef;
+  border: 1px solid var(--line);
   border-radius: 8px;
 }
 
@@ -573,15 +573,15 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   width: 100%;
   min-width: 520px;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--surface);
   font-size: 13px;
 }
 
 .markdown-content :deep(th),
 .markdown-content :deep(td) {
   padding: 10px 12px;
-  border-right: 1px solid #e6eaf1;
-  border-bottom: 1px solid #e6eaf1;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
 }
@@ -596,13 +596,13 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 }
 
 .markdown-content :deep(th) {
-  color: #39465a;
-  background: #f4f6fa;
+  color: var(--text);
+  background: var(--surface-soft);
   font-weight: 750;
 }
 
 .markdown-content :deep(tr:nth-child(even) td) {
-  background: #fafbfe;
+  background: var(--surface-raised);
 }
 
 .markdown-content :deep(img) {
@@ -610,30 +610,30 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   max-width: 100%;
   height: auto;
   margin: 20px auto;
-  border: 1px solid #e1e6ef;
+  border: 1px solid var(--line);
   border-radius: 8px;
 }
 
 .markdown-content :deep(hr) {
   margin: 30px 0;
   border: 0;
-  border-top: 1px solid #dfe4ec;
+  border-top: 1px solid var(--line);
 }
 
 .markdown-content :deep(pre) {
   margin: 0;
   padding: 18px 20px 20px;
   overflow-x: auto;
-  background: #f0f2f5;
+  background: var(--surface-soft);
 }
 
 .markdown-content :deep(.code-block-shell) {
   margin: 18px 0 22px;
   overflow: hidden;
-  border: 1px solid #e0e5ec;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: #f0f2f5;
-  box-shadow: 0 5px 18px rgba(41, 54, 78, .06);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-soft);
 }
 
 .markdown-content :deep(.code-block-toolbar) {
@@ -643,9 +643,9 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   justify-content: flex-end;
   gap: 10px;
   padding: 0 10px 0 14px;
-  border-bottom: 1px solid #e0e5ec;
-  color: #687487;
-  background: #e8ebf0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--surface-soft);
   font-size: 11px;
 }
 
@@ -659,7 +659,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   padding: 4px 6px;
   border: 0;
   border-radius: 4px;
-  color: #647086;
+  color: var(--muted);
   background: transparent;
   font: inherit;
   cursor: pointer;
@@ -667,8 +667,8 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 }
 
 .markdown-content :deep(.code-copy-button:hover) {
-  color: #245de8;
-  background: rgba(255, 255, 255, .7);
+  color: var(--brand-strong);
+  background: var(--glass);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -682,7 +682,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
   display: block;
   min-width: max-content;
   padding: 0;
-  color: #263247;
+  color: var(--text);
   background: transparent;
   font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   font-size: 13px;
@@ -693,7 +693,7 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 
 .markdown-content :deep(.hljs-comment),
 .markdown-content :deep(.hljs-quote) {
-  color: #9aa5b4;
+  color: var(--subtle);
   font-style: italic;
 }
 
@@ -701,35 +701,35 @@ watch(html, () => nextTick(() => markdownRoot.value?.scrollTo({ left: 0, top: 0 
 .markdown-content :deep(.hljs-selector-tag),
 .markdown-content :deep(.hljs-literal),
 .markdown-content :deep(.hljs-type) {
-  color: #b51da8;
+  color: var(--accent);
 }
 
 .markdown-content :deep(.hljs-string),
 .markdown-content :deep(.hljs-attr),
 .markdown-content :deep(.hljs-variable),
 .markdown-content :deep(.hljs-template-variable) {
-  color: #2765e8;
+  color: var(--brand);
 }
 
 .markdown-content :deep(.hljs-number),
 .markdown-content :deep(.hljs-symbol),
 .markdown-content :deep(.hljs-bullet) {
-  color: #d35c22;
+  color: var(--accent);
 }
 
 .markdown-content :deep(.hljs-title),
 .markdown-content :deep(.hljs-function),
 .markdown-content :deep(.hljs-built_in) {
-  color: #2753b8;
+  color: var(--brand-strong);
 }
 
 .markdown-content :deep(.hljs-meta),
 .markdown-content :deep(.hljs-name) {
-  color: #008d8a;
+  color: var(--brand);
 }
 
 .markdown-content :deep(a) {
-  color: #2563eb;
+  color: var(--brand);
   text-decoration: none;
 }
 
