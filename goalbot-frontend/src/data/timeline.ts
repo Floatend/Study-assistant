@@ -1,4 +1,6 @@
-export type TimelineCategory = 'project' | 'learning' | 'course' | 'certificate'
+export type TimelineCategory = 'education' | 'project'
+export type JourneyFilter = 'all' | TimelineCategory | 'achievement'
+export type AchievementScope = 'national' | 'provincial' | 'campus'
 
 export interface TimelineLink {
   label: string
@@ -7,74 +9,134 @@ export interface TimelineLink {
 
 export interface TimelineItem {
   id: string
+  code: string
   category: TimelineCategory
-  date: string
+  start: string
+  end?: string
+  period: string
   title: string
+  role?: string
   description: string
-  tags?: string[]
+  details: string[]
+  tags: string[]
   link?: TimelineLink
-  highlight?: boolean
+  current?: boolean
 }
 
-// 公开时间线的数据入口：直接增删下面的条目即可，页面会自动更新筛选和统计。
-// 证书（certificate）为空时会显示“待整理”空状态，填一条数据后会自动出现在时间线里。
+export interface AchievementItem {
+  id: string
+  scope: AchievementScope
+  title: string
+  result: string
+}
+
+// Public journey data is taken from the owner's resume. Keep undated awards out
+// of the chronological scale so the page never implies dates that were not given.
 export const timelineItems: TimelineItem[] = [
   {
+    id: 'zhengzhou-high-school',
+    code: 'E1',
+    category: 'education',
+    start: '2022-09',
+    end: '2025-06',
+    period: '2022.09 - 2025.06',
+    title: '郑州中学',
+    role: '高中阶段',
+    description: '在郑州中学完成高中阶段学习。',
+    details: [],
+    tags: ['郑州中学']
+  },
+  {
+    id: 'henan-university',
+    code: 'E2',
+    category: 'education',
+    start: '2025-09',
+    period: '2025.09 - 至今',
+    title: '河南大学 · 网络工程',
+    role: '网络工程专业九班',
+    description: '进入河南大学学习网络工程，大一上学期平均加权成绩位于专业前 5%。',
+    details: ['大一上学期平均加权成绩位于专业前 5%。'],
+    tags: ['网络工程', '专业前 5%'],
+    current: true
+  },
+  {
+    id: 'cloud-edge-capture',
+    code: 'P1',
+    category: 'project',
+    start: '2026-04',
+    end: '2026-05',
+    period: '2026.04 - 2026.05',
+    title: '云边端智能识别抓取平台',
+    role: '后端负责人',
+    description: '面向移动端、后端服务与边缘设备协同场景，完成接口、通信联调、部署和 AI 对话模块。',
+    details: [
+      '基于 Spring Boot 设计并开发移动端数据交互接口。',
+      '参与移动端、后端服务与边缘设备的通信联调，优化软硬件协同场景下的响应延迟。',
+      '完成后端服务部署与云端联调，打通本地服务与云服务器。',
+      '集成 AI 对话交互模块。'
+    ],
+    tags: ['Spring Boot', '云边端协同', 'AI 对话']
+  },
+  {
+    id: 'wechat-llm-agent',
+    code: 'P2',
+    category: 'project',
+    start: '2026-04',
+    period: '2026.04 - 至今',
+    title: '基于 LLM 的微信智能体机器人',
+    role: '个人开发',
+    description: '搭建面向微信群聊场景的 LLM 智能体机器人，支持自动回复、定时提醒、持续对话与多角色切换。',
+    details: [
+      '实现关键词自动回复、定时提醒与持续对话。',
+      '设计多角色人设切换机制，支持不同对话风格下的日常聊天与群聊交互。',
+      '针对并发请求和接口调用频率限制进行优化，提升运行稳定性。'
+    ],
+    tags: ['LLM', '微信机器人', '多角色对话'],
+    current: true
+  },
+  {
+    id: 'ceramic-commerce',
+    code: 'P3',
+    category: 'project',
+    start: '2026-05',
+    period: '2026.05 - 至今',
+    title: '3D 定制陶瓷电商平台',
+    role: '后端负责人',
+    description: '围绕用户定制需求，完成后端核心业务、3D 模型生成展示流程与数据持久化设计。',
+    details: [
+      '基于 Spring Boot 与 MyBatis 完成核心业务接口开发。',
+      '接入混元 3D 模型，设计 3D 陶瓷模型生成与展示流程。',
+      '设计 MySQL 表结构，持久化管理用户、商品和订单等核心数据。'
+    ],
+    tags: ['Spring Boot', 'MyBatis', 'MySQL', '混元 3D'],
+    current: true
+  },
+  {
     id: 'linge-site',
+    code: 'P4',
     category: 'project',
-    date: '2026.08',
-    title: 'linge.xin 个人知识站',
-    description: '把公开主页、学习笔记与站长工作台整理成同一个站点：Vue 3 前端、Spring Boot 后端与 MySQL 数据模型，并持续打磨阅读体验。',
-    tags: ['Vue 3', 'Spring Boot', 'MySQL'],
+    start: '2026-05',
+    period: '2026.05 - 至今',
+    title: '个人网站 linge.xin',
+    role: '个人开发',
+    description: '搭建个人技术博客，并接入目标监督、咨询推送和项目复盘等 AI 工具能力。',
+    details: [
+      '建设个人技术博客与 AI 工具面板。',
+      '负责 Linux 环境、Nginx 反向代理、域名解析以及网站部署维护。'
+    ],
+    tags: ['个人技术博客', 'Linux', 'Nginx'],
     link: { label: '查看学习笔记', to: '/notes' },
-    highlight: true
-  },
-  {
-    id: 'study-assistant',
-    category: 'project',
-    date: '2026.06',
-    title: 'Study-assistant 全栈实践',
-    description: '从目标、任务与打卡管理出发，完成前后端分离的全栈项目，并尝试接入 AI 建议与飞书机器人交互。',
-    tags: ['全栈', 'AI 集成', '飞书']
-  },
-  {
-    id: 'algorithm-training',
-    category: 'learning',
-    date: '2026.02',
-    title: '算法与竞赛训练',
-    description: '围绕 C++ 与数据结构持续训练，把常用算法模板和解题过程沉淀成可复用的笔记。',
-    tags: ['C++', '数据结构', 'ACM']
-  },
-  {
-    id: 'web-development',
-    category: 'course',
-    date: '2025.09',
-    title: 'Web 开发基础',
-    description: '学习 HTML、CSS、JavaScript 与前端工程化，并开始用真实项目检验课堂知识。',
-    tags: ['HTML', 'CSS', 'JavaScript']
-  },
-  {
-    id: 'discrete-math',
-    category: 'course',
-    date: '2025.09',
-    title: '离散数学',
-    description: '集合、关系、图论与逻辑是理解算法和程序结构的重要基础。',
-    tags: ['集合论', '图论', '逻辑']
-  },
-  {
-    id: 'advanced-math',
-    category: 'course',
-    date: '2025.03',
-    title: '高等数学',
-    description: '从极限、导数到积分，建立持续推导和把问题形式化的能力。',
-    tags: ['微积分', '极限', '级数']
-  },
-  {
-    id: 'note-archive',
-    category: 'learning',
-    date: '2024.10',
-    title: '建立个人知识库',
-    description: '开始用 Markdown 记录课程、项目与思考，逐渐形成分类、整理和公开写作的习惯。',
-    tags: ['Markdown', 'Obsidian', '知识管理']
+    current: true
   }
+]
+
+export const achievements: AchievementItem[] = [
+  { id: 'lanqiao', scope: 'provincial', title: '蓝桥杯程序设计竞赛', result: '省级二等奖' },
+  { id: 'huawei-ict', scope: 'provincial', title: '华为 ICT 大赛', result: '省级二等奖' },
+  { id: 'computer-design', scope: 'provincial', title: '中国大学生计算机设计大赛', result: '省级三等奖' },
+  { id: 'matiji', scope: 'national', title: '码蹄杯程序设计竞赛', result: '国赛铜奖' },
+  { id: 'innovation', scope: 'campus', title: '中国国际大学生创新大赛', result: '校级一等奖' },
+  { id: 'baidu-star', scope: 'national', title: '百度之星程序设计大赛', result: '国赛铜奖' },
+  { id: 'robot-ai', scope: 'campus', title: '中国机器人及人工智能大赛', result: '校级三等奖' },
+  { id: 'innovation-training', scope: 'campus', title: '大学生创新创业训练计划项目', result: '校级立项' }
 ]
