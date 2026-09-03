@@ -43,21 +43,28 @@
 .site-nav a {
   flex: 0 0 auto;
   padding: 7px;
-  border-radius: 999px;
+  border-radius: 0;
   color: var(--muted);
+  box-shadow: inset 0 -2px 0 transparent;
   font-size: 13px;
   font-weight: 650;
   text-decoration: none;
-  transition: color .22s ease, background-color .22s ease;
+  transition: color .22s ease, box-shadow .22s ease;
 }
-.site-nav a:hover,
-.site-nav a.router-link-exact-active { color: var(--brand-strong); background: var(--brand-soft); }
+.site-nav a:not(.site-workspace-link):hover,
+.site-nav a:not(.site-workspace-link).router-link-exact-active {
+  color: var(--brand-strong);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--brand);
+}
 .site-nav .site-workspace-link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  border-radius: 999px;
   color: var(--brand-strong);
 }
+.site-nav .site-workspace-link:hover { border-color: var(--brand); }
 .site-workspace-link span { transition: transform .25s ease; }
 .site-workspace-link:hover span { transform: translate(2px,-2px); }
 

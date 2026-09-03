@@ -19,11 +19,11 @@
   --accent-soft: color-mix(in srgb, var(--accent) 14%, var(--surface));
   --on-brand: var(--surface);
   --on-accent: var(--text);
-  --glass: color-mix(in srgb, var(--surface) 48%, transparent);
-  --glass-strong: color-mix(in srgb, var(--surface) 66%, transparent);
-  --glass-border: color-mix(in srgb, var(--surface) 68%, var(--brand) 32%);
-  --glass-highlight: color-mix(in srgb, var(--surface) 88%, transparent);
-  --glass-depth: color-mix(in srgb, var(--brand) 12%, transparent);
+  --glass: color-mix(in srgb, var(--surface) 22%, transparent);
+  --glass-strong: color-mix(in srgb, var(--surface) 34%, transparent);
+  --glass-border: color-mix(in srgb, var(--surface) 52%, transparent);
+  --glass-highlight: color-mix(in srgb, var(--surface) 38%, transparent);
+  --glass-depth: color-mix(in srgb, var(--brand) 8%, transparent);
   --glass-shadow-color: color-mix(in srgb, var(--brand-strong) 13%, transparent);
   --liquid-brand: color-mix(in srgb, var(--brand) 58%, var(--surface));
   --liquid-accent: color-mix(in srgb, var(--accent) 62%, var(--surface));
@@ -163,28 +163,25 @@ a { color: inherit; }
 }
 .liquid-glass::before {
   position: absolute;
-  inset: 0;
+  inset: -1px;
   z-index: 0;
   border-radius: inherit;
   pointer-events: none;
   content: '';
   background: linear-gradient(118deg, var(--glass-highlight), transparent 38%, transparent 72%, var(--glass-depth));
-  opacity: .74;
-  transform: translate3d(-2%, 0, 0);
-  transition: opacity .3s ease, transform .3s ease;
+  opacity: .38;
 }
 .liquid-glass::after {
   position: absolute;
   inset: 1px;
   z-index: 0;
-  border: 1px solid color-mix(in srgb, var(--surface) 58%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface) 36%, transparent);
   border-radius: inherit;
-  box-shadow: inset 0 8px 18px color-mix(in srgb, var(--surface) 24%, transparent), inset 0 -10px 22px var(--glass-depth);
+  box-shadow: inset 0 8px 18px color-mix(in srgb, var(--surface) 12%, transparent), inset 0 -10px 22px var(--glass-depth);
   pointer-events: none;
   content: '';
-  opacity: .68;
+  opacity: .46;
 }
-.liquid-glass:hover::before { opacity: .94; transform: translate3d(2%, 0, 0); }
 .liquid-glass > * { position: relative; z-index: 1; }
 .liquid-glass-strong { background: var(--glass-strong); }
 .liquid-glass-control {

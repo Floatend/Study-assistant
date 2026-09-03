@@ -5,8 +5,14 @@
 ### Changed
 
 - Replaced the page-corner color blobs with one shared `LiquidBackdrop` that renders three full-width green, sakura, and mist ribbons. The ribbons move independently behind every route and stop when reduced motion is requested.
-- Rebuilt liquid glass as a reusable surface system with lower-opacity fills, stronger backdrop refraction, a moving specular highlight, an inner lens outline, and layered depth shadows.
+- Rebuilt liquid glass as a reusable surface system with lower-opacity fills, stronger backdrop refraction, a restrained specular highlight, an inner lens outline, and layered depth shadows.
 - Applied the glass system only to public navigation, timeline filters, note sidebars, the back-to-top control, login panel, workspace header, account control, and circular actions. Reading and editing surfaces remain opaque for clarity.
+
+### Fixed
+
+- Reduced the shared glass fill and highlight opacity so scenery and liquid color remain visible through controls instead of reading as an opaque white surface.
+- Removed the hover-time highlight translation and expanded the highlight layer by one pixel, preventing the color wash from filling the whole control on hover or leaving a clipped gap after the pointer exits.
+- Replaced solid public-navigation hover pills with a slim underline; the workspace entry keeps its glass boundary without changing fill geometry.
 
 ### Verification
 
