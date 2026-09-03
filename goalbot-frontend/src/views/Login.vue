@@ -17,7 +17,7 @@
     </section>
 
     <section class="login-form-area">
-      <div class="login-panel">
+      <div class="login-panel liquid-glass liquid-glass-strong">
         <RouterLink class="back-to-blog" to="/">← 返回个人主页</RouterLink>
         <div class="login-heading">
           <span>OWNER SIGN IN</span>
@@ -72,7 +72,7 @@ async function submit() {
 </script>
 
 <style scoped>
-.login-page { display: flex; min-height: 100vh; flex-direction: column; color: var(--text); background: var(--bg); }
+.login-page { display: flex; min-height: 100vh; flex-direction: column; color: var(--text); background: transparent; }
 .login-context { position: relative; display: flex; min-height: 360px; flex-direction: column; justify-content: space-between; gap: var(--space-6); overflow: hidden; padding: var(--space-5); color: var(--surface); background: var(--brand); }
 .context-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .context-shade { position: absolute; inset: 0; background: color-mix(in srgb, var(--text) 76%, transparent); }
@@ -85,7 +85,7 @@ async function submit() {
 .context-index { display: none; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); color: color-mix(in srgb, var(--surface) 62%, transparent); font-size: 11px; }
 .context-index strong { color: var(--surface); font-size: 12px; }
 .login-form-area { display: grid; flex: 1; place-items: center; padding: var(--space-5) var(--space-4); }
-.login-panel { display: flex; width: min(420px,100%); flex-direction: column; gap: var(--space-6); padding: var(--space-6); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); background: var(--glass-strong); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-float); backdrop-filter: blur(24px) saturate(1.2); }
+.login-panel { display: flex; width: min(420px,100%); flex-direction: column; gap: var(--space-6); padding: var(--space-6); border-radius: var(--radius-lg); }
 .back-to-blog { align-self: flex-start; color: var(--brand-strong); font-size: 14px; font-weight: 700; text-decoration: none; }
 .login-heading { display: flex; flex-direction: column; gap: var(--space-2); }
 .login-heading>span { color: var(--brand); }

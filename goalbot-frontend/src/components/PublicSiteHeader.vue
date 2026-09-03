@@ -1,12 +1,12 @@
 <template>
-  <header class="site-header">
+  <header class="site-header liquid-glass liquid-glass-strong">
     <RouterLink class="site-wordmark" to="/">linge.xin</RouterLink>
     <nav class="site-nav" aria-label="网站导航">
       <RouterLink to="/">首页</RouterLink>
       <RouterLink to="/notes">学习笔记</RouterLink>
       <RouterLink to="/journey">时间线</RouterLink>
       <RouterLink to="/about">关于</RouterLink>
-      <RouterLink class="site-workspace-link" to="/login">站长入口 <span aria-hidden="true">↗</span></RouterLink>
+      <RouterLink class="site-workspace-link liquid-glass liquid-glass-control" to="/login">站长入口 <span aria-hidden="true">↗</span></RouterLink>
     </nav>
   </header>
 </template>
@@ -20,13 +20,8 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
-  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   color: var(--text);
-  background: var(--glass);
-  border-color: var(--glass-border);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
-  backdrop-filter: blur(22px) saturate(1.22);
 }
 .site-wordmark {
   align-self: flex-start;
@@ -61,11 +56,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  border: 1px solid var(--glass-border);
   color: var(--brand-strong);
-  background: var(--glass-strong);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 8px 24px color-mix(in srgb, var(--brand) 8%, transparent);
-  backdrop-filter: blur(16px) saturate(1.18);
 }
 .site-workspace-link span { transition: transform .25s ease; }
 .site-workspace-link:hover span { transform: translate(2px,-2px); }

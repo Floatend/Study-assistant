@@ -12,7 +12,7 @@
         </div>
       </section>
 
-      <section class="journey-filters" aria-label="时间线筛选">
+      <section class="journey-filters liquid-glass liquid-glass-strong" aria-label="时间线筛选">
         <button v-for="filter in filters" :key="filter.key" class="journey-filter" :class="{ 'is-active': activeFilter === filter.key }" type="button" @click="activeFilter = filter.key">
           {{ filter.label }} <small>{{ filter.count }}</small>
         </button>
@@ -76,7 +76,7 @@ function categoryLabel(category: TimelineCategory) { return categoryLabels[categ
 </script>
 
 <style scoped>
-.journey-page { min-height: 100vh; color: var(--text); background: var(--bg); }
+.journey-page { min-height: 100vh; color: var(--text); background: transparent; }
 .journey-shell { width: min(100% - 32px, 1180px); margin-inline: auto; padding-block: var(--space-3) 0; }
 .journey-hero { display: flex; flex-direction: column; gap: var(--space-5); padding-block: var(--space-8); border-bottom: 1px solid var(--line); }
 .journey-hero>p { color: var(--brand); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
@@ -94,11 +94,7 @@ function categoryLabel(category: TimelineCategory) { return categoryLabels[categ
   flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-3);
-  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  background: var(--glass);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
-  backdrop-filter: blur(22px) saturate(1.2);
 }
 .journey-filter { display: inline-flex; align-items: center; gap: var(--space-2); padding: 8px 13px; border: 0; border-radius: 999px; color: var(--muted); background: transparent; font-size: 14px; font-weight: 700; cursor: pointer; transition: color .22s ease, background-color .22s ease; }
 .journey-filter small { color: var(--subtle); font-size: 11px; }

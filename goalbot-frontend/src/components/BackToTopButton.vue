@@ -2,7 +2,7 @@
   <Transition name="back-to-top">
     <button
       v-if="visible"
-      class="back-to-top-button"
+      class="back-to-top-button liquid-glass liquid-glass-control"
       type="button"
       title="回到开头"
       aria-label="回到开头"
@@ -48,12 +48,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', updateVisibility))
   gap: 6px;
   min-height: 38px;
   padding: 0 13px;
-  border: 1px solid var(--glass-border);
   border-radius: 999px;
   color: var(--brand-strong);
-  background: var(--glass-strong);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
-  backdrop-filter: blur(20px) saturate(1.2);
   font: inherit;
   font-size: 12px;
   font-weight: 750;

@@ -1,15 +1,16 @@
 <template>
+  <LiquidBackdrop />
   <RouterView v-if="route.meta.public" />
 
   <div v-else class="admin-shell">
-    <header class="admin-header">
+    <header class="admin-header liquid-glass liquid-glass-strong">
       <RouterLink class="admin-wordmark" to="/">linge.xin</RouterLink>
       <nav class="admin-nav" aria-label="站长后台导航">
         <RouterLink to="/notes">公开笔记</RouterLink>
         <RouterLink to="/notebook">站长工作台</RouterLink>
       </nav>
       <el-dropdown trigger="click" @command="handleAccountCommand">
-        <button class="account-button" type="button">
+        <button class="account-button liquid-glass liquid-glass-control" type="button">
           <span>
             <small>已登录</small>
             <strong>{{ userStore.displayName }}</strong>
@@ -55,6 +56,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { ArrowDown, Key, SwitchButton } from '@element-plus/icons-vue'
 import { changePassword } from '@/api/auth'
+import LiquidBackdrop from '@/components/LiquidBackdrop.vue'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -107,7 +109,7 @@ async function submitPassword() {
 </script>
 
 <style scoped>
-.admin-shell { min-height: 100vh; color: var(--text); background: var(--bg); }
+.admin-shell { min-height: 100vh; color: var(--text); background: transparent; }
 .admin-header {
   position: sticky;
   top: 0;
@@ -117,19 +119,14 @@ async function submitPassword() {
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--glass-border);
-  border-top: 0;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
-  background: var(--glass-strong);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
-  backdrop-filter: blur(22px) saturate(1.2);
 }
 .admin-wordmark { color: var(--brand-strong); font-family: var(--font-display); font-size: 21px; font-weight: 700; text-decoration: none; }
 .admin-nav { grid-row: 2; grid-column: 1 / -1; display: flex; gap: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--line); }
 .admin-nav a { padding: 7px 11px; border-radius: 999px; color: var(--muted); font-size: 14px; font-weight: 700; text-decoration: none; transition: color .2s ease, background-color .2s ease; }
 .admin-nav a:hover, .admin-nav a.router-link-exact-active { color: var(--brand-strong); background: var(--brand-soft); }
-.account-button { display: flex; align-items: center; justify-self: end; gap: var(--space-2); padding: 7px 11px; border: 1px solid var(--glass-border); border-radius: 999px; color: var(--text); background: var(--glass); box-shadow: inset 0 1px 0 var(--glass-highlight), 0 8px 24px color-mix(in srgb, var(--brand) 8%, transparent); backdrop-filter: blur(16px) saturate(1.18); cursor: pointer; transition: transform .2s ease, border-color .2s ease, background-color .2s ease; }
-.account-button:hover { border-color: var(--brand); background: var(--glass-strong); transform: translateY(-1px); }
+.account-button { display: flex; align-items: center; justify-self: end; gap: var(--space-2); padding: 7px 11px; border-radius: 999px; color: var(--text); cursor: pointer; transition: transform .2s ease, border-color .2s ease, background-color .2s ease; }
+.account-button:hover { border-color: var(--brand); transform: translateY(-1px); }
 .account-button span { display: grid; text-align: right; }
 .account-button small { color: var(--subtle); font-size: 11px; }
 .account-button strong { font-size: 14px; }

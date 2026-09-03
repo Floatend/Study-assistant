@@ -8,7 +8,7 @@
       </section>
 
       <section class="knowledge-layout" v-loading="loading">
-        <aside class="knowledge-library">
+        <aside class="knowledge-library liquid-glass">
           <el-input v-model="keyword" :prefix-icon="Search" clearable placeholder="搜索学习笔记" @clear="loadNotes" @keyup.enter="loadNotes" />
           <div class="library-label">分类索引</div>
           <NoteCategoryTree :categories="categories" :model-value="selectedCategory" :all-count="totalCount" all-label="全部文章" @select="selectCategoryNode" />
@@ -43,7 +43,7 @@
           <RouterLink v-else to="/">返回首页</RouterLink>
         </section>
 
-        <aside v-if="activeNote" class="article-outline">
+        <aside v-if="activeNote" class="article-outline liquid-glass">
           <p>文章目录</p>
           <button v-for="heading in headings" :key="heading.id" :class="{ active: activeHeadingId === heading.id }" :style="{ paddingLeft: `${(heading.level - 1) * 12}px` }" type="button" @click="scrollToHeading(heading.id)">{{ heading.text }}</button>
           <span v-if="!headings.length">正文没有标题</span>
@@ -197,7 +197,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 </script>
 
 <style scoped>
-.knowledge-page { min-height:100vh; color:var(--gb-text); background:var(--gb-bg); }
+.knowledge-page { min-height:100vh; color:var(--gb-text); background:transparent; }
 .knowledge-shell { width:min(1320px,calc(100% - 8vw)); margin:0 auto; padding:var(--space-3) 0 var(--space-8); }
 
 /* ============ Intro ============ */
@@ -209,7 +209,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .knowledge-layout { display:grid; grid-template-columns:minmax(250px,.62fr) minmax(0,1.7fr) minmax(180px,.4fr); gap:22px; min-height:700px; align-items:start; }
 
 /* ============ Library ============ */
-.knowledge-library { padding:20px; border:1px solid var(--glass-border); border-radius:var(--radius-lg); background:var(--glass); box-shadow:inset 0 1px 0 var(--glass-highlight),var(--shadow-soft); backdrop-filter:blur(22px) saturate(1.2); }
+.knowledge-library { padding:20px; border-radius:var(--radius-lg); }
 .library-label { margin:22px 0 10px; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.12em; }
 .notes-label { margin-top:26px; }
 .public-note-scroll { height:380px; margin-right:-8px; padding-right:8px; }
@@ -267,7 +267,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .article-pagination strong { font-size:13px; font-weight:750; }
 
 /* ============ Outline ============ */
-.article-outline { position:sticky; top:92px; padding:22px 20px; border:1px solid var(--glass-border); border-radius:var(--radius-lg); background:var(--glass); box-shadow:inset 0 1px 0 var(--glass-highlight),var(--shadow-soft); backdrop-filter:blur(22px) saturate(1.2); }
+.article-outline { position:sticky; top:92px; padding:22px 20px; border-radius:var(--radius-lg); }
 .article-outline>p { margin:0; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.1em; }
 .article-outline>span { display:block; margin-top:16px; color:var(--gb-subtle); font-size:12px; }
 .article-outline button {

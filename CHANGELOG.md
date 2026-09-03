@@ -4,15 +4,15 @@
 
 ### Changed
 
-- Added a restrained green-and-sakura liquid color wash to the page edges across the public site, login screen, and private workspace. The wash uses existing semantic tokens, stays behind content, and respects reduced-motion preferences.
-- Refined public navigation, timeline filters, note sidebars, the back-to-top control, login panel, and workspace account control with shared liquid-glass borders, inset highlights, blur, and soft shadows.
-- Added the same glass treatment to circular Element Plus action buttons without changing the task and reading surfaces that need high scanability.
+- Replaced the page-corner color blobs with one shared `LiquidBackdrop` that renders three full-width green, sakura, and mist ribbons. The ribbons move independently behind every route and stop when reduced motion is requested.
+- Rebuilt liquid glass as a reusable surface system with lower-opacity fills, stronger backdrop refraction, a moving specular highlight, an inner lens outline, and layered depth shadows.
+- Applied the glass system only to public navigation, timeline filters, note sidebars, the back-to-top control, login panel, workspace header, account control, and circular actions. Reading and editing surfaces remain opaque for clarity.
 
 ### Verification
 
 - `vue-tsc -b` passed.
 - `npm.cmd run build` passed with the existing dependency annotation and large-chunk warnings.
-- Browser checks passed for `/`, `/notes`, and `/journey` at desktop, 390px, and 320px widths with no horizontal overflow.
+- Browser checks passed for `/`, `/notes`, and `/journey` at desktop, 390px, and 320px widths with no horizontal overflow; computed transforms confirmed that the background ribbons animate.
 
 ## 2026-08-15 - Server auto-update script
 

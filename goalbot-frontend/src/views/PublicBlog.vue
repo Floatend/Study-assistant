@@ -95,7 +95,7 @@ function scrollToDirections() { document.getElementById('directions')?.scrollInt
 </script>
 
 <style scoped>
-.public-home { overflow: hidden; color: var(--text); background: var(--bg); }
+.public-home { overflow: hidden; color: var(--text); background: transparent; }
 .home-inner { width: min(100% - 32px, 1240px); margin-inline: auto; }
 .header-wrap { padding-block: var(--space-3); }
 

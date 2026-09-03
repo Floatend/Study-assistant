@@ -22,7 +22,7 @@ import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
 </script>
 
 <style scoped>
-.about-page { min-height: 100vh; color: var(--text); background: var(--bg); }
+.about-page { min-height: 100vh; color: var(--text); background: transparent; }
 .about-shell { width: min(100% - 32px, 1180px); margin-inline: auto; padding-block: var(--space-3) 0; }
 .about-hero { display: flex; flex-direction: column; gap: var(--space-5); padding-block: var(--space-8); border-bottom: 1px solid var(--line); }
 .about-hero>p, .about-principles article>p { color: var(--brand); font-size: 11px; font-weight: 800; letter-spacing: .12em; }

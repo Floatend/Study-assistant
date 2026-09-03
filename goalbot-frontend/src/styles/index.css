@@ -19,12 +19,15 @@
   --accent-soft: color-mix(in srgb, var(--accent) 14%, var(--surface));
   --on-brand: var(--surface);
   --on-accent: var(--text);
-  --glass: color-mix(in srgb, var(--surface) 76%, transparent);
-  --glass-strong: color-mix(in srgb, var(--surface) 90%, transparent);
-  --glass-border: color-mix(in srgb, var(--surface) 58%, var(--brand) 22%);
-  --glass-highlight: color-mix(in srgb, var(--surface) 78%, transparent);
-  --liquid-brand: color-mix(in srgb, var(--brand) 72%, transparent);
-  --liquid-accent: color-mix(in srgb, var(--accent) 64%, transparent);
+  --glass: color-mix(in srgb, var(--surface) 48%, transparent);
+  --glass-strong: color-mix(in srgb, var(--surface) 66%, transparent);
+  --glass-border: color-mix(in srgb, var(--surface) 68%, var(--brand) 32%);
+  --glass-highlight: color-mix(in srgb, var(--surface) 88%, transparent);
+  --glass-depth: color-mix(in srgb, var(--brand) 12%, transparent);
+  --glass-shadow-color: color-mix(in srgb, var(--brand-strong) 13%, transparent);
+  --liquid-brand: color-mix(in srgb, var(--brand) 58%, var(--surface));
+  --liquid-accent: color-mix(in srgb, var(--accent) 62%, var(--surface));
+  --liquid-mist: color-mix(in srgb, var(--brand) 16%, var(--surface));
   --focus-ring: color-mix(in srgb, var(--brand) 24%, transparent);
   --shadow-soft: 0 16px 44px color-mix(in srgb, var(--text) 9%, transparent);
   --shadow-float: 0 26px 70px color-mix(in srgb, var(--text) 15%, transparent);
@@ -142,55 +145,59 @@ a { color: inherit; }
 .el-button.is-circle.is-plain {
   border-color: var(--glass-border);
   background: var(--glass);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
-  backdrop-filter: blur(16px) saturate(1.18);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 var(--glass-depth), 0 10px 26px var(--glass-shadow-color);
+  -webkit-backdrop-filter: blur(20px) saturate(1.28);
+  backdrop-filter: blur(20px) saturate(1.28);
 }
 
-/* A quiet color wash keeps long editorial pages from feeling completely flat. */
-:where(.public-home, .knowledge-page, .journey-page, .about-page, .login-page, .admin-shell) {
+/* Functional floating surfaces share one glass treatment. */
+.liquid-glass {
   position: relative;
   isolation: isolate;
-  overflow-x: clip;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 var(--glass-depth), 0 18px 48px var(--glass-shadow-color);
+  -webkit-backdrop-filter: blur(28px) saturate(1.34);
+  backdrop-filter: blur(28px) saturate(1.34);
 }
-:where(.public-home, .knowledge-page, .journey-page, .about-page, .login-page, .admin-shell)::before,
-:where(.public-home, .knowledge-page, .journey-page, .about-page, .login-page, .admin-shell)::after {
+.liquid-glass::before {
   position: absolute;
+  inset: 0;
   z-index: 0;
+  border-radius: inherit;
   pointer-events: none;
   content: '';
-  border-radius: 47% 53% 60% 40% / 42% 44% 56% 58%;
-  filter: blur(78px) saturate(1.12);
-  will-change: transform;
+  background: linear-gradient(118deg, var(--glass-highlight), transparent 38%, transparent 72%, var(--glass-depth));
+  opacity: .74;
+  transform: translate3d(-2%, 0, 0);
+  transition: opacity .3s ease, transform .3s ease;
 }
-:where(.public-home, .knowledge-page, .journey-page, .about-page, .login-page, .admin-shell)::before {
-  top: -150px;
-  right: -160px;
-  width: min(58vw, 820px);
-  height: 480px;
-  background: var(--liquid-brand);
-  opacity: .18;
-  animation: liquid-drift-a 20s ease-in-out infinite alternate;
+.liquid-glass::after {
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border: 1px solid color-mix(in srgb, var(--surface) 58%, transparent);
+  border-radius: inherit;
+  box-shadow: inset 0 8px 18px color-mix(in srgb, var(--surface) 24%, transparent), inset 0 -10px 22px var(--glass-depth);
+  pointer-events: none;
+  content: '';
+  opacity: .68;
 }
-:where(.public-home, .knowledge-page, .journey-page, .about-page, .login-page, .admin-shell)::after {
-  bottom: -120px;
-  left: -160px;
-  width: min(44vw, 620px);
-  height: 380px;
-  background: var(--liquid-accent);
-  opacity: .12;
-  animation: liquid-drift-b 25s ease-in-out infinite alternate;
+.liquid-glass:hover::before { opacity: .94; transform: translate3d(2%, 0, 0); }
+.liquid-glass > * { position: relative; z-index: 1; }
+.liquid-glass-strong { background: var(--glass-strong); }
+.liquid-glass-control {
+  box-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 var(--glass-depth), 0 10px 28px var(--glass-shadow-color);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.3);
 }
-:where(.public-home, .knowledge-page, .journey-page, .about-page, .login-page, .admin-shell) > * {
+
+:where(.public-home, .knowledge-page, .journey-page, .about-page, .login-page, .admin-shell) {
   position: relative;
   z-index: 1;
-}
-@keyframes liquid-drift-a {
-  from { transform: translate3d(0, 0, 0) rotate(-4deg) scale(1); }
-  to { transform: translate3d(-22px, 18px, 0) rotate(4deg) scale(1.06); }
-}
-@keyframes liquid-drift-b {
-  from { transform: translate3d(0, 0, 0) rotate(6deg) scale(1.02); }
-  to { transform: translate3d(24px, -20px, 0) rotate(-5deg) scale(1.08); }
+  isolation: isolate;
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: reduce) {
