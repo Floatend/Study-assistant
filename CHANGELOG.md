@@ -7,11 +7,14 @@
 - Replaced the fictional sequential journey list with resume-sourced education, project, competition, and honor data; private contact details remain excluded from the public site.
 - Added a proportional education overview, a month-based 2026 project swimlane view, selectable timeline nodes with linked responsibility details, and an award map grouped by national, provincial, and campus scope.
 - Kept awards without resume dates outside the chronological scale instead of inventing occurrence dates, and added contained horizontal exploration for narrow screens without causing page-level overflow.
+- Added viewport-triggered motion: education and project tracks advance from left to right, while award groups, guide lines, and all eight award nodes unfold in a readable staggered sequence.
+- Replaced the heavy pink timeline blocks with translucent paper bands, thin semantic track lines, start nodes, and restrained current-project endpoints; selected items now use a light tint instead of a solid fill.
 
 ### Verification
 
 - `vue-tsc -b` and the Vite production build passed.
 - Browser checks passed at 1440px and 390px widths; timeline selection updates the detail panel, all 4 project tracks and 8 award records render, and the page has no horizontal overflow.
+- Browser animation checks confirmed the project reveal state, award delays from 220ms through 1.14s, completed end states, and reduced-motion fallbacks.
 
 ## 2026-09-03 - Liquid glass atmosphere
 

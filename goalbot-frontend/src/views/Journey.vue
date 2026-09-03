@@ -30,7 +30,13 @@
         </button>
       </nav>
 
-      <section v-if="activeFilter === 'all' || activeFilter === 'education'" class="journey-section overview-section" aria-labelledby="overview-title">
+      <section
+        v-if="activeFilter === 'all' || activeFilter === 'education'"
+        class="journey-section overview-section"
+        :class="{ 'is-revealed': isMotionVisible('overview') }"
+        data-motion="overview"
+        aria-labelledby="overview-title"
+      >
         <header class="section-heading">
           <div>
             <p>01 / OVERVIEW</p>
@@ -97,7 +103,13 @@
         </div>
       </section>
 
-      <section v-if="activeFilter === 'all' || activeFilter === 'project'" class="journey-section project-section" aria-labelledby="project-title">
+      <section
+        v-if="activeFilter === 'all' || activeFilter === 'project'"
+        class="journey-section project-section"
+        :class="{ 'is-revealed': isMotionVisible('projects') }"
+        data-motion="projects"
+        aria-labelledby="project-title"
+      >
         <header class="section-heading">
           <div>
             <p>{{ activeFilter === 'all' ? '02' : '01' }} / PROJECT FOCUS</p>
@@ -137,7 +149,7 @@
                   @click="selectTimelineItem(item.id)"
                 >
                   <span>{{ item.title }}</span>
-                  <small>{{ item.current ? '至今' : '完成' }}</small>
+                  <small><i v-if="item.current" aria-hidden="true" />{{ item.current ? '至今' : '完成' }}</small>
                 </button>
               </div>
             </template>
@@ -165,7 +177,13 @@
         </ul>
       </section>
 
-      <section v-if="activeFilter === 'all' || activeFilter === 'achievement'" class="journey-section achievement-section" aria-labelledby="achievement-title">
+      <section
+        v-if="activeFilter === 'all' || activeFilter === 'achievement'"
+        class="journey-section achievement-section"
+        :class="{ 'is-revealed': isMotionVisible('achievements') }"
+        data-motion="achievements"
+        aria-labelledby="achievement-title"
+      >
         <header class="section-heading">
           <div>
             <p>{{ activeFilter === 'all' ? '03' : '01' }} / OUTCOMES</p>
@@ -175,13 +193,23 @@
         </header>
 
         <div class="achievement-map">
-          <article v-for="group in achievementGroups" :key="group.scope" class="achievement-zone" :class="`scope-${group.scope}`">
+          <article
+            v-for="(group, groupIndex) in achievementGroups"
+            :key="group.scope"
+            class="achievement-zone"
+            :class="`scope-${group.scope}`"
+            :style="{ '--group-index': groupIndex }"
+          >
             <header>
               <div><span>{{ group.code }}</span><h3>{{ group.label }}</h3></div>
               <strong>{{ group.items.length }}</strong>
             </header>
             <ol>
-              <li v-for="item in group.items" :key="item.id">
+              <li
+                v-for="(item, itemIndex) in group.items"
+                :key="item.id"
+                :style="{ '--award-order': groupIndex * 3 + itemIndex }"
+              >
                 <i aria-hidden="true" />
                 <div><h4>{{ item.title }}</h4><p>{{ item.result }}</p></div>
               </li>
@@ -207,7 +235,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
 import BackToTopButton from '@/components/BackToTopButton.vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
@@ -216,6 +244,7 @@ import type { AchievementScope, JourneyFilter, TimelineCategory, TimelineItem } 
 
 const activeFilter = ref<JourneyFilter>('all')
 const selectedId = ref('linge-site')
+const visibleMotionSections = ref<Set<string>>(new Set())
 const months = Array.from({ length: 12 }, (_, index) => index + 1)
 const now = new Date()
 const currentYear = now.getFullYear()
@@ -257,6 +286,8 @@ const achievementGroups = computed(() => scopeMeta.map((group) => ({
   ...group,
   items: achievements.filter((item) => item.scope === group.scope)
 })))
+
+let revealObserver: IntersectionObserver | undefined
 
 function monthSerial(value: string) {
   const [year, month] = value.split('-').map(Number)
@@ -305,6 +336,48 @@ function setFilter(filter: JourneyFilter) {
   if (filter === 'education') selectedId.value = educationItems[educationItems.length - 1]?.id ?? selectedId.value
   if (filter === 'project') selectedId.value = projectItems.find((item) => item.current)?.id ?? projectItems[0]?.id ?? selectedId.value
 }
+
+function revealMotionSection(key: string) {
+  if (visibleMotionSections.value.has(key)) return
+  visibleMotionSections.value = new Set([...visibleMotionSections.value, key])
+}
+
+function isMotionVisible(key: string) {
+  return visibleMotionSections.value.has(key)
+}
+
+function observeMotionSections() {
+  if (!revealObserver) return
+  document.querySelectorAll<HTMLElement>('.journey-page [data-motion]').forEach((element) => {
+    const key = element.dataset.motion
+    if (key && !visibleMotionSections.value.has(key)) revealObserver?.observe(element)
+  })
+}
+
+onMounted(() => {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    ;['overview', 'projects', 'achievements'].forEach(revealMotionSection)
+    return
+  }
+
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      const key = (entry.target as HTMLElement).dataset.motion
+      if (key) revealMotionSection(key)
+      revealObserver?.unobserve(entry.target)
+    })
+  }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' })
+  observeMotionSections()
+})
+
+watch(activeFilter, async () => {
+  await nextTick()
+  observeMotionSections()
+})
+
+onBeforeUnmount(() => revealObserver?.disconnect())
 </script>
 
 <style scoped>
@@ -340,15 +413,20 @@ function setFilter(filter: JourneyFilter) {
 .axis-tick.is-start::after { left: 0; }
 .axis-tick.is-end { transform: translateX(-100%); }
 .axis-tick.is-end::after { right: 0; left: auto; }
-.lane-track { height: 68px; background: var(--surface-soft); }
+.lane-track { height: 68px; border-block: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 46%, transparent); }
 .map-guide { position: absolute; inset-block: 0; width: 1px; background: var(--line); }
-.map-node { position: absolute; top: 13px; z-index: 1; display: flex; height: 42px; min-width: 68px; align-items: center; gap: var(--space-2); overflow: hidden; padding-inline: var(--space-3); border: 1px solid var(--brand); border-radius: var(--radius-sm); color: var(--brand-strong); background: var(--brand-soft); cursor: pointer; animation: reveal-track .72s both; transition: color .2s ease, background-color .2s ease, box-shadow .2s ease; }
+.map-node { position: absolute; top: 14px; z-index: 1; display: flex; height: 38px; min-width: 68px; align-items: center; gap: var(--space-2); overflow: hidden; padding-inline: var(--space-3); border: 0; border-bottom: 2px solid var(--brand); border-radius: 2px; color: var(--brand-strong); background: color-mix(in srgb, var(--surface) 76%, transparent); box-shadow: 0 8px 22px transparent; opacity: 0; clip-path: inset(0 100% 0 0); transform: translateX(-14px); cursor: pointer; transition: color .22s ease, background-color .22s ease, box-shadow .22s ease; }
+.map-node::before { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; content: ''; background: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
 .map-node small { flex: 0 0 auto; font-size: 10px; font-weight: 900; }
 .map-node strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .map-node i { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-.map-node:hover, .map-node.is-selected { color: var(--surface); background: var(--brand); box-shadow: 0 8px 24px var(--glass-shadow-color); }
-.project-cluster { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
-.project-cluster:hover, .project-cluster.is-selected { color: var(--text); background: var(--accent); }
+.map-node:hover, .map-node.is-selected { color: var(--brand-strong); background: color-mix(in srgb, var(--surface) 78%, var(--brand) 22%); box-shadow: 0 10px 26px var(--glass-shadow-color); }
+.project-cluster { border-bottom-color: var(--accent); color: var(--text); background: color-mix(in srgb, var(--surface) 76%, transparent); }
+.project-cluster::before { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.project-cluster:hover, .project-cluster.is-selected { color: var(--text); background: color-mix(in srgb, var(--surface) 76%, var(--accent) 24%); }
+.overview-section.is-revealed .education-node { animation: track-advance .84s cubic-bezier(.22,.72,.2,1) both; }
+.overview-section.is-revealed .education-node:nth-of-type(2) { animation-delay: 140ms; }
+.overview-section.is-revealed .project-cluster { animation: track-advance .84s cubic-bezier(.22,.72,.2,1) 280ms both; }
 .project-grid { display: grid; min-width: 920px; grid-template-columns: 112px minmax(0, 1fr); padding-block: var(--space-4); }
 .project-grid-year { display: flex; align-items: flex-end; padding: 0 var(--space-3) var(--space-2) 0; color: var(--brand-strong); font-family: var(--font-display); font-size: 20px; font-weight: 700; }
 .project-months { display: grid; grid-template-columns: repeat(12, minmax(58px, 1fr)); }
@@ -356,15 +434,20 @@ function setFilter(filter: JourneyFilter) {
 .project-row-label { display: flex; min-height: 58px; flex-direction: column; justify-content: center; gap: var(--space-1); padding-right: var(--space-3); border-top: 1px solid var(--line); }
 .project-row-label strong { color: var(--accent); font-size: 13px; }
 .project-row-label span { color: var(--muted); font-size: 11px; }
-.project-track { display: grid; min-height: 58px; grid-template-columns: repeat(12, minmax(58px, 1fr)); border-top: 1px solid var(--line); }
+.project-track { display: grid; min-height: 58px; grid-template-columns: repeat(12, minmax(58px, 1fr)); border-top: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 36%, transparent); }
 .project-month-cell { grid-row: 1; min-width: 0; border-left: 1px solid var(--line); }
 .project-month-cell:last-of-type { border-right: 1px solid var(--line); }
-.project-month-cell.is-current { background: var(--accent-soft); }
-.project-month-cell.is-future { background: var(--surface-soft); }
-.project-bar { z-index: 1; grid-row: 1; align-self: center; display: flex; min-width: 0; height: 36px; align-items: center; justify-content: space-between; gap: var(--space-2); margin-inline: 4px; overflow: hidden; padding-inline: var(--space-3); border: 1px solid var(--accent); border-radius: var(--radius-sm); color: var(--text); background: var(--accent-soft); cursor: pointer; animation: reveal-track .72s calc(var(--row-index) * 90ms) both; transition: color .2s ease, background-color .2s ease, box-shadow .2s ease; }
+.project-month-cell.is-current { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.project-month-cell.is-future { background: color-mix(in srgb, var(--bg) 54%, transparent); }
+.project-bar { --track-color: var(--brand); position: relative; z-index: 1; grid-row: 1; align-self: center; display: flex; min-width: 0; height: 36px; align-items: center; justify-content: space-between; gap: var(--space-2); margin-inline: 4px; overflow: hidden; padding-inline: var(--space-3); border: 0; border-bottom: 2px solid var(--track-color); border-radius: 2px; color: var(--text); background: color-mix(in srgb, var(--surface) 78%, transparent); box-shadow: 0 8px 22px transparent; opacity: 0; clip-path: inset(0 100% 0 0); transform: translateX(-16px); cursor: pointer; transition: background-color .22s ease, box-shadow .22s ease; }
+.project-bar::before { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; content: ''; background: var(--track-color); box-shadow: 0 0 0 3px color-mix(in srgb, var(--track-color) 14%, transparent); }
+.project-bar:not(.is-current) { --track-color: var(--subtle); }
 .project-bar span { overflow: hidden; font-size: 12px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
-.project-bar small { flex: 0 0 auto; font-size: 10px; font-weight: 800; }
-.project-bar:hover, .project-bar.is-selected { background: var(--accent); box-shadow: 0 8px 24px var(--glass-shadow-color); }
+.project-bar small { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; }
+.project-bar small i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); animation: current-pulse 2.4s ease-in-out infinite; }
+.project-bar:hover { background: var(--surface-raised); box-shadow: 0 10px 26px var(--glass-shadow-color); }
+.project-bar.is-selected { --track-color: var(--accent); background: color-mix(in srgb, var(--surface) 78%, var(--accent) 22%); box-shadow: 0 10px 26px var(--glass-shadow-color); }
+.project-section.is-revealed .project-bar { animation: project-advance .86s cubic-bezier(.22,.72,.2,1) calc(100ms + var(--row-index) * 120ms) both; }
 .journey-inspector { display: grid; gap: var(--space-6); padding-block: var(--space-7); border-bottom: 1px solid var(--line); }
 .inspector-meta { display: flex; align-items: baseline; gap: var(--space-3); }
 .inspector-meta > span { color: var(--accent); font-size: 12px; font-weight: 900; }
@@ -384,20 +467,23 @@ function setFilter(filter: JourneyFilter) {
 .inspector-details li::before { position: absolute; top: .7em; left: 0; width: 12px; height: 1px; content: ''; background: var(--accent); }
 .achievement-map { display: grid; }
 .achievement-zone { display: grid; gap: var(--space-5); padding-block: var(--space-6); border-top: 1px solid var(--line); }
-.achievement-zone > header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.achievement-zone > header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); opacity: 0; transform: translateY(12px); }
 .achievement-zone > header > div { display: flex; align-items: baseline; gap: var(--space-3); }
 .achievement-zone > header span { color: var(--accent); font-size: 11px; font-weight: 900; }
 .achievement-zone > header h3 { color: var(--text); font-size: 24px; }
 .achievement-zone > header > strong { color: var(--subtle); font-family: var(--font-display); font-size: 36px; }
 .achievement-zone ol { position: relative; display: grid; gap: var(--space-4); padding: 0; list-style: none; }
-.achievement-zone ol::before { position: absolute; inset-block: 7px; left: 5px; width: 1px; content: ''; background: var(--line-strong); }
-.achievement-zone li { position: relative; z-index: 1; display: grid; grid-template-columns: 12px 1fr; gap: var(--space-3); align-items: start; }
+.achievement-zone ol::before { position: absolute; inset-block: 7px; left: 5px; width: 1px; content: ''; background: var(--line-strong); transform: scaleY(0); transform-origin: top; }
+.achievement-zone li { position: relative; z-index: 1; display: grid; grid-template-columns: 12px 1fr; gap: var(--space-3); align-items: start; opacity: 0; clip-path: inset(0 0 100% 0); transform: translateY(-10px); }
 .achievement-zone li > i { width: 11px; height: 11px; margin-top: 5px; border: 2px solid var(--surface); border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
 .achievement-zone li > div { display: grid; gap: var(--space-1); }
 .achievement-zone h4 { color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
 .achievement-zone li p { color: var(--muted); font-size: 12px; font-weight: 700; }
 .scope-national li > i { background: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .scope-campus li > i { background: var(--subtle); box-shadow: 0 0 0 1px var(--subtle); }
+.achievement-section.is-revealed .achievement-zone > header { animation: award-heading .48s ease-out calc(var(--group-index) * 120ms) both; }
+.achievement-section.is-revealed .achievement-zone ol::before { animation: award-line .78s ease-out calc(160ms + var(--group-index) * 120ms) both; }
+.achievement-section.is-revealed .achievement-zone li { animation: award-unfold .58s cubic-bezier(.2,.72,.2,1) calc(220ms + var(--award-order) * 115ms) both; }
 .journey-closing { display: flex; flex-direction: column; gap: var(--space-7); padding: var(--space-8) var(--space-5) var(--space-6); color: var(--on-brand); background: var(--brand); }
 .journey-closing > span { font-family: var(--font-display); font-size: 58px; font-weight: 700; line-height: .86; }
 .journey-closing-copy { display: flex; flex-direction: column; gap: var(--space-5); }
@@ -405,9 +491,28 @@ function setFilter(filter: JourneyFilter) {
 .journey-closing-copy nav { display: flex; flex-direction: column; gap: var(--space-2); }
 .journey-closing-copy a { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); padding-bottom: var(--space-2); border-bottom: 1px solid color-mix(in srgb, var(--surface) 26%, transparent); color: var(--surface); font-size: 14px; font-weight: 750; text-decoration: none; }
 
-@keyframes reveal-track {
-  from { clip-path: inset(0 100% 0 0); opacity: .45; }
-  to { clip-path: inset(0); opacity: 1; }
+@keyframes track-advance {
+  0% { clip-path: inset(0 100% 0 0); opacity: 0; transform: translateX(-14px); }
+  45% { opacity: 1; }
+  100% { clip-path: inset(0); opacity: 1; transform: translateX(0); }
+}
+@keyframes project-advance {
+  0% { clip-path: inset(0 100% 0 0); opacity: 0; transform: translateX(-16px); }
+  45% { opacity: 1; }
+  100% { clip-path: inset(0); opacity: 1; transform: translateX(0); }
+}
+@keyframes award-heading {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes award-line {
+  to { transform: scaleY(1); }
+}
+@keyframes award-unfold {
+  to { clip-path: inset(0); opacity: 1; transform: translateY(0); }
+}
+@keyframes current-pulse {
+  0%, 100% { opacity: .55; transform: scale(.82); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
 @media (min-width: 760px) {
@@ -430,6 +535,11 @@ function setFilter(filter: JourneyFilter) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .map-node, .project-bar { animation: none; }
+  .map-node,
+  .project-bar,
+  .achievement-zone > header,
+  .achievement-zone ol::before,
+  .achievement-zone li,
+  .project-bar small i { animation: none !important; opacity: 1; clip-path: none; transform: none; }
 }
 </style>
