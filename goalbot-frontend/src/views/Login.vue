@@ -85,7 +85,7 @@ async function submit() {
 .context-index { display: none; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); color: color-mix(in srgb, var(--surface) 62%, transparent); font-size: 11px; }
 .context-index strong { color: var(--surface); font-size: 12px; }
 .login-form-area { display: grid; flex: 1; place-items: center; padding: var(--space-5) var(--space-4); }
-.login-panel { display: flex; width: min(420px,100%); flex-direction: column; gap: var(--space-6); padding: var(--space-6); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--glass-strong); box-shadow: var(--shadow-float); backdrop-filter: blur(20px) saturate(1.15); }
+.login-panel { display: flex; width: min(420px,100%); flex-direction: column; gap: var(--space-6); padding: var(--space-6); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); background: var(--glass-strong); box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-float); backdrop-filter: blur(24px) saturate(1.2); }
 .back-to-blog { align-self: flex-start; color: var(--brand-strong); font-size: 14px; font-weight: 700; text-decoration: none; }
 .login-heading { display: flex; flex-direction: column; gap: var(--space-2); }
 .login-heading>span { color: var(--brand); }

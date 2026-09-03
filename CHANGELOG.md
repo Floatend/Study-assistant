@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-09-03 - Liquid glass atmosphere
+
+### Changed
+
+- Added a restrained green-and-sakura liquid color wash to the page edges across the public site, login screen, and private workspace. The wash uses existing semantic tokens, stays behind content, and respects reduced-motion preferences.
+- Refined public navigation, timeline filters, note sidebars, the back-to-top control, login panel, and workspace account control with shared liquid-glass borders, inset highlights, blur, and soft shadows.
+- Added the same glass treatment to circular Element Plus action buttons without changing the task and reading surfaces that need high scanability.
+
+### Verification
+
+- `vue-tsc -b` passed.
+- `npm.cmd run build` passed with the existing dependency annotation and large-chunk warnings.
+- Browser checks passed for `/`, `/notes`, and `/journey` at desktop, 390px, and 320px widths with no horizontal overflow.
+
+## 2026-08-15 - Server auto-update script
+
+### Added
+
+- Added `deploy/auto-update.sh`, a cron-friendly script that polls `origin/main`, pulls only when a new commit exists and the working tree is clean, then rebuilds the Docker containers and writes a log outside the repository.
+
+### Verification
+
+- Shell syntax check passed with `bash -n`.
+
 ## 2026-08-15 - Note summary cleanup
 
 ### Fixed

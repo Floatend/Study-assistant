@@ -209,7 +209,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .knowledge-layout { display:grid; grid-template-columns:minmax(250px,.62fr) minmax(0,1.7fr) minmax(180px,.4fr); gap:22px; min-height:700px; align-items:start; }
 
 /* ============ Library ============ */
-.knowledge-library { padding:20px; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--glass); box-shadow:var(--shadow-soft); backdrop-filter:blur(18px) saturate(1.15); }
+.knowledge-library { padding:20px; border:1px solid var(--glass-border); border-radius:var(--radius-lg); background:var(--glass); box-shadow:inset 0 1px 0 var(--glass-highlight),var(--shadow-soft); backdrop-filter:blur(22px) saturate(1.2); }
 .library-label { margin:22px 0 10px; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.12em; }
 .notes-label { margin-top:26px; }
 .public-note-scroll { height:380px; margin-right:-8px; padding-right:8px; }
@@ -267,7 +267,7 @@ function formatLongDate(value?: string) { return value ? new Date(value).toLocal
 .article-pagination strong { font-size:13px; font-weight:750; }
 
 /* ============ Outline ============ */
-.article-outline { position:sticky; top:92px; padding:22px 20px; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--glass); box-shadow:var(--shadow-soft); backdrop-filter:blur(18px) saturate(1.15); }
+.article-outline { position:sticky; top:92px; padding:22px 20px; border:1px solid var(--glass-border); border-radius:var(--radius-lg); background:var(--glass); box-shadow:inset 0 1px 0 var(--glass-highlight),var(--shadow-soft); backdrop-filter:blur(22px) saturate(1.2); }
 .article-outline>p { margin:0; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.1em; }
 .article-outline>span { display:block; margin-top:16px; color:var(--gb-subtle); font-size:12px; }
 .article-outline button {

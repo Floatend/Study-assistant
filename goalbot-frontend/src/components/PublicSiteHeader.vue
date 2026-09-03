@@ -24,8 +24,9 @@
   border-radius: var(--radius-lg);
   color: var(--text);
   background: var(--glass);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(20px) saturate(1.2);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
+  backdrop-filter: blur(22px) saturate(1.22);
 }
 .site-wordmark {
   align-self: flex-start;
@@ -60,9 +61,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--glass-border);
   color: var(--brand-strong);
   background: var(--glass-strong);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 8px 24px color-mix(in srgb, var(--brand) 8%, transparent);
+  backdrop-filter: blur(16px) saturate(1.18);
 }
 .site-workspace-link span { transition: transform .25s ease; }
 .site-workspace-link:hover span { transform: translate(2px,-2px); }

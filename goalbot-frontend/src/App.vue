@@ -117,15 +117,19 @@ async function submitPassword() {
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--line);
+  border: 1px solid var(--glass-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
   background: var(--glass-strong);
-  backdrop-filter: blur(18px) saturate(1.15);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
+  backdrop-filter: blur(22px) saturate(1.2);
 }
 .admin-wordmark { color: var(--brand-strong); font-family: var(--font-display); font-size: 21px; font-weight: 700; text-decoration: none; }
 .admin-nav { grid-row: 2; grid-column: 1 / -1; display: flex; gap: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--line); }
 .admin-nav a { padding: 7px 11px; border-radius: 999px; color: var(--muted); font-size: 14px; font-weight: 700; text-decoration: none; transition: color .2s ease, background-color .2s ease; }
 .admin-nav a:hover, .admin-nav a.router-link-exact-active { color: var(--brand-strong); background: var(--brand-soft); }
-.account-button { display: flex; align-items: center; justify-self: end; gap: var(--space-2); padding: 7px 0; border: 0; color: var(--text); background: transparent; cursor: pointer; }
+.account-button { display: flex; align-items: center; justify-self: end; gap: var(--space-2); padding: 7px 11px; border: 1px solid var(--glass-border); border-radius: 999px; color: var(--text); background: var(--glass); box-shadow: inset 0 1px 0 var(--glass-highlight), 0 8px 24px color-mix(in srgb, var(--brand) 8%, transparent); backdrop-filter: blur(16px) saturate(1.18); cursor: pointer; transition: transform .2s ease, border-color .2s ease, background-color .2s ease; }
+.account-button:hover { border-color: var(--brand); background: var(--glass-strong); transform: translateY(-1px); }
 .account-button span { display: grid; text-align: right; }
 .account-button small { color: var(--subtle); font-size: 11px; }
 .account-button strong { font-size: 14px; }

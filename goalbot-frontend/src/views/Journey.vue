@@ -94,11 +94,11 @@ function categoryLabel(category: TimelineCategory) { return categoryLabels[categ
   flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-3);
-  border: 1px solid var(--line);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   background: var(--glass);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(18px) saturate(1.15);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--shadow-soft);
+  backdrop-filter: blur(22px) saturate(1.2);
 }
 .journey-filter { display: inline-flex; align-items: center; gap: var(--space-2); padding: 8px 13px; border: 0; border-radius: 999px; color: var(--muted); background: transparent; font-size: 14px; font-weight: 700; cursor: pointer; transition: color .22s ease, background-color .22s ease; }
 .journey-filter small { color: var(--subtle); font-size: 11px; }
