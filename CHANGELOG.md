@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-09-06 - Public page loading performance
+
+### Changed
+
+- Replaced full Element Plus registration/CSS with component-level imports using its standard Vue component resolver. Included service styles explicitly and preserved site overrides when route CSS arrives later.
+- Extracted the existing private layout behind an async import and waited for initial router readiness before mounting. Public visits no longer temporarily load the owner layout, authentication utilities, forms or dialogs.
+- Added reproducible WebP generation and responsive hero sources while preserving the original PNG files, visible composition, layout, typography and motion. The hero remains eager/high-priority; private workspace imagery is not loaded on public pages.
+- Enabled static-response gzip and HTML revalidation in the frontend container's Nginx. Hashed assets keep an immutable cache, now for one year; API proxying remains unchanged.
+- Fixed an existing unhandled rejection when cancelling or dismissing the notebook delete confirmation, found during development-server regression checks. Cancellation still sends no delete request.
+
+### Measurements
+
+- Compared with `82ab4e8`, total homepage decoded JS falls from 1,111,981 to 174,682 bytes; CSS from 378,294 to 26,989 bytes. Mobile hero payload falls from 2,841,840 to 162,060 bytes, desktop to 327,508 bytes.
+- Controlled local production-preview tests (4 Mbps, 40ms latency, 3x CPU slowdown, three cold runs per viewport) recorded median LCP of 7,280 to 856ms on mobile and 7,276 to 1,200ms on desktop, with observed CLS 0. These are not deployed-site speed guarantees. Full method and compression distinctions are in `docs/frontend-performance.md`.
+
+### Verification And Deployment
+
+- Production build, 10 unit tests, 15 project browser checks, 13 existing note-discovery browser checks and 9 new lazy-UI/cache checks pass. Browser auth/note data is isolated; no live database writes were made.
+- Added an executable performance budget test and browser coverage for deferred admin loading, validation, dialogs, editor/math rendering, loading directives, responsive imagery and repeat-visit resource reuse. Temporary screenshots and metrics stay outside the repository.
+- Existing VueUse annotation and reader-bundle size warnings remain. Docker is unavailable locally, so live Nginx syntax/header and backend smoke checks remain part of deployment.
+- Frontend-only rollout, including its embedded Nginx configuration. No SQL, backend, environment secret, FRP or VPS Nginx change. See `docs/frontend-performance.md` for reviewed staging, build, `nginx -t` and deployment commands. No automatic commit, push or deployment was performed.
+
 ## 2026-09-06 - Public project portfolio
 
 ### Added

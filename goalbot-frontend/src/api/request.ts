@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
+import 'element-plus/es/components/message/style/css'
 import type { Result } from '@/types/common'
 
 type SiteRequestConfig = AxiosRequestConfig & {

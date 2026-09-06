@@ -100,6 +100,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import 'element-plus/es/components/message-box/style/css'
 import { Close, Delete, EditPen, FolderOpened, Hide, MoreFilled, Plus, Promotion, Switch } from '@element-plus/icons-vue'
 import type { Note, NoteCategory } from '@/types/note'
 

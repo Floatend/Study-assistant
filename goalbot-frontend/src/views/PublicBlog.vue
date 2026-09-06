@@ -3,7 +3,10 @@
     <div class="home-inner header-wrap"><PublicSiteHeader /></div>
 
     <section class="home-hero" :style="heroStyle" @pointermove="handleHeroPointerMove" @pointerleave="resetHeroPointer">
-      <img class="hero-image" :src="sakuraHero" alt="盛开的樱花与林间步道" fetchpriority="high" />
+      <picture class="hero-picture">
+        <source media="(max-width: 759px) and (max-aspect-ratio: 2/3)" :srcset="`${sakuraPortraitSmall} 640w, ${sakuraPortrait} 887w`" sizes="max(100vw, 68svh)" />
+        <img class="hero-image" :src="sakuraHero" :srcset="`${sakuraSmall} 1280w, ${sakuraHero} 1774w`" sizes="max(100vw, min(1240px, 136svh))" width="1774" height="887" alt="盛开的樱花与林间步道" fetchpriority="high" loading="eager" decoding="async" />
+      </picture>
       <div class="hero-shade" aria-hidden="true" />
       <div class="home-inner hero-content">
         <div class="hero-meta"><span>LINGE.XIN / 郭麟阁的个人网站</span></div>
@@ -81,7 +84,10 @@ import { computed, onMounted, ref } from 'vue'
 import { ArrowDown, ArrowRight } from '@element-plus/icons-vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
 import { projects } from '@/data/projects'
-import sakuraHero from '@/assets/linge-sakura-hero.png'
+import sakuraHero from '@/assets/optimized/sakura-wide-1774.webp'
+import sakuraSmall from '@/assets/optimized/sakura-wide-1280.webp'
+import sakuraPortrait from '@/assets/optimized/sakura-portrait-887.webp'
+import sakuraPortraitSmall from '@/assets/optimized/sakura-portrait-640.webp'
 
 const ready = ref(false)
 const heroOffset = ref({ x: 0, y: 0 })
@@ -119,6 +125,7 @@ function scrollToSection(id: string) {
 .home-inner { width:min(100% - 32px, 1240px); margin-inline:auto; }
 .header-wrap { padding-block:var(--space-3); }
 .home-hero { position:relative; overflow:hidden; color:var(--surface); background:var(--brand); }
+.hero-picture { position:absolute; inset:0; display:block; }
 .hero-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 34%; transform:translate3d(var(--hero-x),var(--hero-y),0) scale(1.055); transition:transform 1.2s cubic-bezier(.16,1,.3,1); }
 .ready .hero-image { transform:translate3d(var(--hero-x),var(--hero-y),0) scale(1.025); }
 .hero-shade { position:absolute; inset:0; background:var(--hero-overlay); }

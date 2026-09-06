@@ -130,6 +130,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import 'element-plus/es/components/message-box/style/css'
 import { ChatLineSquare, Delete, DocumentAdd, DocumentCopy, EditPen, Hide, InfoFilled, List, Plus, Promotion, Refresh, Search, Tickets, Upload } from '@element-plus/icons-vue'
 import { createNote, deleteNote, fetchNote, fetchNoteCategories, fetchNotes, updateNote, uploadNote } from '@/api/note'
 import BackToTopButton from '@/components/BackToTopButton.vue'
@@ -259,7 +260,12 @@ async function handleMoveNote(note: Note, category: string) {
 }
 
 async function handleDelete(note: Note) {
-  await ElMessageBox.confirm(`确认删除「${note.title}」吗？此操作不可恢复。`, '删除笔记', { type: 'warning' })
+  try {
+    await ElMessageBox.confirm(`确认删除「${note.title}」吗？此操作不可恢复。`, '删除笔记', { type: 'warning' })
+  } catch (action) {
+    if (action === 'cancel' || action === 'close') return
+    throw action
+  }
   await deleteNote(note.id)
   ElMessage.success('笔记已删除')
   activeNote.value = null

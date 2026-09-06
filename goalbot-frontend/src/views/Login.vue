@@ -1,7 +1,7 @@
 <template>
   <main class="login-page">
     <section class="login-context">
-      <img class="context-image" :src="workspaceHero" alt="安静的书桌与学习空间" />
+      <img class="context-image" :src="workspaceHero" :srcset="`${workspaceSmall} 960w, ${workspaceHero} 1672w`" sizes="(min-width: 840px) max(54vw, 178vh), max(100vw, 800px)" width="1672" height="941" alt="安静的书桌与学习空间" decoding="async" />
       <div class="context-shade" aria-hidden="true" />
       <RouterLink class="login-wordmark" to="/">linge.xin</RouterLink>
       <div class="context-copy">
@@ -44,7 +44,8 @@ import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { Lock, User } from '@element-plus/icons-vue'
-import workspaceHero from '@/assets/linge-workspace-hero.png'
+import workspaceHero from '@/assets/optimized/workspace-1672.webp'
+import workspaceSmall from '@/assets/optimized/workspace-960.webp'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
