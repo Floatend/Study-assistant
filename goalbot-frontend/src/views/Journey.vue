@@ -237,13 +237,20 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
+import { useRoute } from 'vue-router'
 import BackToTopButton from '@/components/BackToTopButton.vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
 import { achievements, timelineItems } from '@/data/timeline'
 import type { AchievementScope, JourneyFilter, TimelineCategory, TimelineItem } from '@/data/timeline'
 
 const activeFilter = ref<JourneyFilter>('all')
+const route = useRoute()
 const selectedId = ref('linge-site')
+watch(() => route.query.project, (id) => {
+  const item = timelineItems.find((entry) => entry.id === id && entry.category === 'project')
+  activeFilter.value = item ? 'project' : 'all'
+  selectedId.value = item?.id ?? 'linge-site'
+}, { immediate: true })
 const visibleMotionSections = ref<Set<string>>(new Set())
 const months = Array.from({ length: 12 }, (_, index) => index + 1)
 const now = new Date()

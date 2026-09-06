@@ -75,7 +75,8 @@ export const timelineItems: TimelineItem[] = [
       '完成后端服务部署与云端联调，打通本地服务与云服务器。',
       '集成 AI 对话交互模块。'
     ],
-    tags: ['Spring Boot', '云边端协同', 'AI 对话']
+    tags: ['Spring Boot', '云边端协同', 'AI 对话'],
+    link: { label: '查看项目详情', to: '/projects/cloud-edge-capture' }
   },
   {
     id: 'wechat-llm-agent',
@@ -92,6 +93,7 @@ export const timelineItems: TimelineItem[] = [
       '针对并发请求和接口调用频率限制进行优化，提升运行稳定性。'
     ],
     tags: ['LLM', '微信机器人', '多角色对话'],
+    link: { label: '查看项目详情', to: '/projects/wechat-llm-agent' },
     current: true
   },
   {
@@ -109,6 +111,7 @@ export const timelineItems: TimelineItem[] = [
       '设计 MySQL 表结构，持久化管理用户、商品和订单等核心数据。'
     ],
     tags: ['Spring Boot', 'MyBatis', 'MySQL', '混元 3D'],
+    link: { label: '查看项目详情', to: '/projects/ceramic-commerce' },
     current: true
   },
   {
@@ -119,9 +122,9 @@ export const timelineItems: TimelineItem[] = [
     period: '2026.05 - 至今',
     title: '个人网站 linge.xin',
     role: '个人开发',
-    description: '搭建个人技术博客，并接入目标监督、咨询推送和项目复盘等 AI 工具能力。',
+    description: '搭建个人技术博客，记录学习笔记、项目实践与个人履历，负责网站部署维护。',
     details: [
-      '建设个人技术博客与 AI 工具面板。',
+      '建设个人技术博客；早期探索过目标监督、咨询推送与项目复盘工具，当前站点聚焦公开笔记和个人作品展示。',
       '负责 Linux 环境、Nginx 反向代理、域名解析以及网站部署维护。'
     ],
     tags: ['个人技术博客', 'Linux', 'Nginx'],

@@ -27,6 +27,8 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'PublicBlog', component: () => import('@/views/PublicBlog.vue'), meta: { public: true } },
     { path: '/notes', name: 'OfficialNotes', component: () => import('@/views/OfficialNotes.vue'), meta: { public: true } },
+    { path: '/projects', name: 'Projects', component: () => import('@/views/Projects.vue'), meta: { public: true } },
+    { path: '/projects/:slug', name: 'ProjectDetail', component: () => import('@/views/ProjectDetail.vue'), meta: { public: true } },
     { path: '/journey', name: 'Journey', component: () => import('@/views/Journey.vue'), meta: { public: true } },
     { path: '/about', name: 'About', component: () => import('@/views/About.vue'), meta: { public: true } },
     { path: '/login', name: 'Login', component: () => import('@/views/Login.vue'), meta: { public: true } },

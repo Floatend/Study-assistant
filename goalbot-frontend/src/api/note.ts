@@ -49,8 +49,8 @@ export function fetchOfficialNoteCategories() {
   return request<NoteCategory[]>({ url: '/api/public/notes/categories', method: 'GET', silent: true })
 }
 
-export function searchOfficialNotes(params: PublicNoteQuery) {
-  return request<PublicNotePage>({ url: '/api/public/notes/search', method: 'GET', params, silent: true })
+export function searchOfficialNotes(params: PublicNoteQuery, signal?: AbortSignal) {
+  return request<PublicNotePage>({ url: '/api/public/notes/search', method: 'GET', params, signal, silent: true })
 }
 
 export function fetchRelatedNotes(id: number) {

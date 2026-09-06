@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-06 - Public project portfolio
+
+### Added
+
+- Public `/projects` overview and three independent project detail routes for the cloud-edge capture platform, LLM WeChat bot and 3D ceramic commerce platform. Details contain resume-supported background, responsibilities, implementation focus and conceptual workflow overviews, without invented metrics, screenshots, demo links or private contact details.
+- Shared project stories layered on the existing timeline facts; homepage and timeline links now reach the detail pages. Detail pages support timeline preselection, previous/next projects, chapter navigation, back-to-top and an unknown-project recovery view.
+- Topic-based related reading through the existing public search endpoint. Project content loads independently; note requests have empty/error/retry states, cancellation and stale-response guards. Returned titles render as escaped text.
+
+### Changed
+
+- Added a public project navigation entry and moved the owner login link onto the wordmark row on mobile. Navigation remains usable at 320px, project details keep the project entry active, and note/section headings clear the sticky header.
+- Clarified that the website's early AI tools are historical experiments, not current public functionality. The eight previously verified awards are unchanged.
+- Silent Axios requests now suppress business-error toasts as well as HTTP-error toasts. Existing non-silent errors and authentication handling remain unchanged.
+- Retained the existing palette, Sakura homepage, glass navigation and Markdown/math rendering. New project content uses unframed sections, semantic color tokens and reduced-motion-aware reveals.
+
+### Verification
+
+- Frontend TypeScript/Vite production build and 10 unit tests passed, including 5 new portfolio tests.
+- 15 Playwright project checks passed: direct links, data boundaries, homepage/timeline links, browser history, unknown slugs, note loading/retry/empty/business errors, escaped titles, stale responses, reader integration, keyboard navigation and normal/reduced motion. Screenshots cover 320/390/820/1440px with no page-level overflow.
+- Re-ran all 13 existing note-discovery browser checks: search/pagination, categories, neighbors, resume/revision invalidation, async races, retry states, mobile drawers and heading offsets still pass after the shared navigation and error-handling changes.
+- Browser note data is isolated test data, not live MySQL. No backend or database records were changed; real public-note integration still needs deployment smoke verification. Existing bundle-size and dependency-annotation build warnings remain.
+
+### Deployment
+
+- Frontend-only rebuild. No SQL migration, backend rebuild, secret, FRP or VPS Nginx change. The previous public note-discovery endpoint is reused.
+- See `docs/project-portfolio.md` for scoped staging, tests, deployment-server commands and verification. Changes have not been automatically committed, pushed or deployed.
+
 ## 2026-09-06 - Note discovery and reading continuity
 
 ### Added

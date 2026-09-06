@@ -25,7 +25,7 @@ http.interceptors.response.use(
     if (typeof body?.code === 'number') {
       if (body.code !== 0) {
         if (body.code === 401) clearExpiredSession()
-        ElMessage.error(body.message || '请求失败')
+        if (!(response.config as SiteRequestConfig).silent) ElMessage.error(body.message || '请求失败')
         return Promise.reject(new Error(body.message || '请求失败'))
       }
       return body.data

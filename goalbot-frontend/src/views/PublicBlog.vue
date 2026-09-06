@@ -42,7 +42,7 @@
       <div class="home-inner">
         <header class="work-heading reveal">
           <div class="section-heading"><p class="section-index">02 / SELECTED WORK</p><h2>做过的项目</h2></div>
-          <RouterLink class="text-link" to="/journey">完整项目时间线 <el-icon><ArrowRight /></el-icon></RouterLink>
+          <RouterLink class="text-link" to="/projects">全部项目 <el-icon><ArrowRight /></el-icon></RouterLink>
         </header>
         <div class="project-list">
           <article v-for="project in selectedProjects" :key="project.id" class="project-row reveal">
@@ -55,6 +55,7 @@
                 <summary>具体工作 <el-icon class="detail-chevron"><ArrowDown /></el-icon></summary>
                 <ul><li v-for="detail in project.details" :key="detail">{{ detail }}</li></ul>
               </details>
+              <RouterLink class="text-link" :to="`/projects/${project.id}`" :aria-label="`查看项目详情：${project.title}`">查看项目详情 <el-icon><ArrowRight /></el-icon></RouterLink>
             </div>
           </article>
         </div>
@@ -79,13 +80,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { ArrowDown, ArrowRight } from '@element-plus/icons-vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
-import { timelineItems } from '@/data/timeline'
+import { projects } from '@/data/projects'
 import sakuraHero from '@/assets/linge-sakura-hero.png'
 
 const ready = ref(false)
 const heroOffset = ref({ x: 0, y: 0 })
 const currentYear = new Date().getFullYear()
-const selectedProjects = timelineItems.filter((item) => ['cloud-edge-capture', 'ceramic-commerce', 'wechat-llm-agent'].includes(item.id))
+const selectedProjects = projects
 const heroStyle = computed(() => ({
   '--hero-x': heroOffset.value.x + 'px',
   '--hero-y': heroOffset.value.y + 'px',

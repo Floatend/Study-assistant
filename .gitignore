@@ -8,3 +8,5 @@ dist/
 .env
 docs/*.local.md
 *.tsbuildinfo
+/.chat_extract_frames/
+/.chat_frames_1s/
