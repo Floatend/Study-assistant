@@ -2,32 +2,29 @@
   <main class="knowledge-page">
     <div class="knowledge-shell">
       <PublicSiteHeader />
-
-      <section class="knowledge-intro">
-        <div><p>LEARNING ARCHIVE</p><h1>学习笔记</h1></div>
-      </section>
-
-      <section class="knowledge-layout" v-loading="loading">
+      <section class="knowledge-intro"><p>LEARNING ARCHIVE</p><h1>学习笔记</h1></section>
+      <section class="knowledge-layout">
         <aside class="knowledge-library liquid-glass">
-          <el-input v-model="keyword" :prefix-icon="Search" clearable placeholder="搜索学习笔记" @clear="loadNotes" @keyup.enter="loadNotes" />
-          <div class="library-label">分类索引</div>
-          <NoteCategoryTree :categories="categories" :model-value="selectedCategory" :all-count="totalCount" all-label="全部文章" @select="selectCategoryNode" />
-          <div class="library-label notes-label">文章列表</div>
-          <el-scrollbar class="public-note-scroll">
-            <button v-for="note in notes" :key="note.id" class="public-note-link" :class="{ active: activeNote?.id === note.id }" type="button" @click="selectNote(note)">
-              <small>{{ note.category || '未分类' }} · {{ formatShortDate(note.updatedAt) }}</small><strong>{{ note.title }}</strong>
-            </button>
-            <el-empty v-if="!notes.length && !loading" description="暂时没有对应笔记" :image-size="72" />
-          </el-scrollbar>
+          <PublicNoteLibrary v-model:keyword="keyword" :category="selectedCategory" :categories="categories" :notes="notes"
+            :active-id="activeNote?.id" :loading="loading" :error="listError" @search="searchNotes" @category="selectCategory"
+            @select="selectNote" @retry="syncRoute(true)" />
         </aside>
 
-        <article v-if="activeNote" class="knowledge-article" v-loading="articleLoading">
-          <div class="reading-progress" aria-hidden="true"><span :style="{ width: `${readingProgress}%` }" /></div>
+        <section v-if="articleLoading" class="knowledge-empty" aria-live="polite" aria-busy="true">
+          <el-icon class="is-loading"><Loading /></el-icon><p>正在打开文章…</p>
+        </section>
+        <section v-else-if="loadError || !activeNote" class="knowledge-empty" aria-live="polite">
+          <p>{{ loadError || (loading ? '正在查找笔记…' : '没有找到对应笔记。') }}</p>
+          <button v-if="loadError || listError" type="button" @click="syncRoute(true)">重新加载</button>
+          <button v-else-if="!loading" type="button" @click="openDrawer('library')">选择其他笔记</button>
+        </section>
+        <article v-else ref="articleElement" class="knowledge-article">
+          <div class="reading-progress" aria-hidden="true"><span :style="{ width: readingProgress + '%' }" /></div>
           <header class="article-head">
-            <div class="article-path"><span>学习笔记</span><b>/</b><span>{{ activeNote.category || '未分类' }}</span></div>
-            <h2>{{ activeNote.title }}</h2>
+            <div class="article-path"><span>学习笔记</span><span aria-hidden="true">/</span><span>{{ activeNote.category || '未分类' }}</span></div>
+            <h2 id="reader-article-title" tabindex="-1">{{ activeNote.title }}</h2>
             <p v-if="activeNote.summary">{{ activeNote.summary }}</p>
-            <div class="article-meta"><span>{{ activeNote.authorName || 'linge.xin' }}</span><span>{{ formatLongDate(activeNote.updatedAt) }}</span><span>{{ activeNote.wordCount }} 字</span></div>
+            <div class="article-meta"><span>{{ activeNote.authorName || 'linge.xin' }}</span><time>{{ formatLongDate(activeNote.updatedAt) }}</time><span>{{ activeNote.wordCount }} 字</span></div>
             <div v-if="activeTags.length" class="article-tags"><span v-for="tag in activeTags" :key="tag"># {{ tag }}</span></div>
           </header>
           <div class="article-body"><MarkdownContent :content="activeNote.content" /></div>
@@ -37,31 +34,36 @@
           </nav>
         </article>
 
-        <section v-else class="knowledge-empty">
-          <p>{{ loadError || '还没有可以阅读的内容。' }}</p>
-          <button v-if="loadError" type="button" @click="loadNotes(false)">重新加载</button>
-          <RouterLink v-else to="/">返回首页</RouterLink>
-        </section>
-
-        <aside v-if="activeNote" class="article-outline liquid-glass">
-          <p>文章目录</p>
-          <button v-for="heading in headings" :key="heading.id" :class="{ active: activeHeadingId === heading.id }" :style="{ paddingLeft: `${(heading.level - 1) * 12}px` }" type="button" @click="scrollToHeading(heading.id)">{{ heading.text }}</button>
-          <span v-if="!headings.length">正文没有标题</span>
+        <aside v-if="activeNote && !articleLoading" class="article-outline liquid-glass">
+          <h2>文章目录</h2><PublicNoteOutline :headings="headings" :active-id="activeHeadingId" @select="scrollToHeading" />
         </aside>
       </section>
     </div>
-    <BackToTopButton />
+
+    <nav class="reader-tools liquid-glass liquid-glass-strong" aria-label="阅读工具">
+      <button type="button" :aria-expanded="drawerOpen && drawerMode === 'library'" aria-haspopup="dialog" @click="openDrawer('library')"><el-icon><Collection /></el-icon><span>笔记</span></button>
+      <button type="button" :disabled="!activeNote || articleLoading" :aria-expanded="drawerOpen && drawerMode === 'outline'" aria-haspopup="dialog" @click="openDrawer('outline')"><el-icon><List /></el-icon><span>目录</span></button>
+    </nav>
+    <el-drawer v-model="drawerOpen" :title="drawerMode === 'library' ? '查找笔记' : '文章目录'" :direction="drawerMode === 'library' ? 'ltr' : 'rtl'"
+      size="min(92vw, 420px)" append-to-body @close="drawerClosing = true" @closed="finishDrawerNavigation">
+      <PublicNoteLibrary v-if="drawerMode === 'library'" v-model:keyword="keyword" :category="selectedCategory" :categories="categories" :notes="notes"
+        :active-id="activeNote?.id" :loading="loading" :error="listError" @search="searchNotes" @category="selectCategory"
+        @select="selectNote" @retry="syncRoute(true)" />
+      <PublicNoteOutline v-else :headings="headings" :active-id="activeHeadingId" @select="scrollToHeading" />
+    </el-drawer>
+    <BackToTopButton class="reader-back-top" />
   </main>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
+import { Collection, List, Loading } from '@element-plus/icons-vue'
 import { fetchOfficialNote, fetchOfficialNoteCategories, fetchOfficialNotes } from '@/api/note'
 import BackToTopButton from '@/components/BackToTopButton.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
-import NoteCategoryTree from '@/components/NoteCategoryTree.vue'
+import PublicNoteLibrary from '@/components/PublicNoteLibrary.vue'
+import PublicNoteOutline from '@/components/PublicNoteOutline.vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
 import type { Note, NoteCategory } from '@/types/note'
 import { extractMarkdownHeadings } from '@/utils/markdown'
@@ -72,235 +74,246 @@ const router = useRouter()
 const notes = ref<Note[]>([])
 const categories = ref<NoteCategory[]>([])
 const activeNote = ref<Note | null>(null)
+const articleElement = ref<HTMLElement>()
 const keyword = ref('')
 const selectedCategory = ref('')
 const loading = ref(false)
-const articleLoading = ref(false)
+const articleLoading = ref(true)
 const loadError = ref('')
+const listError = ref('')
 const readingProgress = ref(0)
 const activeHeadingId = ref('')
-const selectedCategoryDescendants = ref<string[] | null>(null)
+const drawerOpen = ref(false)
+const drawerMode = ref<'library' | 'outline'>('library')
+const drawerClosing = ref(false)
+let pendingScroll = ''
 let scrollFrame: number | undefined
+let requestVersion = 0
+let listKey: string | undefined
+let initialized = false
+let disposed = false
+let hasOpenedArticle = false
 
-const totalCount = computed(() => categories.value.reduce((total, category) => total + category.count, 0))
 const activeTags = computed(() => activeNote.value?.tags?.split(',').map((tag) => tag.trim()).filter(Boolean) ?? [])
 const headings = computed(() => extractMarkdownHeadings(activeNote.value?.content))
 const activeIndex = computed(() => notes.value.findIndex((note) => note.id === activeNote.value?.id))
 const previousNote = computed(() => activeIndex.value > 0 ? notes.value[activeIndex.value - 1] : null)
 const nextNote = computed(() => activeIndex.value >= 0 && activeIndex.value < notes.value.length - 1 ? notes.value[activeIndex.value + 1] : null)
+const queryString = (value: unknown) => typeof value === 'string' ? value : ''
 
 onMounted(async () => {
-  const requestedCategory = typeof route.query.category === 'string' ? route.query.category : ''
-  try { categories.value = await fetchOfficialNoteCategories() } catch { categories.value = [] }
-  selectedCategory.value = requestedCategory
-  const initialCategoryNode = findNoteCategoryNode(buildNoteCategoryTree(categories.value), requestedCategory)
-  selectedCategoryDescendants.value = initialCategoryNode?.children.length ? initialCategoryNode.leafValues : null
-  await loadNotes(false)
   window.addEventListener('scroll', handleScroll, { passive: true })
+  try { categories.value = await fetchOfficialNoteCategories() } catch { categories.value = [] }
+  if (disposed) return
+  initialized = true
+  await syncRoute()
+})
+
+watch(() => [route.query.note, route.query.category, route.query.q], () => {
+  if (initialized) void syncRoute()
 })
 
 onBeforeUnmount(() => {
+  disposed = true
+  requestVersion++
   window.removeEventListener('scroll', handleScroll)
   if (scrollFrame !== undefined) window.cancelAnimationFrame(scrollFrame)
 })
 
-watch(() => route.query.note, (value) => {
-  const id = Number(value)
-  const target = notes.value.find((note) => note.id === id)
-  if (target && target.id !== activeNote.value?.id) selectNote(target, false)
-})
-
-watch(() => route.query.category, async (value) => {
-  const category = typeof value === 'string' ? value : ''
-  if (category === selectedCategory.value) return
+// The URL is the navigation source. Ignore stale responses after rapid selections;
+// direct article links must not depend on the first page of search results.
+async function syncRoute(force = false) {
+  const version = ++requestVersion
+  const category = queryString(route.query.category)
+  const search = queryString(route.query.q)
+  const requestedNote = queryString(route.query.note)
+  const requestedId = Number(requestedNote)
+  const key = JSON.stringify([category, search])
   selectedCategory.value = category
-  const node = findNoteCategoryNode(buildNoteCategoryTree(categories.value), category)
-  selectedCategoryDescendants.value = node?.children.length ? node.leafValues : null
-  await loadNotes(false)
-})
-
-watch(activeNote, () => nextTick(updateReadingState))
-
-async function loadNotes(syncRoute = true) {
-  loading.value = true
+  keyword.value = search
   loadError.value = ''
-  try {
-    const descendants = selectedCategoryDescendants.value
-    const items = await fetchOfficialNotes({
-      keyword: keyword.value.trim() || undefined,
-      category: descendants ? undefined : selectedCategory.value || undefined,
-      limit: 100,
-    })
-    notes.value = descendants ? items.filter((note) => descendants.includes(note.category || '未分类')) : items
-    if (!categories.value.length) categories.value = summarizeNoteCategories(items)
-    const requestedId = Number(route.query.note)
-    const target = notes.value.find((note) => note.id === requestedId) ?? notes.value[0]
-    if (target) await selectNote(target, syncRoute)
-    else activeNote.value = null
-  } catch {
+  articleLoading.value = force || !activeNote.value || activeNote.value.id !== requestedId
+  if (articleLoading.value) pendingScroll = ''
+
+  if (force || listKey !== key) {
+    loading.value = true
+    listError.value = ''
+    listKey = undefined
     notes.value = []
-    activeNote.value = null
-    loadError.value = '笔记服务暂时不可用，请稍后重试。'
-  } finally { loading.value = false }
-}
-
-async function selectCategoryNode(category: string, descendants: string[] | null) {
-  selectedCategory.value = category
-  selectedCategoryDescendants.value = descendants
-  await router.replace({ query: category ? { category } : {} })
-  await loadNotes()
-}
-
-async function selectNote(note: Note, syncRoute = true) {
-  articleLoading.value = true
-  try {
-    activeNote.value = await fetchOfficialNote(note.id)
-    if (syncRoute && Number(route.query.note) !== note.id) {
-      await router.replace({ query: { ...(selectedCategory.value ? { category: selectedCategory.value } : {}), note: String(note.id) } })
+    const node = findNoteCategoryNode(buildNoteCategoryTree(categories.value), category)
+    const descendants = node?.children.length ? node.leafValues : null
+    try {
+      const items = await fetchOfficialNotes({ keyword: search || undefined, category: descendants ? undefined : category || undefined, limit: 100 })
+      if (version !== requestVersion) return
+      notes.value = descendants ? items.filter((note) => descendants.includes(note.category || '未分类')) : items
+      if (!categories.value.length) categories.value = summarizeNoteCategories(items)
+      listKey = key
+    } catch {
+      if (version !== requestVersion) return
+      listKey = undefined
+      listError.value = '文章列表暂时不可用，请重试。'
+    } finally {
+      if (version === requestVersion) loading.value = false
     }
-  } catch {
-    loadError.value = '文章暂时无法打开，请稍后重试。'
-  } finally { articleLoading.value = false }
-}
+  } else loading.value = false
 
-function scrollToHeading(id: string) {
-  activeHeadingId.value = id
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function handleScroll() {
-  if (scrollFrame !== undefined) return
-  scrollFrame = window.requestAnimationFrame(() => {
-    scrollFrame = undefined
-    updateReadingState()
-  })
-}
-
-function updateReadingState() {
-  const article = document.querySelector('.knowledge-article') as HTMLElement | null
-  if (!article || !activeNote.value) {
-    readingProgress.value = 0
+  if (requestedNote && (!Number.isSafeInteger(requestedId) || requestedId <= 0)) {
+    activeNote.value = null
+    articleLoading.value = false
+    loadError.value = '文章链接无效，请从笔记列表重新选择。'
     return
   }
+  const targetId = requestedNote ? requestedId : notes.value[0]?.id
+  if (!targetId) {
+    activeNote.value = null
+    articleLoading.value = false
+    loadError.value = listError.value
+    return
+  }
+  if (!requestedNote) {
+    await router.replace({ query: { ...route.query, note: String(targetId) } })
+    return
+  }
+  if (!force && activeNote.value?.id === targetId) { articleLoading.value = false; return }
+  activeNote.value = null
+  articleLoading.value = true
+  try {
+    const note = await fetchOfficialNote(targetId)
+    if (version !== requestVersion) return
+    activeNote.value = note
+    articleLoading.value = false
+    await nextTick()
+    if (version !== requestVersion) return
+    if (hasOpenedArticle) requestScroll('reader-article-title')
+    hasOpenedArticle = true
+    updateReadingState()
+  } catch {
+    if (version !== requestVersion) return
+    loadError.value = '文章暂时无法打开，可能已取消公开。请重试或选择其他笔记。'
+  } finally {
+    if (version === requestVersion) articleLoading.value = false
+  }
+}
+
+function searchNotes() {
+  const q = keyword.value.trim()
+  if (q === queryString(route.query.q)) return syncRoute(true)
+  return router.push({ query: { ...route.query, q: q || undefined, note: undefined } })
+}
+function selectCategory(category: string) {
+  if (category === selectedCategory.value) return
+  return router.push({ query: { ...route.query, category: category || undefined, note: undefined } })
+}
+function selectNote(note: Note) {
+  closeDrawer()
+  if (Number(route.query.note) === note.id) {
+    if (loadError.value) return syncRoute(true)
+    if (!articleLoading.value && activeNote.value?.id === note.id) requestScroll('reader-article-title')
+    return
+  }
+  return router.push({ query: { ...route.query, note: String(note.id) } })
+}
+function openDrawer(mode: 'library' | 'outline') {
+  drawerMode.value = mode
+  drawerOpen.value = true
+}
+function closeDrawer() {
+  if (!drawerOpen.value) return
+  drawerClosing.value = true
+  drawerOpen.value = false
+}
+function scrollToHeading(id: string) {
+  closeDrawer()
+  requestScroll(id)
+}
+function finishDrawerNavigation() {
+  drawerClosing.value = false
+  if (pendingScroll) requestScroll(pendingScroll)
+}
+function headingElement(id: string) {
+  return articleElement.value?.querySelector<HTMLElement>('[id="' + CSS.escape(id) + '"]')
+}
+function requestScroll(id: string) {
+  pendingScroll = id
+  if (drawerClosing.value || drawerOpen.value) return
+  const target = headingElement(id)
+  if (target) {
+    target.tabIndex = -1
+    target.focus({ preventScroll: true })
+    target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' })
+    activeHeadingId.value = id
+  }
+  pendingScroll = ''
+}
+function handleScroll() {
+  if (scrollFrame !== undefined) return
+  scrollFrame = window.requestAnimationFrame(() => { scrollFrame = undefined; updateReadingState() })
+}
+function updateReadingState() {
+  const article = articleElement.value
+  if (!article || !activeNote.value) { readingProgress.value = 0; return }
   const start = article.getBoundingClientRect().top + window.scrollY
   const range = Math.max(1, article.offsetHeight - window.innerHeight * .62)
   readingProgress.value = Math.max(0, Math.min(100, ((window.scrollY - start + window.innerHeight * .3) / range) * 100))
-  const passedHeadings = headings.value
-    .filter((heading) => {
-      const target = document.getElementById(heading.id)
-      return target ? target.getBoundingClientRect().top <= 160 : false
-    })
-  activeHeadingId.value = passedHeadings[passedHeadings.length - 1]?.id ?? headings.value[0]?.id ?? ''
+  const passed = headings.value.filter((heading) => {
+    const target = headingElement(heading.id)
+    return target ? target.getBoundingClientRect().top <= 180 : false
+  })
+  activeHeadingId.value = passed[passed.length - 1]?.id ?? headings.value[0]?.id ?? ''
 }
-function formatShortDate(value?: string) { return value ? new Date(value).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) : '刚刚' }
-function formatLongDate(value?: string) { return value ? new Date(value).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : '刚刚发布' }
+function formatLongDate(value: string) { return new Date(value).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) }
 </script>
 
 <style scoped>
-.knowledge-page { min-height:100vh; color:var(--gb-text); background:transparent; }
-.knowledge-shell { width:min(1320px,calc(100% - 8vw)); margin:0 auto; padding:var(--space-3) 0 var(--space-8); }
-
-/* ============ Intro ============ */
-.knowledge-intro { display:grid; grid-template-columns:1fr; gap:14px; padding:clamp(52px,8vw,108px) 0 38px; }
-.knowledge-intro p { margin:0; color:var(--gb-primary); font-size:11px; font-weight:800; letter-spacing:.14em; }
-.knowledge-intro h1 { margin:0; color:var(--text); font-size:64px; font-weight:700; line-height:1; }
-
-/* ============ Layout ============ */
-.knowledge-layout { display:grid; grid-template-columns:minmax(250px,.62fr) minmax(0,1.7fr) minmax(180px,.4fr); gap:22px; min-height:700px; align-items:start; }
-
-/* ============ Library ============ */
-.knowledge-library { padding:20px; border-radius:var(--radius-lg); }
-.library-label { margin:22px 0 10px; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.12em; }
-.notes-label { margin-top:26px; }
-.public-note-scroll { height:380px; margin-right:-8px; padding-right:8px; }
-.public-note-link {
-  display:grid; width:100%; gap:4px; margin-bottom:6px;
-  padding:13px 14px;
-  border:0; border-radius:var(--gb-radius-sm);
-  color:inherit; background:transparent; text-align:left; cursor:pointer;
-  transition:background-color .22s ease,transform .22s ease;
+.knowledge-page { --reader-offset:160px; min-height:100vh; color:var(--text); background:transparent; }
+.knowledge-shell { width:min(1320px, calc(100% - 32px)); margin-inline:auto; padding:var(--space-3) 0 calc(var(--space-8) + env(safe-area-inset-bottom)); }
+.knowledge-intro { display:flex; flex-direction:column; gap:var(--space-2); padding-block:var(--space-6); }
+.knowledge-intro p { margin:0; color:var(--brand); font-size:14px; font-weight:700; }
+.knowledge-intro h1 { margin:0; font-size:32px; line-height:1.2; }
+.knowledge-layout { display:flex; flex-direction:column; align-items:stretch; gap:var(--space-5); }
+.knowledge-library, .article-outline { display:none; }
+.knowledge-article { position:relative; min-width:0; padding:var(--space-5) var(--space-4) var(--space-7); color:var(--text); background:var(--surface); border-block:1px solid var(--line); }
+.reading-progress { position:sticky; top:var(--reader-offset); z-index:3; height:3px; background:var(--brand-soft); }
+.reading-progress span { display:block; height:100%; background:var(--brand); transition:width .12s linear; }
+.article-head { display:flex; flex-direction:column; gap:var(--space-4); padding-block:var(--space-5); border-bottom:1px solid var(--line); }
+.article-path, .article-meta, .article-tags { display:flex; flex-wrap:wrap; gap:var(--space-2) var(--space-3); color:var(--muted); font-size:14px; }
+.article-path { color:var(--brand-strong); overflow-wrap:anywhere; }
+.article-head h2 { margin:0; color:var(--text); font-size:28px; line-height:1.35; overflow-wrap:anywhere; scroll-margin-top:var(--reader-offset); }
+.article-head>p { margin:0; color:var(--muted); font-size:15px; line-height:1.6; overflow-wrap:anywhere; }
+.article-tags { color:var(--brand-strong); }
+.article-body { padding-top:var(--space-5); }
+.knowledge-article :deep(.markdown-content) { min-width:0; color:var(--text); font-size:16px; line-height:1.6; overflow-wrap:anywhere; }
+.knowledge-article :deep(.markdown-content :is(h1,h2,h3,h4,h5,h6)) { scroll-margin-top:var(--reader-offset); color:var(--text); }
+.article-pagination { display:flex; flex-direction:column; gap:var(--space-3); padding-top:var(--space-5); margin-top:var(--space-7); border-top:1px solid var(--line); }
+.article-pagination button { display:flex; min-width:0; flex:1; flex-direction:column; gap:var(--space-2); padding:var(--space-4); border:1px solid var(--line); border-radius:var(--radius-sm); color:var(--brand-strong); background:var(--surface); text-align:left; cursor:pointer; transition:background-color .2s ease; }
+.article-pagination button:hover:not(:disabled) { background:var(--brand-soft); }
+.article-pagination button:disabled { color:var(--muted); cursor:default; }
+.article-pagination small, .article-pagination strong { font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+.knowledge-empty { display:flex; min-height:360px; min-width:0; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:var(--space-4); padding:var(--space-6); color:var(--muted); background:var(--surface); }
+.knowledge-empty p { margin:0; font-size:15px; }
+.knowledge-empty button { padding:var(--space-3) var(--space-4); border:0; border-radius:var(--radius-sm); color:var(--on-brand); background:var(--brand); cursor:pointer; }
+.reader-tools { position:fixed; z-index:25; left:16px; bottom:calc(16px + env(safe-area-inset-bottom)); display:flex; max-width:calc(100% - 88px); gap:var(--space-1); padding:var(--space-1); border-radius:999px; }
+.reader-tools button { display:flex; min-height:44px; align-items:center; gap:var(--space-2); padding-inline:var(--space-3); border:0; border-radius:999px; color:var(--brand-strong); background:transparent; font-size:14px; cursor:pointer; }
+.reader-tools button:hover:not(:disabled) { background:var(--brand-soft); }
+.reader-tools button:disabled { color:var(--muted); opacity:.6; cursor:default; }
+.reader-back-top { right:16px; bottom:calc(20px + env(safe-area-inset-bottom)); width:44px; min-height:44px; justify-content:center; padding:0; }
+.reader-back-top :deep(span:not(.el-icon)) { display:none; }
+@media(min-width:760px) {
+  .knowledge-page { --reader-offset:104px; }
+  .knowledge-intro { padding-block:var(--space-7) var(--space-6); }
+  .knowledge-intro h1 { font-size:42px; }
+  .knowledge-article { padding:var(--space-6) var(--space-7) var(--space-7); }
+  .article-head h2 { font-size:36px; }
+  .article-pagination { flex-direction:row; }
+  .article-pagination button:last-child { text-align:right; align-items:flex-end; }
 }
-.public-note-link:hover,.public-note-link.active { background:var(--gb-primary-soft); }
-.public-note-link:hover { transform:translateX(3px); }
-.public-note-link small { color:var(--gb-primary); font-size:11px; font-weight:700; }
-.public-note-link strong { overflow:hidden; color:var(--gb-text); font-size:14px; font-weight:750; text-overflow:ellipsis; white-space:nowrap; }
-
-/* ============ Article ============ */
-.knowledge-article {
-  position:relative; min-width:0;
-  padding:44px clamp(30px,4.4vw,78px) 60px;
-  border:1px solid var(--line); border-radius:var(--radius-sm);
-  background:var(--surface);
-}
-.reading-progress { position:sticky; top:0; z-index:3; width:100%; height:4px; margin:0 -1px 27px -1px; border-radius:4px; background:var(--gb-primary-soft); }
-.reading-progress span { display:block; height:100%; border-radius:4px; background:var(--gb-primary); transition:width .12s linear; }
-.article-head { max-width:820px; padding-bottom:28px; border-bottom:1px solid var(--gb-border); }
-.article-path { display:flex; gap:8px; color:var(--gb-primary); font-size:12px; font-weight:700; }
-.article-path b { color:var(--gb-subtle); font-weight:500; }
-.article-head h2 { margin:17px 0 0; color:var(--text); font-size:clamp(28px,3.4vw,46px); font-weight:700; line-height:1.24; }
-.article-head>p { margin:17px 0 0; color:var(--gb-muted); font-size:15px; line-height:1.82; }
-.article-meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:19px; color:var(--gb-subtle); font-size:12px; }
-.article-meta span+span::before { margin-right:10px; color:var(--gb-border-strong); content:'•'; }
-.article-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:15px; }
-.article-tags span { padding:4px 11px; border-radius:999px; color:var(--gb-primary-dark); background:var(--gb-primary-soft); font-size:12px; font-weight:650; }
-.article-body { max-width:820px; padding-top:32px; }
-.knowledge-article :deep(.markdown-content) { color:var(--text); font-size:16px; line-height:1.8; }
-.knowledge-article :deep(.markdown-content h1),
-.knowledge-article :deep(.markdown-content h2),
-.knowledge-article :deep(.markdown-content h3),
-.knowledge-article :deep(.markdown-content h4) { scroll-margin-top:24px; color:var(--gb-text); }
-.knowledge-article :deep(.markdown-content h2) { margin-top:48px; padding-bottom:10px; border-bottom:1px solid var(--gb-border); }
-
-/* ============ Pagination ============ */
-.article-pagination { display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:820px; margin-top:56px; padding-top:26px; border-top:1px solid var(--gb-border); }
-.article-pagination button {
-  display:grid; gap:5px; padding:16px 18px;
-  border:1px solid var(--line); border-radius:var(--radius-sm);
-  color:var(--gb-primary-dark); background:var(--gb-surface);
-  text-align:left; cursor:pointer;
-  transition:border-color .22s ease,background-color .22s ease,transform .22s ease;
-}
-.article-pagination button:last-child { text-align:right; }
-.article-pagination button:hover:not(:disabled) { border-color:var(--gb-primary); background:var(--gb-primary-soft); transform:translateY(-2px); }
-.article-pagination button:disabled { color:var(--gb-subtle); background:var(--gb-surface-soft); cursor:default; }
-.article-pagination small { font-size:11px; font-weight:700; }
-.article-pagination strong { font-size:13px; font-weight:750; }
-
-/* ============ Outline ============ */
-.article-outline { position:sticky; top:92px; padding:22px 20px; border-radius:var(--radius-lg); }
-.article-outline>p { margin:0; color:var(--gb-muted); font-size:11px; font-weight:800; letter-spacing:.1em; }
-.article-outline>span { display:block; margin-top:16px; color:var(--gb-subtle); font-size:12px; }
-.article-outline button {
-  display:block; width:100%; overflow:hidden; margin-top:11px;
-  padding:6px 10px;
-  border:0; border-radius:8px;
-  color:var(--gb-muted); background:transparent;
-  font-size:12px; line-height:1.45; text-align:left; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;
-  transition:color .2s ease,background-color .2s ease;
-}
-.article-outline button:hover,.article-outline button.active { color:var(--gb-primary-dark); background:var(--gb-primary-soft); font-weight:700; }
-
-/* ============ Empty ============ */
-.knowledge-empty { display:grid; grid-column:2 / -1; min-height:560px; align-content:center; justify-items:center; gap:14px; padding:50px; border:1px dashed var(--gb-border-strong); border-radius:var(--gb-radius); background:var(--gb-surface); }
-.knowledge-empty p { margin:0; color:var(--gb-muted); font-size:16px; }
-.knowledge-empty a,.knowledge-empty button { display:inline-flex; padding:9px 24px; border:0; border-radius:var(--radius-sm); color:var(--on-brand); background:var(--brand); font-size:14px; font-weight:750; text-decoration:none; cursor:pointer; transition:background-color .2s ease,transform .2s ease; }
-.knowledge-empty a:hover,.knowledge-empty button:hover { background:var(--gb-primary-dark); transform:translateY(-1px); }
-
-@media(max-width:1100px){
-  .knowledge-layout { grid-template-columns:minmax(240px,.62fr) minmax(0,1.7fr); }
-  .article-outline { display:none; }
-  .knowledge-empty { grid-column:2; }
-}
-@media(max-width:760px){
-  .knowledge-shell { width:min(100% - 32px,1320px); }
-  .knowledge-intro { grid-template-columns:1fr; padding:52px 0 30px; }
-  .knowledge-layout { grid-template-columns:1fr; }
-  .knowledge-library { padding:18px; }
-  .public-note-scroll { height:240px; }
-  .knowledge-article,.knowledge-empty { grid-column:auto; padding:32px 22px 48px; }
-  .reading-progress { margin-bottom:22px; }
-  .article-pagination { grid-template-columns:1fr; }
-  .article-pagination button:last-child { text-align:left; }
-  .knowledge-intro h1 { font-size:46px; }
+@media(min-width:1101px) {
+  .knowledge-shell { width:min(1440px, calc(100% - 64px)); }
+  .knowledge-layout { display:grid; grid-template-columns:250px minmax(0,1fr) 190px; align-items:start; gap:var(--space-4); }
+  .knowledge-library, .article-outline { display:flex; min-width:0; flex-direction:column; gap:var(--space-4); position:sticky; top:104px; max-height:calc(100svh - 128px); overflow-y:auto; padding:var(--space-4); border-radius:var(--radius-sm); }
+  .article-outline h2 { margin:0; color:var(--muted); font:700 14px/1.5 var(--font-body); }
+  .knowledge-article { padding-inline:var(--space-6); }
+  .reader-tools { display:none; }
+  .reader-back-top { right:24px; bottom:24px; }
 }
 </style>

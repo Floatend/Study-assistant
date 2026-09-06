@@ -19,6 +19,11 @@ function clearStoredSession() {
 
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior(to, from, savedPosition) {
+    // In-page article changes scroll after the asynchronous content is rendered.
+    if (to.path === from.path) return false
+    return savedPosition ?? { top: 0, behavior: 'instant' }
+  },
   routes: [
     { path: '/', name: 'PublicBlog', component: () => import('@/views/PublicBlog.vue'), meta: { public: true } },
     { path: '/notes', name: 'OfficialNotes', component: () => import('@/views/OfficialNotes.vue'), meta: { public: true } },

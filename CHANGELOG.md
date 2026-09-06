@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-09-06 - Mobile reading and personal introduction
+
+### Changed
+
+- Made public notes article-first on mobile and tablet, moving search, category navigation, and article selection into a drawer. Added persistent reading controls and a separate outline drawer while retaining desktop sidebars.
+- Shared the library and outline components across layouts; kept Markdown, Obsidian callout, code, and KaTeX rendering unchanged.
+- Replaced generic homepage slogans with the owner's education, development interests, and three resume-sourced projects. Project responsibilities expand on demand; the Sakura hero and existing palette remain, and article bodies stay on the notes route.
+- Reused the timeline project data on the homepage instead of maintaining a second set of project facts. Kept public content free of private contact details and invented project metrics or screenshots.
+
+### Fixed
+
+- Article selection now creates browser history entries, preserving search and category context. Article changes scroll and focus the title after rendering; outline targets clear the fixed navigation. Cross-page navigation starts at the top, while browser page history can restore saved positions.
+- Direct article URLs no longer depend on membership in the first 100 list results. Stale requests cannot replace a newer selection, and missing articles/list failures have visible retry states.
+- Checked all eight awards against the owner's supplied screenshot: Huawei ICT is provincial third prize, and the China International College Students' Innovation Competition is campus second prize. Corrected that competition's Chinese title to match the source; the other six records were already consistent. No award dates were inferred.
+- Home content remains visible without motion support and under reduced-motion preferences. Drawer Escape handling retains Element Plus focus restoration; article/heading selection focuses the reading destination after the drawer closes.
+
+### Verification
+
+- `npm.cmd run build` passed (Vue TypeScript check and Vite production build); existing dependency annotation and bundle-size warnings remain.
+- 16 Playwright browser checks passed: article-first mobile layout, Markdown/KaTeX, drawer keyboard focus, heading offsets, article/history navigation, search/category/empty states, out-of-list deep links, error recovery, stale article requests and back-navigation during a slow category load, cross-page scroll, invalid links, normal/reduced motion, homepage project expansion, and all eight awards.
+- Responsive checks and screenshots covered 320, 390, 820, 1100, and 1440px without page-level horizontal overflow.
+- Local backend was not running. Reading tests intercepted public API responses only inside an isolated browser context; no database records were created or changed. Live backend integration remains to be checked after deployment.
+
+### Deployment
+
+- Frontend-only update; no SQL migration or backend rebuild is needed. After committing and pushing the updated frontend files and this changelog, run on the local deployment server:
+
+```bash
+cd /home/glg/goalbot/Study-assistant
+git pull --ff-only origin main
+docker compose build goalbot-frontend
+docker compose up -d --no-deps --force-recreate goalbot-frontend
+docker compose ps goalbot-frontend
+```
+
 ## 2026-09-04 - Resume-based journey visualization
 
 ### Changed

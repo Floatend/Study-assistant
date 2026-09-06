@@ -132,10 +132,10 @@ export const timelineItems: TimelineItem[] = [
 
 export const achievements: AchievementItem[] = [
   { id: 'lanqiao', scope: 'provincial', title: '蓝桥杯程序设计竞赛', result: '省级二等奖' },
-  { id: 'huawei-ict', scope: 'provincial', title: '华为 ICT 大赛', result: '省级二等奖' },
+  { id: 'huawei-ict', scope: 'provincial', title: '华为 ICT 大赛', result: '省级三等奖' },
   { id: 'computer-design', scope: 'provincial', title: '中国大学生计算机设计大赛', result: '省级三等奖' },
   { id: 'matiji', scope: 'national', title: '码蹄杯程序设计竞赛', result: '国赛铜奖' },
-  { id: 'innovation', scope: 'campus', title: '中国国际大学生创新大赛', result: '校级一等奖' },
+  { id: 'innovation', scope: 'campus', title: '中国国际大学生创新竞赛', result: '校级二等奖' },
   { id: 'baidu-star', scope: 'national', title: '百度之星程序设计大赛', result: '国赛铜奖' },
   { id: 'robot-ai', scope: 'campus', title: '中国机器人及人工智能大赛', result: '校级三等奖' },
   { id: 'innovation-training', scope: 'campus', title: '大学生创新创业训练计划项目', result: '校级立项' }
