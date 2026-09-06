@@ -35,3 +35,34 @@ export interface NotePayload {
   published?: boolean
   official?: boolean
 }
+
+export interface PublicNoteItem {
+  id: number
+  title: string
+  category?: string | null
+  tags?: string | null
+  excerpt: string
+  wordCount: number
+  updatedAt: string
+}
+
+export interface PublicNoteQuery {
+  keyword?: string
+  category?: string
+  descendants?: boolean
+  page?: number
+  pageSize?: number
+}
+
+export interface PublicNotePage {
+  items: PublicNoteItem[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export interface PublicNoteNavigation {
+  previous: PublicNoteItem | null
+  next: PublicNoteItem | null
+  position: number
+}

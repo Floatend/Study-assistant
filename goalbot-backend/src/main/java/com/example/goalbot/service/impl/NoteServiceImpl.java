@@ -3,6 +3,7 @@ package com.example.goalbot.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.goalbot.common.BusinessException;
+import com.example.goalbot.common.NoteExcerpt;
 import com.example.goalbot.dto.note.NoteCreateRequest;
 import com.example.goalbot.dto.note.NoteUpdateRequest;
 import com.example.goalbot.entity.Note;
@@ -236,106 +237,7 @@ public class NoteServiceImpl extends ServiceImpl<NoteMapper, Note> implements No
     }
 
     private String buildSummary(String content) {
-        if (!StringUtils.hasText(content)) {
-            return "";
-        }
-
-        String[] lines = content.replace("\r\n", "\n").split("\n");
-        StringBuilder excerpt = new StringBuilder();
-        boolean inCodeFence = false;
-        boolean frontmatterClosed = !isFrontmatterDelimiter(lines[0].trim());
-
-        for (String rawLine : lines) {
-            String line = rawLine.trim();
-            if (!frontmatterClosed) {
-                if (isFrontmatterDelimiter(line)) {
-                    frontmatterClosed = true;
-                }
-                continue;
-            }
-            if (inCodeFence) {
-                if (line.startsWith("```") || line.startsWith("~~~")) {
-                    inCodeFence = false;
-                }
-                continue;
-            }
-            if (line.startsWith("```") || line.startsWith("~~~")) {
-                inCodeFence = true;
-                continue;
-            }
-            if (line.startsWith("#") || line.matches("^---+\\s*$") || line.startsWith("<!--")) {
-                continue;
-            }
-
-            boolean isBlockquote = line.startsWith(">");
-            String text = line.replaceFirst("^>\\s*", "").trim();
-            if (!StringUtils.hasText(text) || text.startsWith("[!") || text.matches("^!\\w+.*") || text.startsWith("|")) {
-                continue;
-            }
-            if (text.contains("$") || text.contains("\\(") || text.contains("\\)") || text.contains("\\[")) {
-                continue;
-            }
-            if (text.contains("|")) {
-                text = text.replaceAll("\\s*\\|\\s*", "、");
-            }
-
-            String plain = stripInlineMarkdown(text);
-            if (!StringUtils.hasText(plain)) {
-                continue;
-            }
-
-            if (isBlockquote && plain.length() <= 160) {
-                return plain;
-            }
-
-            if (excerpt.length() > 0) {
-                excerpt.append(' ');
-            }
-            excerpt.append(plain);
-            if (excerpt.length() >= 180 || line.isEmpty()) {
-                break;
-            }
-        }
-
-        String result = excerpt.toString().replaceAll("\\s+", " ").trim();
-        if (StringUtils.hasText(result)) {
-            return truncateSummary(result);
-        }
-
-        for (String rawLine : lines) {
-            String text = rawLine.trim().replaceFirst("^#{1,6}\\s*", "").replaceFirst("^>\\s*", "").trim();
-            if (StringUtils.hasText(text) && !text.contains("$") && !text.contains("|") && !text.contains("\\")) {
-                return truncateSummary(stripInlineMarkdown(text));
-            }
-        }
-        return "";
-    }
-
-    private boolean isFrontmatterDelimiter(String line) {
-        return line.matches("^(---|\\+\\+\\+)\\s*$");
-    }
-
-    private String stripInlineMarkdown(String text) {
-        return text
-                .replaceAll("!?\\[([^\\]]*)\\]\\([^)]*\\)", "$1")
-                .replaceAll("`([^`]*)`", "$1")
-                .replaceAll("\\*\\*([^*]+)\\*\\*", "$1")
-                .replaceAll("__([^_]+)__", "$1")
-                .replaceAll("\\*([^*]+)\\*", "$1")
-                .replaceAll("_([^_]+)_", "$1")
-                .replaceAll("~~([^~]+)~~", "$1")
-                .replaceAll("==([^=]+)==", "$1")
-                .replaceAll("^[\\-+*]\\s+", "")
-                .replaceAll("^\\d+\\.\\s+", "")
-                .replaceAll("\\s+", " ")
-                .trim();
-    }
-
-    private String truncateSummary(String value) {
-        if (value.length() <= 180) {
-            return value;
-        }
-        return value.substring(0, 180).trim() + "...";
+        return NoteExcerpt.extract(content, "");
     }
 
     private int countWords(String content) {

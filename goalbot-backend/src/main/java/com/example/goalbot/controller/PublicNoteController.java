@@ -2,6 +2,10 @@ package com.example.goalbot.controller;
 
 import com.example.goalbot.common.Result;
 import com.example.goalbot.service.NoteService;
+import com.example.goalbot.service.PublicNoteSearchService;
+import com.example.goalbot.vo.PublicNoteItemVO;
+import com.example.goalbot.vo.PublicNotePageVO;
+import com.example.goalbot.vo.PublicNoteNavigationVO;
 import com.example.goalbot.vo.NoteVO;
 import com.example.goalbot.vo.NoteCategoryVO;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +26,28 @@ import java.util.List;
 public class PublicNoteController {
 
     private final NoteService noteService;
+    private final PublicNoteSearchService searchService;
+
+    @GetMapping("/search")
+    public Result<PublicNotePageVO> search(@RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "") String category,
+            @RequestParam(defaultValue = "true") boolean descendants,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int pageSize) {
+        return Result.success(searchService.search(keyword, category, descendants, page, pageSize));
+    }
+
+    @GetMapping("/{id}/related")
+    public Result<List<PublicNoteItemVO>> related(@PathVariable Long id) {
+        return Result.success(searchService.related(id));
+    }
+
+    @GetMapping("/{id}/navigation")
+    public Result<PublicNoteNavigationVO> navigation(@PathVariable Long id,
+            @RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "") String category,
+            @RequestParam(defaultValue = "true") boolean descendants) {
+        return Result.success(searchService.navigation(id, keyword, category, descendants));
+    }
 
     @GetMapping
     public Result<List<NoteVO>> listOfficialNotes(

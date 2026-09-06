@@ -3,38 +3,57 @@
     <div class="knowledge-shell">
       <PublicSiteHeader />
       <section class="knowledge-intro"><p>LEARNING ARCHIVE</p><h1>学习笔记</h1></section>
-      <section class="knowledge-layout">
+      <section class="knowledge-layout" :class="{ 'results-layout': !requestedNote }">
         <aside class="knowledge-library liquid-glass">
-          <PublicNoteLibrary v-model:keyword="keyword" :category="selectedCategory" :categories="categories" :notes="notes"
-            :active-id="activeNote?.id" :loading="loading" :error="listError" @search="searchNotes" @category="selectCategory"
-            @select="selectNote" @retry="syncRoute(true)" />
+          <PublicNoteLibrary v-model:keyword="keyword" v-bind="libraryProps" :show-notes="!!requestedNote" :show-search="!!requestedNote"
+            @search="searchNotes" @category="selectCategory" @select="selectNote" @page="changePage" @retry="loadSearch(true)" />
         </aside>
 
-        <section v-if="articleLoading" class="knowledge-empty" aria-live="polite" aria-busy="true">
+        <section v-if="!requestedNote" class="note-results">
+          <header class="results-heading">
+            <h2 id="reader-results-title" tabindex="-1">{{ matchedKeyword ? '搜索结果' : selectedCategory || '全部笔记' }}</h2>
+            <p v-if="matchedKeyword">“{{ matchedKeyword }}”<span v-if="selectedCategory"> · {{ selectedCategory }}</span></p>
+            <button v-if="selectedCategory" type="button" @click="selectCategory('')">清除分类 <el-icon><Close /></el-icon></button>
+          </header>
+          <PublicNoteLibrary v-model:keyword="keyword" v-bind="libraryProps" results-view
+            @search="searchNotes" @select="selectNote" @page="changePage" @retry="loadSearch(true)" />
+        </section>
+        <section v-else-if="articleLoading" class="knowledge-empty" aria-live="polite" aria-busy="true">
           <el-icon class="is-loading"><Loading /></el-icon><p>正在打开文章…</p>
         </section>
         <section v-else-if="loadError || !activeNote" class="knowledge-empty" aria-live="polite">
-          <p>{{ loadError || (loading ? '正在查找笔记…' : '没有找到对应笔记。') }}</p>
-          <button v-if="loadError || listError" type="button" @click="syncRoute(true)">重新加载</button>
-          <button v-else-if="!loading" type="button" @click="openDrawer('library')">选择其他笔记</button>
+          <p>{{ loadError || '没有找到这篇文章。' }}</p>
+          <button type="button" @click="loadArticle(true)">重新加载</button>
+          <button type="button" @click="backToResults">返回列表</button>
         </section>
         <article v-else ref="articleElement" class="knowledge-article">
           <div class="reading-progress" aria-hidden="true"><span :style="{ width: readingProgress + '%' }" /></div>
           <header class="article-head">
-            <div class="article-path"><span>学习笔记</span><span aria-hidden="true">/</span><span>{{ activeNote.category || '未分类' }}</span></div>
+            <div class="article-path"><button type="button" @click="backToResults"><el-icon><Back /></el-icon>返回列表</button><span aria-hidden="true">/</span><span>{{ activeNote.category || '未分类' }}</span></div>
             <h2 id="reader-article-title" tabindex="-1">{{ activeNote.title }}</h2>
             <p v-if="activeNote.summary">{{ activeNote.summary }}</p>
             <div class="article-meta"><span>{{ activeNote.authorName || 'linge.xin' }}</span><time>{{ formatLongDate(activeNote.updatedAt) }}</time><span>{{ activeNote.wordCount }} 字</span></div>
             <div v-if="activeTags.length" class="article-tags"><span v-for="tag in activeTags" :key="tag"># {{ tag }}</span></div>
+            <button v-if="resumePosition" class="resume-reading" type="button" @click="resumeReading"><el-icon><Position /></el-icon>继续阅读 · 上次 {{ Math.round(resumePosition.progress * 100) }}%</button>
           </header>
-          <div class="article-body"><MarkdownContent :content="activeNote.content" /></div>
-          <nav class="article-pagination" aria-label="相邻文章">
-            <button type="button" :disabled="!previousNote" @click="previousNote && selectNote(previousNote)"><small>上一篇</small><strong>{{ previousNote?.title || '已经是第一篇' }}</strong></button>
-            <button type="button" :disabled="!nextNote" @click="nextNote && selectNote(nextNote)"><small>下一篇</small><strong>{{ nextNote?.title || '已经是最后一篇' }}</strong></button>
+          <div ref="bodyElement" class="article-body" tabindex="-1"><MarkdownContent :content="activeNote.content" /></div>
+          <div v-if="linksError" class="reading-links-error" role="status"><span>{{ linksError }}</span><button type="button" @click="loadReadingLinks">重试</button></div>
+          <nav class="article-pagination" aria-label="相邻文章" :aria-busy="linksLoading">
+            <button type="button" :disabled="!navigation.previous || linksLoading" @click="navigateNeighbor('previous')"><small>上一篇</small><strong>{{ navigation.previous?.title || '已经是第一篇' }}</strong></button>
+            <button type="button" :disabled="!navigation.next || linksLoading" @click="navigateNeighbor('next')"><small>下一篇</small><strong>{{ navigation.next?.title || '已经是最后一篇' }}</strong></button>
           </nav>
+          <section class="related-notes" aria-labelledby="related-title">
+            <header><h3 id="related-title">同类文章</h3><button type="button" @click="selectCategory(activeNote.category || '未分类')">查看分类 <el-icon><ArrowRight /></el-icon></button></header>
+            <p v-if="linksLoading" role="status">正在查找相关文章…</p>
+            <p v-else-if="!relatedNotes.length && !linksError">这个分类暂时没有其他公开文章。</p>
+            <button v-for="note in relatedNotes" :key="note.id" class="related-note" type="button" @click="selectRelated(note)">
+              <span>{{ note.title }}</span><small>{{ formatLongDate(note.updatedAt) }}</small><el-icon><ArrowRight /></el-icon>
+            </button>
+          </section>
+          <button class="article-return" type="button" @click="backToResults"><el-icon><Back /></el-icon>返回笔记列表</button>
         </article>
 
-        <aside v-if="activeNote && !articleLoading" class="article-outline liquid-glass">
+        <aside v-if="activeNote && !articleLoading && requestedNote" class="article-outline liquid-glass">
           <h2>文章目录</h2><PublicNoteOutline :headings="headings" :active-id="activeHeadingId" @select="scrollToHeading" />
         </aside>
       </section>
@@ -42,13 +61,12 @@
 
     <nav class="reader-tools liquid-glass liquid-glass-strong" aria-label="阅读工具">
       <button type="button" :aria-expanded="drawerOpen && drawerMode === 'library'" aria-haspopup="dialog" @click="openDrawer('library')"><el-icon><Collection /></el-icon><span>笔记</span></button>
-      <button type="button" :disabled="!activeNote || articleLoading" :aria-expanded="drawerOpen && drawerMode === 'outline'" aria-haspopup="dialog" @click="openDrawer('outline')"><el-icon><List /></el-icon><span>目录</span></button>
+      <button v-if="requestedNote" type="button" :disabled="!activeNote || articleLoading" :aria-expanded="drawerOpen && drawerMode === 'outline'" aria-haspopup="dialog" @click="openDrawer('outline')"><el-icon><List /></el-icon><span>目录</span></button>
     </nav>
     <el-drawer v-model="drawerOpen" :title="drawerMode === 'library' ? '查找笔记' : '文章目录'" :direction="drawerMode === 'library' ? 'ltr' : 'rtl'"
       size="min(92vw, 420px)" append-to-body @close="drawerClosing = true" @closed="finishDrawerNavigation">
-      <PublicNoteLibrary v-if="drawerMode === 'library'" v-model:keyword="keyword" :category="selectedCategory" :categories="categories" :notes="notes"
-        :active-id="activeNote?.id" :loading="loading" :error="listError" @search="searchNotes" @category="selectCategory"
-        @select="selectNote" @retry="syncRoute(true)" />
+      <PublicNoteLibrary v-if="drawerMode === 'library'" v-model:keyword="keyword" v-bind="libraryProps"
+        @search="searchNotes" @category="selectCategory" @select="selectNote" @page="changePage" @retry="loadSearch(true)" />
       <PublicNoteOutline v-else :headings="headings" :active-id="activeHeadingId" @select="scrollToHeading" />
     </el-drawer>
     <BackToTopButton class="reader-back-top" />
@@ -58,27 +76,37 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Collection, List, Loading } from '@element-plus/icons-vue'
-import { fetchOfficialNote, fetchOfficialNoteCategories, fetchOfficialNotes } from '@/api/note'
+import { ArrowRight, Back, Close, Collection, List, Loading, Position } from '@element-plus/icons-vue'
+import { fetchOfficialNote, fetchOfficialNoteCategories, searchOfficialNotes, fetchRelatedNotes, fetchNoteNavigation } from '@/api/note'
 import BackToTopButton from '@/components/BackToTopButton.vue'
 import MarkdownContent from '@/components/MarkdownContent.vue'
 import PublicNoteLibrary from '@/components/PublicNoteLibrary.vue'
 import PublicNoteOutline from '@/components/PublicNoteOutline.vue'
 import PublicSiteHeader from '@/components/PublicSiteHeader.vue'
-import type { Note, NoteCategory } from '@/types/note'
+import type { Note, NoteCategory, PublicNoteItem, PublicNoteNavigation } from '@/types/note'
 import { extractMarkdownHeadings } from '@/utils/markdown'
-import { buildNoteCategoryTree, findNoteCategoryNode, summarizeNoteCategories } from '@/utils/noteCategories'
+import { loadReadingPosition, saveReadingPosition, type ReadingPosition } from '@/utils/noteReading'
 
 const route = useRoute()
 const router = useRouter()
-const notes = ref<Note[]>([])
+const pageSize = 12
+const queryString = (value: unknown) => typeof value === 'string' ? value : ''
+const requestedNote = computed(() => queryString(route.query.note))
+const matchedKeyword = computed(() => queryString(route.query.q).trim())
+const selectedCategory = computed(() => queryString(route.query.category))
+const currentPage = computed(() => {
+  const value = Number(route.query.page)
+  return Number.isSafeInteger(value) && value > 0 && value <= 2147483647 ? value : 1
+})
+const notes = ref<PublicNoteItem[]>([])
+const total = ref(0)
 const categories = ref<NoteCategory[]>([])
 const activeNote = ref<Note | null>(null)
 const articleElement = ref<HTMLElement>()
-const keyword = ref('')
-const selectedCategory = ref('')
+const bodyElement = ref<HTMLElement>()
+const keyword = ref(matchedKeyword.value)
 const loading = ref(false)
-const articleLoading = ref(true)
+const articleLoading = ref(false)
 const loadError = ref('')
 const listError = ref('')
 const readingProgress = ref(0)
@@ -86,132 +114,195 @@ const activeHeadingId = ref('')
 const drawerOpen = ref(false)
 const drawerMode = ref<'library' | 'outline'>('library')
 const drawerClosing = ref(false)
-let pendingScroll = ''
+const navigation = ref<PublicNoteNavigation>({ previous: null, next: null, position: 0 })
+const relatedNotes = ref<PublicNoteItem[]>([])
+const linksError = ref('')
+const linksLoading = ref(false)
+const resumePosition = ref<ReadingPosition | null>(null)
+let pendingAction: (() => void) | null = null
 let scrollFrame: number | undefined
-let requestVersion = 0
-let listKey: string | undefined
-let initialized = false
+let saveTimer: ReturnType<typeof setTimeout> | undefined
+let searchVersion = 0
+let articleVersion = 0
+let linksVersion = 0
+let loadedSearchKey = ''
 let disposed = false
-let hasOpenedArticle = false
+let readingEngaged = false
 
 const activeTags = computed(() => activeNote.value?.tags?.split(',').map((tag) => tag.trim()).filter(Boolean) ?? [])
 const headings = computed(() => extractMarkdownHeadings(activeNote.value?.content))
-const activeIndex = computed(() => notes.value.findIndex((note) => note.id === activeNote.value?.id))
-const previousNote = computed(() => activeIndex.value > 0 ? notes.value[activeIndex.value - 1] : null)
-const nextNote = computed(() => activeIndex.value >= 0 && activeIndex.value < notes.value.length - 1 ? notes.value[activeIndex.value + 1] : null)
-const queryString = (value: unknown) => typeof value === 'string' ? value : ''
+const libraryProps = computed(() => ({
+  category: selectedCategory.value, categories: categories.value, notes: notes.value, total: total.value,
+  page: currentPage.value, pageSize, matchedKeyword: matchedKeyword.value, activeId: activeNote.value?.id,
+  loading: loading.value, error: listError.value
+}))
+const searchParams = () => ({ keyword: matchedKeyword.value || undefined, category: selectedCategory.value || undefined, descendants: true })
+const searchKey = (page: number) => JSON.stringify([matchedKeyword.value, selectedCategory.value, page])
 
-onMounted(async () => {
+watch(matchedKeyword, (value) => { keyword.value = value })
+watch(() => [matchedKeyword.value, selectedCategory.value, currentPage.value], () => { void loadSearch() }, { immediate: true })
+watch(() => [requestedNote.value, matchedKeyword.value, selectedCategory.value], () => { void loadArticle() }, { immediate: true })
+
+onMounted(() => {
+  void fetchOfficialNoteCategories().then((items) => { if (!disposed) categories.value = items }).catch(() => {})
   window.addEventListener('scroll', handleScroll, { passive: true })
-  try { categories.value = await fetchOfficialNoteCategories() } catch { categories.value = [] }
-  if (disposed) return
-  initialized = true
-  await syncRoute()
+  window.addEventListener('wheel', engageReading, { passive: true })
+  window.addEventListener('touchmove', engageReading, { passive: true })
+  window.addEventListener('keydown', engageReading)
+  window.addEventListener('pagehide', persistPosition)
+  document.addEventListener('visibilitychange', saveWhenHidden)
 })
-
-watch(() => [route.query.note, route.query.category, route.query.q], () => {
-  if (initialized) void syncRoute()
-})
-
 onBeforeUnmount(() => {
+  persistPosition()
   disposed = true
-  requestVersion++
+  searchVersion++
+  articleVersion++
+  linksVersion++
+  pendingAction = null
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('wheel', engageReading)
+  window.removeEventListener('touchmove', engageReading)
+  window.removeEventListener('keydown', engageReading)
+  window.removeEventListener('pagehide', persistPosition)
+  document.removeEventListener('visibilitychange', saveWhenHidden)
   if (scrollFrame !== undefined) window.cancelAnimationFrame(scrollFrame)
+  if (saveTimer !== undefined) clearTimeout(saveTimer)
 })
 
-// The URL is the navigation source. Ignore stale responses after rapid selections;
-// direct article links must not depend on the first page of search results.
-async function syncRoute(force = false) {
-  const version = ++requestVersion
-  const category = queryString(route.query.category)
-  const search = queryString(route.query.q)
-  const requestedNote = queryString(route.query.note)
-  const requestedId = Number(requestedNote)
-  const key = JSON.stringify([category, search])
-  selectedCategory.value = category
-  keyword.value = search
-  loadError.value = ''
-  articleLoading.value = force || !activeNote.value || activeNote.value.id !== requestedId
-  if (articleLoading.value) pendingScroll = ''
+// Lists and article bodies load independently; a slow sidebar must not block reading.
+async function loadSearch(force = false) {
+  const key = searchKey(currentPage.value)
+  if (!force && loadedSearchKey === key) return
+  const version = ++searchVersion
+  loadedSearchKey = ''
+  loading.value = true
+  listError.value = ''
+  notes.value = []
+  try {
+    const result = await searchOfficialNotes({ ...searchParams(), page: currentPage.value, pageSize })
+    if (version !== searchVersion || disposed) return
+    notes.value = result.items
+    total.value = result.total
+    loadedSearchKey = searchKey(result.page)
+    if (result.page !== currentPage.value) await router.replace({ query: { ...route.query, page: String(result.page) } })
+    await nextTick()
+    if (version !== searchVersion || disposed) return
+    if (!requestedNote.value) runAfterDrawer(() => scrollToId('reader-results-title'))
+  } catch {
+    if (version === searchVersion && !disposed) { total.value = 0; listError.value = '文章列表暂时不可用，请重试。' }
+  } finally {
+    if (version === searchVersion && !disposed) loading.value = false
+  }
+}
 
-  if (force || listKey !== key) {
-    loading.value = true
-    listError.value = ''
-    listKey = undefined
-    notes.value = []
-    const node = findNoteCategoryNode(buildNoteCategoryTree(categories.value), category)
-    const descendants = node?.children.length ? node.leafValues : null
-    try {
-      const items = await fetchOfficialNotes({ keyword: search || undefined, category: descendants ? undefined : category || undefined, limit: 100 })
-      if (version !== requestVersion) return
-      notes.value = descendants ? items.filter((note) => descendants.includes(note.category || '未分类')) : items
-      if (!categories.value.length) categories.value = summarizeNoteCategories(items)
-      listKey = key
-    } catch {
-      if (version !== requestVersion) return
-      listKey = undefined
-      listError.value = '文章列表暂时不可用，请重试。'
-    } finally {
-      if (version === requestVersion) loading.value = false
-    }
-  } else loading.value = false
-
-  if (requestedNote && (!Number.isSafeInteger(requestedId) || requestedId <= 0)) {
+async function loadArticle(force = false) {
+  const version = ++articleVersion
+  const id = Number(requestedNote.value)
+  const sameArticle = activeNote.value?.id === id
+  if (!sameArticle) {
+    persistPosition()
+    readingEngaged = false
+    if (saveTimer !== undefined) clearTimeout(saveTimer)
     activeNote.value = null
+    resumePosition.value = null
+  }
+  pendingAction = null
+  loadError.value = ''
+  linksVersion++
+  linksError.value = ''
+  navigation.value = { previous: null, next: null, position: 0 }
+  relatedNotes.value = []
+  if (!requestedNote.value) {
+    articleLoading.value = false
+    linksLoading.value = false
+    await nextTick()
+    if (!disposed && version === articleVersion) runAfterDrawer(() => scrollToId('reader-results-title'))
+    return
+  }
+  if (!Number.isSafeInteger(id) || id <= 0) {
     articleLoading.value = false
     loadError.value = '文章链接无效，请从笔记列表重新选择。'
     return
   }
-  const targetId = requestedNote ? requestedId : notes.value[0]?.id
-  if (!targetId) {
-    activeNote.value = null
-    articleLoading.value = false
-    loadError.value = listError.value
-    return
-  }
-  if (!requestedNote) {
-    await router.replace({ query: { ...route.query, note: String(targetId) } })
-    return
-  }
-  if (!force && activeNote.value?.id === targetId) { articleLoading.value = false; return }
-  activeNote.value = null
+  if (!force && sameArticle) { articleLoading.value = false; void loadReadingLinks(); return }
   articleLoading.value = true
   try {
-    const note = await fetchOfficialNote(targetId)
-    if (version !== requestVersion) return
+    const note = await fetchOfficialNote(id)
+    if (version !== articleVersion || disposed) return
     activeNote.value = note
+    resumePosition.value = loadReadingPosition(id, note.updatedAt)
     articleLoading.value = false
     await nextTick()
-    if (version !== requestVersion) return
-    if (hasOpenedArticle) requestScroll('reader-article-title')
-    hasOpenedArticle = true
+    if (version !== articleVersion || disposed) return
+    runAfterDrawer(() => scrollToId('reader-article-title'))
     updateReadingState()
+    void loadReadingLinks()
   } catch {
-    if (version !== requestVersion) return
-    loadError.value = '文章暂时无法打开，可能已取消公开。请重试或选择其他笔记。'
+    if (version === articleVersion && !disposed) {
+      activeNote.value = null
+      loadError.value = '文章暂时无法打开，可能已取消公开。请重试或选择其他笔记。'
+    }
   } finally {
-    if (version === requestVersion) articleLoading.value = false
+    if (version === articleVersion && !disposed) articleLoading.value = false
   }
+}
+
+async function loadReadingLinks() {
+  const id = activeNote.value?.id
+  if (!id) return
+  const version = ++linksVersion
+  linksLoading.value = true
+  linksError.value = ''
+  const [related, neighbors] = await Promise.allSettled([fetchRelatedNotes(id), fetchNoteNavigation(id, searchParams())])
+  if (version !== linksVersion || disposed || activeNote.value?.id !== id) return
+  if (related.status === 'fulfilled') relatedNotes.value = related.value
+  if (neighbors.status === 'fulfilled') {
+    navigation.value = neighbors.value
+    if (!route.query.page && neighbors.value.position > 0) {
+      const page = Math.floor((neighbors.value.position - 1) / pageSize) + 1
+      if (page > 1) await router.replace({ query: { ...route.query, page: String(page) } })
+    }
+  }
+  if (version !== linksVersion || disposed || activeNote.value?.id !== id) return
+  if (related.status === 'rejected' || neighbors.status === 'rejected') linksError.value = '延伸阅读暂时不可用。'
+  linksLoading.value = false
 }
 
 function searchNotes() {
   const q = keyword.value.trim()
-  if (q === queryString(route.query.q)) return syncRoute(true)
-  return router.push({ query: { ...route.query, q: q || undefined, note: undefined } })
+  closeDrawer()
+  if (q === matchedKeyword.value && !requestedNote.value && currentPage.value === 1) return loadSearch(true)
+  return router.push({ query: { ...route.query, q: q || undefined, page: '1', note: undefined } })
 }
 function selectCategory(category: string) {
-  if (category === selectedCategory.value) return
-  return router.push({ query: { ...route.query, category: category || undefined, note: undefined } })
-}
-function selectNote(note: Note) {
   closeDrawer()
-  if (Number(route.query.note) === note.id) {
-    if (loadError.value) return syncRoute(true)
-    if (!articleLoading.value && activeNote.value?.id === note.id) requestScroll('reader-article-title')
+  if (category === selectedCategory.value && !requestedNote.value && currentPage.value === 1) return
+  return router.push({ query: { ...route.query, category: category || undefined, page: '1', note: undefined } })
+}
+function changePage(page: number) {
+  return router.push({ query: { ...route.query, page: String(page) } })
+}
+function selectNote(note: PublicNoteItem, page = currentPage.value) {
+  closeDrawer()
+  if (Number(requestedNote.value) === note.id) {
+    if (loadError.value) return loadArticle(true)
+    if (!articleLoading.value) runAfterDrawer(() => scrollToId('reader-article-title'))
     return
   }
-  return router.push({ query: { ...route.query, note: String(note.id) } })
+  return router.push({ query: { ...route.query, page: String(page), note: String(note.id) } })
+}
+function navigateNeighbor(direction: 'previous' | 'next') {
+  const note = navigation.value[direction]
+  if (!note) return
+  const index = navigation.value.position + (direction === 'previous' ? -2 : 0)
+  return selectNote(note, Math.max(1, Math.floor(index / pageSize) + 1))
+}
+function selectRelated(note: PublicNoteItem) {
+  return router.push({ query: { category: note.category || '未分类', page: '1', note: String(note.id) } })
+}
+function backToResults() {
+  closeDrawer()
+  return router.push({ query: { ...route.query, note: undefined } })
 }
 function openDrawer(mode: 'library' | 'outline') {
   drawerMode.value = mode
@@ -223,41 +314,91 @@ function closeDrawer() {
   drawerOpen.value = false
 }
 function scrollToHeading(id: string) {
+  readingEngaged = true
+  resumePosition.value = null
   closeDrawer()
-  requestScroll(id)
+  runAfterDrawer(() => scrollToId(id))
 }
 function finishDrawerNavigation() {
   drawerClosing.value = false
-  if (pendingScroll) requestScroll(pendingScroll)
+  const action = pendingAction
+  pendingAction = null
+  if (!disposed) action?.()
+}
+function runAfterDrawer(action: () => void) {
+  if (drawerClosing.value || drawerOpen.value) pendingAction = action
+  else action()
 }
 function headingElement(id: string) {
   return articleElement.value?.querySelector<HTMLElement>('[id="' + CSS.escape(id) + '"]')
 }
-function requestScroll(id: string) {
-  pendingScroll = id
-  if (drawerClosing.value || drawerOpen.value) return
-  const target = headingElement(id)
-  if (target) {
-    target.tabIndex = -1
-    target.focus({ preventScroll: true })
-    target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' })
-    activeHeadingId.value = id
-  }
-  pendingScroll = ''
+function scrollToId(id: string) {
+  const target = id === 'reader-results-title' ? document.getElementById(id) : headingElement(id)
+  if (!target) return
+  target.tabIndex = -1
+  target.focus({ preventScroll: true })
+  const scrollTarget = id === 'reader-article-title' ? target.closest('.article-head') ?? target : target
+  scrollTarget.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
+  activeHeadingId.value = id
+}
+function scrollBehavior(): ScrollBehavior {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+}
+function readerOffset() {
+  return Number.parseFloat(getComputedStyle(document.querySelector('.knowledge-page')!).getPropertyValue('--reader-offset')) || 160
+}
+function readingGeometry() {
+  const body = bodyElement.value
+  if (!body) return null
+  const offset = readerOffset()
+  const available = Math.max(1, window.innerHeight - offset - 80)
+  return { start: body.getBoundingClientRect().top + window.scrollY - offset, range: Math.max(1, body.offsetHeight - available) }
+}
+function resumeReading() {
+  const saved = resumePosition.value
+  if (!saved) return
+  resumePosition.value = null
+  readingEngaged = true
+  runAfterDrawer(() => {
+    const geometry = readingGeometry()
+    if (!geometry) return
+    bodyElement.value?.focus({ preventScroll: true })
+    window.scrollTo({ top: geometry.start + saved.progress * geometry.range, behavior: scrollBehavior() })
+  })
+}
+function engageReading(event: Event) {
+  if (drawerOpen.value || drawerClosing.value || !activeNote.value || articleLoading.value) return
+  if (event.target instanceof Element && event.target.closest('input, textarea, [contenteditable="true"]')) return
+  if (event instanceof KeyboardEvent && !['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'End', 'Home'].includes(event.key)) return
+  readingEngaged = true
+}
+function persistPosition() {
+  if (!readingEngaged || !activeNote.value || articleLoading.value) return
+  const geometry = readingGeometry()
+  if (!geometry) return
+  saveReadingPosition(activeNote.value.id, activeNote.value.updatedAt, Math.max(0, Math.min(1, (window.scrollY - geometry.start) / geometry.range)))
+}
+function saveWhenHidden() {
+  if (document.visibilityState === 'hidden') persistPosition()
 }
 function handleScroll() {
   if (scrollFrame !== undefined) return
-  scrollFrame = window.requestAnimationFrame(() => { scrollFrame = undefined; updateReadingState() })
+  scrollFrame = window.requestAnimationFrame(() => {
+    scrollFrame = undefined
+    updateReadingState()
+    if (readingEngaged) {
+      if (saveTimer !== undefined) clearTimeout(saveTimer)
+      saveTimer = setTimeout(persistPosition, 400)
+    }
+  })
 }
 function updateReadingState() {
-  const article = articleElement.value
-  if (!article || !activeNote.value) { readingProgress.value = 0; return }
-  const start = article.getBoundingClientRect().top + window.scrollY
-  const range = Math.max(1, article.offsetHeight - window.innerHeight * .62)
-  readingProgress.value = Math.max(0, Math.min(100, ((window.scrollY - start + window.innerHeight * .3) / range) * 100))
+  const geometry = readingGeometry()
+  if (!geometry || !activeNote.value) { readingProgress.value = 0; return }
+  readingProgress.value = Math.max(0, Math.min(100, (window.scrollY - geometry.start) / geometry.range * 100))
   const passed = headings.value.filter((heading) => {
     const target = headingElement(heading.id)
-    return target ? target.getBoundingClientRect().top <= 180 : false
+    return target ? target.getBoundingClientRect().top <= readerOffset() + 20 : false
   })
   activeHeadingId.value = passed[passed.length - 1]?.id ?? headings.value[0]?.id ?? ''
 }
@@ -316,4 +457,26 @@ function formatLongDate(value: string) { return new Date(value).toLocaleDateStri
   .reader-tools { display:none; }
   .reader-back-top { right:24px; bottom:24px; }
 }
+
+.note-results { min-width:0; padding:var(--space-5) var(--space-4); color:var(--text); background:var(--surface); }
+.results-heading { display:flex; flex-direction:column; align-items:flex-start; gap:var(--space-3); padding-bottom:var(--space-5); }
+.results-heading h2 { margin:0; color:var(--text); font-size:28px; line-height:1.35; scroll-margin-top:var(--reader-offset); overflow-wrap:anywhere; }
+.results-heading p { margin:0; color:var(--muted); overflow-wrap:anywhere; }
+.results-heading button, .article-path button, .article-return, .related-notes header button, .reading-links-error button { display:inline-flex; align-items:center; gap:var(--space-2); min-height:44px; padding:0; border:0; color:var(--brand-strong); background:transparent; font-size:14px; cursor:pointer; }
+.article-path { align-items:center; }
+.article-head { scroll-margin-top:var(--reader-offset); }
+#reader-results-title:focus, #reader-article-title:focus, .article-body:focus { outline:none; }
+.resume-reading { display:inline-flex; align-items:center; align-self:flex-start; gap:var(--space-2); min-height:44px; padding:var(--space-2) var(--space-3); border:1px solid var(--line); border-radius:var(--radius-sm); color:var(--brand-strong); background:var(--brand-soft); font-size:14px; cursor:pointer; }
+.reading-links-error { display:flex; flex-wrap:wrap; align-items:center; gap:var(--space-3); padding-top:var(--space-5); color:var(--muted); font-size:14px; }
+.related-notes { display:flex; flex-direction:column; gap:var(--space-2); padding-block:var(--space-6); }
+.related-notes header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--space-3); }
+.related-notes h3 { margin:0; font-size:22px; color:var(--text); }
+.related-notes p { margin:0; color:var(--muted); font-size:14px; }
+.related-note { display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-2) var(--space-3); width:100%; padding:var(--space-4) 0; border:0; border-bottom:1px solid var(--line); color:var(--text); background:transparent; text-align:left; cursor:pointer; }
+.related-note span { flex:1 1 100%; font-size:16px; overflow-wrap:anywhere; }
+.related-note small { flex:1; color:var(--muted); font-size:14px; }
+.related-note:hover span { color:var(--brand-strong); text-decoration:underline; text-underline-offset:4px; }
+@media(min-width:760px) { .note-results { padding:var(--space-6); } }
+@media(min-width:1101px) { .results-layout { grid-template-columns:250px minmax(0,1fr); } .note-results { padding:var(--space-6) var(--space-7); } }
+
 </style>

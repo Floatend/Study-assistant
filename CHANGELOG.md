@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-06 - Note discovery and reading continuity
+
+### Added
+
+- A public archive/search view with server-side pagination (12 articles per page), result counts, page jumps, full-body search, literal keyword highlighting, and clean matched excerpts. Parent-category filtering now runs before pagination on the server, including existing slash, backslash, `>` and `::` category paths.
+- Lightweight public search, related-article, and contextual neighbor endpoints. All queries require both published and official flags; drafts and ordinary published notes are excluded. Stable timestamp/id ordering keeps page boundaries and neighboring articles consistent.
+- Opt-in local resume positions, keyed by article and update timestamp. At most 50 records are retained for 90 days; no article body is stored. Updated articles, completed reading, invalid storage, and blocked storage are handled without interrupting reading.
+- Same-category recommendations, cross-page previous/next navigation, and explicit return-to-list actions that retain category, keyword, and page in browser history.
+
+### Changed
+
+- Kept article loading independent of search and related content. Failed auxiliary requests have retry states, and stale search/article responses cannot overwrite newer navigation.
+- Replaced hand-written Markdown summary stripping with CommonMark-based plain-text extraction shared by search excerpts and existing note summaries. Frontmatter, math syntax, callout markers, raw HTML and Markdown delimiters stay out of summaries; frontend highlighting never uses raw HTML.
+- Removed the duplicate desktop archive search box and kept the article title, category and return link below the fixed site navigation. Existing site colors, Sakura imagery, Markdown/KaTeX body renderer and glass controls remain unchanged.
+
+### Verification
+
+- Backend: 12 tests covering excerpt cleanup, a 137-public-note dataset, public/draft boundaries, body-only matches, literal SQL wildcard characters, category ancestry, neighbors, validation and controller response shape.
+- Frontend: 5 unit tests covering safe highlighting, versioned resume, start/end cleanup, corrupt/blocked storage and bounded metadata.
+- Browser: 13 Playwright checks covering archive pagination, search snippets, XSS-safe text, categories, history, cross-page neighbors, related notes, actual scroll/resume/revision invalidation, stale requests, retries, keyboard focus and responsive layouts at 320/390/820/1440px.
+- Production frontend build and backend tests passed. Existing Vite bundle-size/dependency-annotation warnings remain.
+- Backend tests use isolated H2 in MySQL mode; browser tests intercept only their own public API requests. No production MySQL data was accessed or changed. Live MySQL and deployed API smoke checks remain necessary after rollout.
+
+### Deployment
+
+- Rebuild both `goalbot-backend` and `goalbot-frontend`; no SQL migration, secret changes, FRP changes or VPS Nginx changes are required.
+- See `docs/note-discovery.md` for API details, local checks and targeted deployment commands. The old public list endpoint and private notebook contracts remain compatible.
+
 ## 2026-09-06 - Mobile reading and personal introduction
 
 ### Changed
