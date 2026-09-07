@@ -15,7 +15,7 @@
           <h1>郭麟阁</h1>
           <p class="hero-description">关注 Java 后端、AI 应用与服务部署。<br />这里记录我的学习笔记，以及从接口到上线的项目实践。</p>
           <div class="hero-actions">
-            <a href="#selected-work" @click.prevent="scrollToSection('selected-work')">查看项目 <el-icon><ArrowDown /></el-icon></a>
+            <a class="hero-action-primary" href="#selected-work" @click.prevent="scrollToSection('selected-work')">查看项目 <el-icon><ArrowDown /></el-icon></a>
             <RouterLink to="/notes">阅读笔记 <el-icon><ArrowRight /></el-icon></RouterLink>
           </div>
         </div>
@@ -138,6 +138,9 @@ function scrollToSection(id: string) {
 .hero-copy .hero-description { max-width:38em; color:var(--surface); }
 .hero-actions { display:flex; flex-wrap:wrap; gap:var(--space-5); padding-top:var(--space-2); }
 .hero-actions a { display:inline-flex; min-height:44px; align-items:center; gap:var(--space-2); border-bottom:1px solid var(--hero-muted); color:var(--surface); font-size:15px; font-weight:700; text-decoration:none; }
+.hero-actions .hero-action-primary { padding-inline:var(--space-5); border:1px solid var(--surface); border-radius:var(--radius-sm); color:var(--brand-strong); background:var(--surface); transition:background-color .2s ease; }
+.hero-actions .hero-action-primary:hover { background:var(--brand-soft); }
+.hero-actions a:focus-visible { outline-color:var(--surface); }
 .hero-footer-row { align-items:center; justify-content:space-between; }
 .hero-footer-row button { display:inline-flex; align-items:center; gap:var(--space-2); min-height:44px; padding:0; border:0; color:var(--surface); background:transparent; font-size:14px; cursor:pointer; }
 .profile-band, .work-band, .archive-band { padding-block:var(--space-7); scroll-margin-top:var(--space-5); }
@@ -156,6 +159,7 @@ function scrollToSection(id: string) {
 .text-link:hover { text-decoration:underline; text-underline-offset:5px; }
 .text-link .el-icon, .hero-actions .el-icon { transition:transform .2s ease; }
 .text-link:hover .el-icon, .hero-actions a:hover .el-icon { transform:translateX(4px); }
+.hero-actions .hero-action-primary:hover .el-icon { transform:translateY(3px); }
 .work-band { padding-top:var(--space-5); }
 .work-heading { display:flex; flex-direction:column; align-items:flex-start; gap:var(--space-4); padding-bottom:var(--space-5); }
 .project-list { display:flex; flex-direction:column; }
@@ -203,5 +207,7 @@ function scrollToSection(id: string) {
 }
 @media(prefers-reduced-motion:reduce) {
   .hero-image, .ready .hero-image, .hero-content, .reveal { transform:none; animation:none; opacity:1; }
+  .hero-actions a, .hero-actions .el-icon { transition:none; }
+  .hero-actions a:hover .el-icon, .hero-actions .hero-action-primary:hover .el-icon { transform:none; }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <main class="knowledge-page">
+  <main class="knowledge-page" :class="{ 'is-reading': !!requestedNote }">
     <div class="knowledge-shell">
       <PublicSiteHeader />
       <section class="knowledge-intro"><p>LEARNING ARCHIVE</p><h1>学习笔记</h1></section>
@@ -61,7 +61,7 @@
 
     <nav class="reader-tools liquid-glass liquid-glass-strong" aria-label="阅读工具">
       <button type="button" :aria-expanded="drawerOpen && drawerMode === 'library'" aria-haspopup="dialog" @click="openDrawer('library')"><el-icon><Collection /></el-icon><span>笔记</span></button>
-      <button v-if="requestedNote" type="button" :disabled="!activeNote || articleLoading" :aria-expanded="drawerOpen && drawerMode === 'outline'" aria-haspopup="dialog" @click="openDrawer('outline')"><el-icon><List /></el-icon><span>目录</span></button>
+      <button v-if="requestedNote" class="reader-outline-trigger" type="button" :disabled="!activeNote || articleLoading" :aria-expanded="drawerOpen && drawerMode === 'outline'" aria-haspopup="dialog" @click="openDrawer('outline')"><el-icon><List /></el-icon><span>目录</span></button>
     </nav>
     <el-drawer v-model="drawerOpen" :title="drawerMode === 'library' ? '查找笔记' : '文章目录'" :direction="drawerMode === 'library' ? 'ltr' : 'rtl'"
       size="min(92vw, 420px)" append-to-body @close="drawerClosing = true" @closed="finishDrawerNavigation">
@@ -413,7 +413,7 @@ function formatLongDate(value: string) { return new Date(value).toLocaleDateStri
 .knowledge-intro h1 { margin:0; font-size:32px; line-height:1.2; }
 .knowledge-layout { display:flex; flex-direction:column; align-items:stretch; gap:var(--space-5); }
 .knowledge-library, .article-outline { display:none; }
-.knowledge-article { position:relative; min-width:0; padding:var(--space-5) var(--space-4) var(--space-7); color:var(--text); background:var(--surface); border-block:1px solid var(--line); }
+.knowledge-article { position:relative; min-width:0; width:100%; max-width:824px; margin-inline:auto; padding:var(--space-5) var(--space-4) var(--space-7); color:var(--text); background:var(--surface); border-block:1px solid var(--line); }
 .reading-progress { position:sticky; top:var(--reader-offset); z-index:3; height:3px; background:var(--brand-soft); }
 .reading-progress span { display:block; height:100%; background:var(--brand); transition:width .12s linear; }
 .article-head { display:flex; flex-direction:column; gap:var(--space-4); padding-block:var(--space-5); border-bottom:1px solid var(--line); }
@@ -425,6 +425,7 @@ function formatLongDate(value: string) { return new Date(value).toLocaleDateStri
 .article-body { padding-top:var(--space-5); }
 .knowledge-article :deep(.markdown-content) { min-width:0; color:var(--text); font-size:16px; line-height:1.6; overflow-wrap:anywhere; }
 .knowledge-article :deep(.markdown-content :is(h1,h2,h3,h4,h5,h6)) { scroll-margin-top:var(--reader-offset); color:var(--text); }
+.knowledge-article :deep(th), .knowledge-article :deep(td) { min-width:8em; }
 .article-pagination { display:flex; flex-direction:column; gap:var(--space-3); padding-top:var(--space-5); margin-top:var(--space-7); border-top:1px solid var(--line); }
 .article-pagination button { display:flex; min-width:0; flex:1; flex-direction:column; gap:var(--space-2); padding:var(--space-4); border:1px solid var(--line); border-radius:var(--radius-sm); color:var(--brand-strong); background:var(--surface); text-align:left; cursor:pointer; transition:background-color .2s ease; }
 .article-pagination button:hover:not(:disabled) { background:var(--brand-soft); }
@@ -448,14 +449,21 @@ function formatLongDate(value: string) { return new Date(value).toLocaleDateStri
   .article-pagination { flex-direction:row; }
   .article-pagination button:last-child { text-align:right; align-items:flex-end; }
 }
-@media(min-width:1101px) {
-  .knowledge-shell { width:min(1440px, calc(100% - 64px)); }
-  .knowledge-layout { display:grid; grid-template-columns:250px minmax(0,1fr) 190px; align-items:start; gap:var(--space-4); }
-  .knowledge-library, .article-outline { display:flex; min-width:0; flex-direction:column; gap:var(--space-4); position:sticky; top:104px; max-height:calc(100svh - 128px); overflow-y:auto; padding:var(--space-4); border-radius:var(--radius-sm); }
+/* Keep the article readable before allocating space to both sidebars. */
+@media(min-width:1024px) {
+  .knowledge-layout { display:grid; width:100%; max-width:1000px; margin-inline:auto; grid-template-columns:minmax(0,1fr) 160px; align-items:start; gap:var(--space-4); }
+  .knowledge-library, .article-outline { min-width:0; flex-direction:column; gap:var(--space-4); position:sticky; top:104px; max-height:calc(100svh - 128px); overflow-y:auto; padding:var(--space-4); border-radius:var(--radius-sm); }
+  .article-outline { display:flex; }
   .article-outline h2 { margin:0; color:var(--muted); font:700 14px/1.5 var(--font-body); }
   .knowledge-article { padding-inline:var(--space-6); }
-  .reader-tools { display:none; }
+  .reader-tools .reader-outline-trigger, .knowledge-page:not(.is-reading) .reader-tools { display:none; }
   .reader-back-top { right:24px; bottom:24px; }
+}
+@media(min-width:1280px) {
+  .knowledge-shell { width:min(1440px, calc(100% - 64px)); }
+  .knowledge-layout { max-width:1236px; grid-template-columns:220px minmax(0,1fr) 160px; }
+  .knowledge-library { display:flex; }
+  .reader-tools { display:none; }
 }
 
 .note-results { min-width:0; padding:var(--space-5) var(--space-4); color:var(--text); background:var(--surface); }
@@ -477,6 +485,10 @@ function formatLongDate(value: string) { return new Date(value).toLocaleDateStri
 .related-note small { flex:1; color:var(--muted); font-size:14px; }
 .related-note:hover span { color:var(--brand-strong); text-decoration:underline; text-underline-offset:4px; }
 @media(min-width:760px) { .note-results { padding:var(--space-6); } }
-@media(min-width:1101px) { .results-layout { grid-template-columns:250px minmax(0,1fr); } .note-results { padding:var(--space-6) var(--space-7); } }
+@media(min-width:1024px) {
+  .results-layout { max-width:none; grid-template-columns:220px minmax(0,1fr); }
+  .results-layout .knowledge-library { display:flex; }
+  .note-results { padding:var(--space-6) var(--space-7); }
+}
 
 </style>

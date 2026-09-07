@@ -8,7 +8,7 @@
       <RouterLink to="/journey">时间线</RouterLink>
       <RouterLink to="/about">关于</RouterLink>
     </nav>
-    <RouterLink class="site-workspace-link liquid-glass liquid-glass-control" to="/login">站长入口 <span aria-hidden="true">↗</span></RouterLink>
+    <RouterLink class="site-workspace-link" to="/login">站长入口 <span aria-hidden="true">↗</span></RouterLink>
   </header>
 </template>
 
@@ -32,6 +32,9 @@ const route = useRoute()
   color: var(--text);
 }
 .site-wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--brand-strong);
   font-family: var(--font-display);
   font-size: 22px;
@@ -73,15 +76,15 @@ const route = useRoute()
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   color: var(--brand-strong);
-  padding: 8px 12px;
+  padding: var(--space-2);
   min-height: 44px;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 500;
   text-decoration: none;
 }
-.site-workspace-link:hover { border-color: var(--brand); }
+.site-workspace-link:hover { color: var(--brand-strong); text-decoration: underline; text-underline-offset: 4px; }
 .site-workspace-link span { transition: transform .25s ease; }
 .site-workspace-link:hover span { transform: translate(2px,-2px); }
 

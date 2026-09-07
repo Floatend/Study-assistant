@@ -59,7 +59,7 @@ async function check(name, fn) { await fn(); passes.push(name); console.log('PAS
       await page.mouse.move(0, 0);
       await page.locator('.login-button').blur();
       assert.equal(await page.locator('.login-button').evaluate(el => getComputedStyle(el).borderRadius), '6px');
-      assert.equal(await page.locator('.login-button').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(40, 93, 77)');
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('.login-button')).backgroundColor === 'rgb(40, 93, 77)');
       await page.locator('.context-image').evaluate(img => img.decode());
       assert((await page.locator('.context-image').evaluate(img => img.currentSrc)).endsWith('.webp'));
       await page.screenshot({ path: path.join(out, 'login-desktop.png') });

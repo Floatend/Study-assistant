@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-07 - Public entry hierarchy and responsive reading (Stage A)
+
+### Changed
+
+- Reduced the owner-login link's visual weight while preserving its destination and legible brand color. Promoted the homepage project anchor to the primary action; kept the notes link secondary and all original content, images, palette and project records unchanged.
+- Replaced the abrupt 1101px three-column reader with single-column, 1024px article/outline, and 1280px full-sidebar layouts. Archive results use separate column rules; intermediate-width readers retain the library drawer. Capped readable line length and gave table cells a minimum width inside their existing horizontal scroller.
+- Added durable note-discovery regression coverage and a dedicated responsive-layout suite. Made the existing login color check wait for the hover transition to settle rather than inspect an interpolated color.
+
+### Verification
+
+- Production build and 10 unit tests pass. All 45 browser checks pass: 8 entry/layout, 13 note-discovery, 15 project and 9 lazy-UI checks. Fixtures are isolated from MySQL and the user's clipboard.
+- At 1101px the article body grows from 501px to 760px. Breakpoint tests cover 320 through 1920px, portrait/landscape, long math/code/tables, drawer/category access, focus, history and reading recovery. A 720px CSS reflow check is not a claim of native browser 200% zoom testing.
+- Existing homepage budgets pass: decoded JS 174,681B, CSS 27,822B, unchanged 162,060B mobile and 327,508B desktop hero payloads; observed CLS 0. Controlled local median LCP is 868ms mobile and 1220ms desktop, not a production guarantee. Existing build warnings remain.
+- No backend, database, permission, FRP or VPS configuration changes. Docker/live deployment verification is not performed locally. See `docs/frontend-stage-a.md` for details and scoped PowerShell / sudo server commands. No commit, push or deployment performed.
+
+## 2026-09-07 - Frontend improvement roadmap (planning only)
+
+- Added `docs/frontend-improvement-plan.md` with page roles, design-system constraints, seven delivery batches, file boundaries, content dependencies and measurable acceptance criteria.
+- Prioritized homepage navigation hierarchy and medium-width note reading for the first implementation batch. Documented safeguards for verified resume facts, publishing permissions, accessibility, performance and staged deployment.
+- Documentation only: no application code, database, deployment configuration or running service changed. Implementation and browser acceptance remain pending; no build or application tests were run for this planning update.
+
 ## 2026-09-06 - Public page loading performance
 
 ### Changed
